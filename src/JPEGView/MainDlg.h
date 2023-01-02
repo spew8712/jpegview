@@ -270,7 +270,7 @@ private:
 
 	bool m_bDragging;
 	bool m_bDoDragging;
-	bool m_bMovieMode;
+	bool m_bMovieMode, m_bMovieModeOperative;
 	double m_dMovieFPS;
 	bool m_bProcFlagsTouched;
 	EProcessingFlags m_eProcFlagsBeforeMovie;
@@ -345,6 +345,7 @@ private:
 	void StopSlideShowTimer(void);
 	void StartMovieMode(double dFPS);
 	void StopMovieMode();
+	void AdjustMovieSpeed(double dIncrement);
 	void StartLowQTimer(int nTimeout);
 	void InitParametersForNewImage();
 	void ExchangeProcessingParams();

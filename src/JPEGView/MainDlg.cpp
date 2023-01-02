@@ -225,6 +225,7 @@ CMainDlg::CMainDlg(bool bForceFullScreen) {
 	m_bUserZoom = false;
 	m_bUserPan = false;
 	m_bMovieMode = false;
+	m_bMovieModeOperative = false;
 	m_bProcFlagsTouched = false;
 	m_bInTrackPopupMenu = false;
 	m_bResizeForNewImage = false;
@@ -1664,10 +1665,20 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDM_TOGGLE_FIT_TO_SCREEN_100_PERCENTS:
 		case IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS:
-			if (fabs(m_dZoom - 1) < 0.01) {
-				ResetZoomToFitScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true, true);
-			} else {
-				ResetZoomTo100Percents(m_bMouseOn);
+			if (!m_bMovieModeOperative)
+			{
+				if (fabs(m_dZoom - 1) < 0.01) {
+					ResetZoomToFitScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true, true);
+				} else {
+					ResetZoomTo100Percents(m_bMouseOn);
+				}
+			}
+			else //switch 'Space' key to start/pause slideshow
+			{
+				if (m_bMovieMode)
+					StopMovieMode();
+				else
+					StartMovieMode(m_dMovieFPS);
 			}
 			break;
 		case IDM_SPAN_SCREENS:
@@ -1744,7 +1755,14 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDM_ZOOM_INC:
 		case IDM_ZOOM_DEC:
-			PerformZoom((nCommand == IDM_ZOOM_INC) ? 1 : -1, true, m_bMouseOn, true);
+			if (!m_bMovieMode)
+			{
+				PerformZoom((nCommand == IDM_ZOOM_INC) ? 1 : -1, true, m_bMouseOn, true);
+			}
+			else
+			{
+				AdjustMovieSpeed((nCommand == IDM_ZOOM_INC) ? 3.0 : -3.0);
+			}
 			break;
 		case IDM_ZOOM_MODE:
 			m_bZoomModeOnLeftMouse = !m_bZoomModeOnLeftMouse;
@@ -1810,7 +1828,10 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 				if (m_bAutoExit)
 					CleanupAndTerminate();
 				else
+				{
 					StopMovieMode(); // stop any running movie/slideshow
+					m_bMovieModeOperative = false;
+				}
 			} else if (m_bIsAnimationPlaying) {
 				if (m_bAutoExit)
 					CleanupAndTerminate();
@@ -2680,6 +2701,7 @@ void CMainDlg::StartMovieMode(double dFPS) {
 		m_bLandscapeMode = false;
 	}
 	m_bMovieMode = true;
+	m_bMovieModeOperative = true;
 	StartSlideShowTimer(Helpers::RoundToInt(1000.0/dFPS));
 	AfterNewImageLoaded(false, false, false);
 	Invalidate(FALSE);
@@ -2713,6 +2735,93 @@ void CMainDlg::StopMovieMode() {
 		AfterNewImageLoaded(false, false, false);
 		this->Invalidate(FALSE);
 	}
+}
+
+//dIncrement in secs
+void CMainDlg::AdjustMovieSpeed(double dIncrement)
+{
+	double dFPS = m_dMovieFPS;
+	/*
+	//Generic +/- change in interval:
+	double dInterval = 1.0 / m_dMovieFPS + dIncrement;
+	if (dInterval < 0.01)
+	{
+		dInterval = 0.01;
+	}
+	dFPS = 1.0 / dInterval;
+	*/
+	/*
+	//Available steps (interval, s): 1,2,3,4,5,7,10,20
+	//  ~> (fps): 1, 0.5, 0.33, 0.25, 0.2, 0.143, 0.1, 0.05
+	//AVailable movie mode fps: 5, 10, 25, 30, 50, 100
+	We'll change to stepping thru' above choices instead
+	*/
+	if (dIncrement < 0.0)
+	{
+		//speed up
+		if (dFPS > 50.0)
+			return;
+		if (dFPS >= 50.0)
+			dFPS = 100.0;
+		else if (dFPS >= 30.0)
+			dFPS = 50.0;
+		else if (dFPS >= 25.0)
+			dFPS = 30.0;
+		else if (dFPS >= 10.0)
+			dFPS = 25.0;
+		else if (dFPS >= 5.0)
+			dFPS = 10.0;
+		else if (dFPS >= 1.0)
+			dFPS = 5.0;
+		else if (dFPS >= 0.5)
+			dFPS = 1.0;
+		else if (dFPS >= 0.32)
+			dFPS = 0.5;
+		else if (dFPS >= 0.25)
+			dFPS = 0.33;
+		else if (dFPS >= 0.2)
+			dFPS = 0.25;
+		else if (dFPS >= 0.142)
+			dFPS = 0.2;
+		else if (dFPS >= 0.1)
+			dFPS = 0.143;
+		else //dFPS <= 0.05
+			dFPS = 0.1;
+	}
+	else
+	{
+		//slow down
+		if (dFPS > 50.0)
+			dFPS = 50.0;
+		else if (dFPS >= 50.0)
+			dFPS = 30.0;
+		else if (dFPS >= 30.0)
+			dFPS = 25.0;
+		else if (dFPS >= 25.0)
+			dFPS = 10.0;
+		else if (dFPS >= 10.0)
+			dFPS = 5.0;
+		else if (dFPS >= 5.0)
+			dFPS = 1.0;
+		else if (dFPS >= 1.0)
+			dFPS = 0.5;
+		else if (dFPS >= 0.5)
+			dFPS = 0.33;
+		else if (dFPS >= 0.32)
+			dFPS = 0.25;
+		else if (dFPS >= 0.25)
+			dFPS = 0.2;
+		else if (dFPS >= 0.2)
+			dFPS = 0.143;
+		else if (dFPS >= 0.142)
+			dFPS = 0.1;
+		else if (dFPS >= 0.1)
+			dFPS = 0.05;
+		else return;
+	}
+	//quick hack: instead of adjusting interval to next pic, just stop + restart slideshow
+	StopMovieMode();
+	StartMovieMode(dFPS);
 }
 
 void CMainDlg::StartLowQTimer(int nTimeout) {
