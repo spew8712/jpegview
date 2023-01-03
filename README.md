@@ -1,6 +1,6 @@
 # JPEGView - Image Viewer and Editor
 
-This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. And maybve add [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support in future.
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. And maybe add [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support in future.
 
 ## Description
 
