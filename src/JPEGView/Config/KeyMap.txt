@@ -43,6 +43,7 @@
 #define IDM_SORT_UPCOUNTING	7100			// sort upcounting
 #define IDM_SORT_DOWNCOUNTING	7110			// sort downcounting
 #define IDM_SLIDESHOW_RESUME    7399			// resume slide show (after stop)
+#define IDM_SLIDESHOW_1         7401
 #define IDM_ROTATE_90		8000			// rotate image 90 deg
 #define IDM_ROTATE_270		9000			// rotate image 270 deg
 #define IDM_ROTATE          	9100			// show free rotation dialog
@@ -203,3 +204,4 @@ Ctrl+L                  IDM_LANDSCAPE_MODE
 R                       IDM_ROTATE_90_LOSSLESS_CONFIRM
 T                       IDM_ROTATE_270_LOSSLESS_CONFIRM
 W                       IDM_EXPLORE
+Shift+Space             IDM_SLIDESHOW_1

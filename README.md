@@ -1,6 +1,6 @@
 # JPEGView - Image Viewer and Editor
 
-This is the official re-release of JPEGView.
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. And maybve add [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support in future.
 
 ## Description
 
@@ -14,6 +14,34 @@ Features
 
 (summary from the original SourceForge project page)
 
+### Slideshow
+
+JPEGView has a slideshow mode which can be activated in various ways:
+* **hotkey**:
+  * **ALT-R**: 'resume'/start slideshow @ default of 1fps.
+  * **one of number 1 to 9**: start slideshow with corresponding delay in seconds, i.e. 1s to 9s.
+  * **CTRL-(one of number 1 to 9)**: start slideshow with corresponding delay in tenth of a second (number x 0.1), i.e. 0.1s to 0.9s.
+  * **CTRL-SHF-(one of number 1 to 9)**: start slideshow with corresponding delay in hundredth of a second (number x 0.01), i.e. 0.01s to 0.09s.
+  * **ESC**: exit slideshow.
+  * **SHIFT-Space** (_**added in mod**_): start slideshow @ 1fps.
+  This is added via `KeyMap.txt` file.
+  * **Plus** (added in mod; when in slideshow mode): increase slideshow frame interval, i.e. slow it down, in steps. Steps are the available fps speeds listed below.
+  * **Minus** (_**added in mod**_; when in slideshow mode): decrease slideshow frame interval, i.e. speed it down, in steps. Steps are the available fps speeds listed below.
+  * **Space** (_**added in mod**_; when in slideshow mode): pause/resume slideshow.
+* **context menu**: right click image, select "Play folder as slideshow/movie" any of the options available - which are different slideshow speeds.
+  * available speeds in fps: 100, 50, 30, 25, 10, 5, 1, 0.5, 0.33, 0.25, 0.2, 0.143, 0.1, 0.05
+
+This mod makes it easier to manipulate the slideshow, specifically to pause/resume it, and (shift) up/down its speed.
+
+### Customizations
+
+JPEGView hotkeys can be customized via the `KeyMap.txt` file.
+WARNING: errors will render all hotkeys disabled.
+* Available #define's are are in `src/JPEGView/resource.h`. These are the available commands that can be mapped to hotkeys.
+* The bottom section are the hotkey mappings to the above commands.
+
+Other useful customizations, refer to this [guide](https://yunharla.wixsite.com/softwaremmm/post/alternate-photo-viewer-for-windows-10-xnview)
+
 # Installation
 
 ## Official Releases
@@ -23,9 +51,19 @@ Official releases will be made to [sylikc's GitHub Releases](https://github.com/
 * **Windows Installer MSI** - For Installs
 * **Source code** - Build it yourself
 
+### Mod Releases
+
+Only a zip file of the executable and DLLs will be in the release.
+
 ## Portable
 
 JPEGView _does not require installation_ to run.  Just **unzip, and run** either the 64-bit version, or the 32-bit version depending on which platform you're on.  It can save the settings to the extracted folder and run entirely portable.
+
+### Mod Update Portable Apps Version
+
+Strangely, there's a [portable app version of JPEGView](https://portableapps.com/apps/graphics_pictures/jpegview_portable) on [portableapps.com](https://portableapps.com/).
+
+To use this mod, simply replace the JPEGView.exe, *.DLL and KeyMap.txt in the `App/JPEGView` sub-folder.
 
 ## MSI Installer
 
@@ -82,4 +120,5 @@ I'm hoping with this project, some devs might help me keep the project alive!  I
 
 ## Special Thanks
 
+Thanks to [sylikc](https://github.com/sylikc) et al for maintaining JPEGView =D
 Special thanks to [qbnu](https://github.com/qbnu) who added Animated WebP and Animated PNG support!
