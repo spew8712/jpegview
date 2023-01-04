@@ -169,6 +169,38 @@ CSettingsProvider::CSettingsProvider(void) {
 
 	m_nMaxSlideShowFileListSize = GetInt(_T("MaxSlideShowFileListSizeKB"), 200, 100, 10000);
 	m_nSlideShowEffectTimeMs = GetInt(_T("SlideShowEffectTime"), 200, 100, 5000);
+
+	//read SlideShowCustomInterval and convert to FPS
+	m_dSlideShowCustomFps = 1.0 / (5*60); //default 5mins
+	CString sSlideShowCustomInterval = GetString(_T("SlideShowCustomInterval"), _T("")).Trim();
+	if (sSlideShowCustomInterval.GetLength() > 0)
+	{
+		double dMultiplier = 1.0;
+		int nLastChIndex = sSlideShowCustomInterval.GetLength() - 1;
+		wchar_t chUnits = sSlideShowCustomInterval[nLastChIndex];
+		if (chUnits == 'm')
+		{
+			dMultiplier = 60.0;
+			sSlideShowCustomInterval = sSlideShowCustomInterval.Left(nLastChIndex);
+		}
+		else if (chUnits == 'h')
+		{
+			dMultiplier = 3600.0;
+			sSlideShowCustomInterval = sSlideShowCustomInterval.Left(nLastChIndex);
+		}
+		else if (chUnits == 's')
+		{
+			sSlideShowCustomInterval = sSlideShowCustomInterval.Left(nLastChIndex);
+		}
+		double dInterval = _wtof((LPCTSTR)sSlideShowCustomInterval) * dMultiplier;
+		if (dInterval > 1e-10) //guard against division by zero -> infinite FPS
+			m_dSlideShowCustomFps = 1.0 / dInterval;
+	}
+	else
+	{
+		m_dSlideShowCustomFps = 1 / (5*60); //5mins
+	}
+
 	m_bForceGDIPlus = GetBool(_T("ForceGDIPlus"), false);
 	m_bSingleInstance = GetBool(_T("SingleInstance"), false);
 	m_bSingleFullScreenInstance = GetBool(_T("SingleFullScreenInstance"), true);

@@ -25,18 +25,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""atlres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\0"
 END
@@ -337,6 +337,7 @@ BEGIN
             MENUITEM "Waiting time\t7 sec",         IDM_SLIDESHOW_7
             MENUITEM "Waiting time\t10 sec",        IDM_SLIDESHOW_10
             MENUITEM "Waiting time\t20 sec",        IDM_SLIDESHOW_20
+            MENUITEM "Waiting time\tCustom",        IDM_SLIDESHOW_CUSTOM
             POPUP "Transition Effect"
             BEGIN
                 MENUITEM "None",                        IDM_EFFECT_NONE

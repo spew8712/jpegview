@@ -203,7 +203,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	ATLASSERT(SUCCEEDED(hRes));
 
 	CString sStartupFile = ParseCommandLineForStartupFile(lpstrCmdLine);
-	int nAutostartSlideShow = (sStartupFile.GetLength() == 0) ? 0 : ParseCommandLineForAutostart(lpstrCmdLine);
+	//int nAutostartSlideShow = (sStartupFile.GetLength() == 0) ? 0 : ParseCommandLineForAutostart(lpstrCmdLine);
+	//Allow selection of image later, then auto-start slideshow
+	int nAutostartSlideShow = ParseCommandLineForAutostart(lpstrCmdLine);
 	bool bForceFullScreen = ParseCommandLineForFullScreen(lpstrCmdLine);
 	bool bAutoExit = ParseCommandLineForAutoExit(lpstrCmdLine);
 	Helpers::ESorting eSorting = ParseCommandLineForSorting(lpstrCmdLine);

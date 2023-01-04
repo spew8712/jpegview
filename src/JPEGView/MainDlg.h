@@ -317,6 +317,7 @@ private:
 	CHelpDlg* m_pHelpDlg;
 	Helpers::ETransitionEffect m_eTransitionEffect;
 	int m_nTransitionTime;
+	double m_dSlideShowCustomFps;
 	DWORD m_nLastSlideShowImageTickCount;
 	bool m_bUseLosslessWEBP;
 	bool m_isBeforeFileSelected;

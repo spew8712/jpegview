@@ -18,20 +18,41 @@ Features
 
 JPEGView has a slideshow mode which can be activated in various ways:
 * **hotkey**:
-  * **ALT-R**: 'resume'/start slideshow @ default of 1fps.
+  * **ALT+R**: 'resume'/start slideshow @ default of 1fps.
+  * **ALT+SHF+R** (added in mod): start slideshow @ custom interval configured via `SlideShowCustomInterval` setting in `JPEGView.ini`.
   * **one of number 1 to 9**: start slideshow with corresponding delay in seconds, i.e. 1s to 9s.
-  * **CTRL-(one of number 1 to 9)**: start slideshow with corresponding delay in tenth of a second (number x 0.1), i.e. 0.1s to 0.9s.
-  * **CTRL-SHF-(one of number 1 to 9)**: start slideshow with corresponding delay in hundredth of a second (number x 0.01), i.e. 0.01s to 0.09s.
+    * May get rid of these excessive selections and repurpose these hotkeys for something else more useful in future.
+  * **CTRL+(one of number 1 to 9)**: start slideshow with corresponding delay in tenth of a second (number x 0.1), i.e. 0.1s to 0.9s.
+  * **CTRL+SHF+(one of number 1 to 9)**: start slideshow with corresponding delay in hundredth of a second (number x 0.01), i.e. 0.01s to 0.09s.
   * **ESC**: exit slideshow.
-  * **SHIFT-Space** (_**added in mod**_): start slideshow @ 1fps.
+  * **SHIFT+Space** (_**added in mod**_): start slideshow @ 1fps.
   This is added via `KeyMap.txt` file.
   * **Plus** (added in mod; when in slideshow mode): increase slideshow frame interval, i.e. slow it down, in steps. Steps are the available fps speeds listed below.
   * **Minus** (_**added in mod**_; when in slideshow mode): decrease slideshow frame interval, i.e. speed it down, in steps. Steps are the available fps speeds listed below.
-  * **Space** (_**added in mod**_; when in slideshow mode): pause/resume slideshow.
+  * **Space** (_**modified in mod**_; when in slideshow mode): pause/resume slideshow.
+  When not in slideshow, it toggles fit to window.
 * **context menu**: right click image, select "Play folder as slideshow/movie" any of the options available - which are different slideshow speeds.
-  * available speeds in fps: 100, 50, 30, 25, 10, 5, 1, 0.5, 0.33, 0.25, 0.2, 0.143, 0.1, 0.05
+  * available speeds in fps: 100, 50, 30, 25, 10, 5, 1, 0.5, 0.33, 0.25, 0.2, 0.143, 0.1, 0.05, and _custom_ (interval)
+  * _custom_ (_**added in mod**_): as per `SlideShowCustomInterval` setting.
+* **commandline**: `JPEGView.exe [optional image/path] /slideshow <interval in secs>`
+  Interval must be integer >= 1, or defaults to 5s; no upper limit.
+    * E.g.: `JPEGView.exe c:\image.png /slideshow 1`
+    starts JPEGView in slideshow with image switching at 1s intervals, beginning with given image or folder.
+    * E.g.: `JPEGView.exe /slideshow 2`
+    (**modified in mod**) starts JPEGView in image selection mode, and then starts slideshow with image switching at 2s intervals. (Previously when an image/path is not specified, `/slideshow` is ignored)
 
 This mod makes it easier to manipulate the slideshow, specifically to pause/resume it, and (shift) up/down its speed.
+
+### Slideshow Custom Interval
+
+Configure slideshow to run at custom interval via `SlideShowCustomInterval` setting in `JPEGView.ini`.
+* Default: 5mins
+* Specify in secs, mins or hrs; default unit: seconds.
+  * E.g.: `0.1` = 0.1s = 10fps, `1s` = 1sec = 1fps, `5m` = 5 mins, `1.5h` = 1.5hrs
+
+Can be activated by **ALT+SHF+R** hotkey.
+
+Alternatively, you may use the `/slideshow` commandline option to specify arbitrary intervals too; so this feature may not really be needed?
 
 ### Customizations
 
@@ -41,6 +62,11 @@ WARNING: errors will render all hotkeys disabled.
 * The bottom section are the hotkey mappings to the above commands.
 
 Other useful customizations, refer to this [guide](https://yunharla.wixsite.com/softwaremmm/post/alternate-photo-viewer-for-windows-10-xnview)
+
+### Wishlist
+
+* A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
+* Support for AVIF image format.
 
 # Installation
 
@@ -53,7 +79,10 @@ Official releases will be made to [sylikc's GitHub Releases](https://github.com/
 
 ### Mod Releases
 
-Only a zip file of the executable and DLLs will be in the release.
+2 zip files:
+* `JPEGView-less-config.zip` - (one purely of the executable and DLLs) for updating your copy, without overriding your existing configuration files.
+  * You will have to merge new config settings yourselves. E.g.: `SlideShowCustomInterval`.
+* `JPEGView.zip` - full package for unzip and run. Includes above Plus all config/translation/etc files.
 
 ## Portable
 

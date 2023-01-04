@@ -202,6 +202,7 @@ CMainDlg::CMainDlg(bool bForceFullScreen) {
 
 	m_eTransitionEffect = sp.SlideShowTransitionEffect();
 	m_nTransitionTime = sp.SlideShowEffectTimeMs();
+	m_dSlideShowCustomFps = sp.SlideShowCustomFps();
 
 	CHistogramCorr::SetContrastCorrectionStrength((float)sp.AutoContrastAmount());
 	CHistogramCorr::SetBrightnessCorrectionStrength((float)sp.AutoBrightnessAmount());
@@ -408,7 +409,7 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	m_bLockPaint = false;
 	m_isBeforeFileSelected = m_sStartupFile.IsEmpty();
 
-	if (m_nAutoStartSlideShow > 0) {
+	if (!m_isBeforeFileSelected && (m_nAutoStartSlideShow > 0)) {
 		StartMovieMode(1.0 / m_nAutoStartSlideShow);
 	}
 
@@ -436,6 +437,9 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			else {
 				OpenFileWithDialog(true, true);
 				Invalidate(TRUE);
+				if (m_nAutoStartSlideShow > 0) {
+					StartMovieMode(1.0 / m_nAutoStartSlideShow);
+				}
 			}
 		}
 	}
@@ -1136,8 +1140,9 @@ LRESULT CMainDlg::OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	}
 	if (!m_bFullScreenMode) {
 		// Transition effect and speed only available in full screen mode
-		::DeleteMenu(hMenuMovie, 9, MF_BYPOSITION);
-		::DeleteMenu(hMenuMovie, 9, MF_BYPOSITION);
+		//                       v-this hardcoded position is bad! As position changes when a new slideshow interval menuitem is inserted in front of it!
+		::DeleteMenu(hMenuMovie, 10, MF_BYPOSITION);
+		::DeleteMenu(hMenuMovie, 10, MF_BYPOSITION);
 	} else {
 		::CheckMenuItem(hMenuMovie, m_eTransitionEffect + IDM_EFFECT_NONE, MF_CHECKED);
 		int nIndex = (m_nTransitionTime < 180) ? 0 : (m_nTransitionTime < 375) ? 1 : (m_nTransitionTime < 750) ? 2 : (m_nTransitionTime < 1500) ? 3 : 4;
@@ -1448,6 +1453,9 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_SLIDESHOW_10:
 		case IDM_SLIDESHOW_20:
 			StartMovieMode(1.0/(nCommand - IDM_SLIDESHOW_START));
+			break;
+		case IDM_SLIDESHOW_CUSTOM:
+			StartMovieMode(m_dSlideShowCustomFps);
 			break;
 		case IDM_EFFECT_NONE:
 		case IDM_EFFECT_BLEND:
