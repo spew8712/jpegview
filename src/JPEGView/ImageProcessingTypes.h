@@ -41,6 +41,7 @@ enum EImageFormat {
 	IF_CameraRAW,
 	IF_JPEG_Embedded, // JPEG embedded in another file, e.g. camera raw
 	IF_TGA,
+	IF_AVIF,
 	IF_Unknown
 };
 
