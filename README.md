@@ -73,6 +73,8 @@ These notes are here in case anyone wishes to further enhance JPEGView =D and me
 
 ## AVIF Image Format
 ![](https://github.com/sdneon/jpegview/releases/download/v1.1.41.3-beta/gentle-fists.avif)
+(this is an animated AVIF; it doesn't animate if your browser does not support)
+
 Support for viewing of AVIF images is via [AOMediaCodec/libavif](https://github.com/AOMediaCodec/libavif/) + [Alliance for Open Media](https://aomedia.googlesource.com/aom).
 * JPEGView uses `avif.dll` from libavif; JPEGView requires `avif.lib` from libavif.
   * `libavif\examples\avif_example_decode_file.c` example is adapted into JPEGView's `ImageLoadThread.cpp`, `CImageLoadThread::ProcessReadAVIFRequest()` method, with reference to `ProcessReadWEBPRequest()`.
@@ -80,6 +82,11 @@ Support for viewing of AVIF images is via [AOMediaCodec/libavif](https://github.
   *  c-based, using malloc/free for image buffer allocation - this has been modded in JPEGView to follow the latter's convention in using new[]/delete[] so as to let it (CJPEGImage) manage freeing of the memory itself.
   *  uses char filenames, unlike JPEGView which uses wchar_t. So there's an ugly hack to convert filenames to char* and let libavif continue to handle the file load.
 * aom's `aom.lib` seems statically linked into libavif to produce `avif.lib`, so its aom.dll is not needed by JPEGView.
+* Tested on AVIF sample images from [https://github.com/link-u/avif-sample-images/](link-u/avif-sample-images)
+    * Known issue: unable to view 'crop'ped samples.
+    * `CJPEGImage` class only handles 8bpp images? So higher bpp images are 'downgraded' to 8bpp.
+* EXIF & raw meta data not extracted.
+  * `ImageLoadThread.cpp` does use a `Helpers::FindEXIFBlock(pBuffer, nFileSize)` to extract EXIF data. Perhaps it can be used for AVIF as well. However, AVIF decoding uses libavif to read the file, instead of relying on `ImageLoadThread.cpp` to read the file. Some re-work is needed.
 
 ### Building aom
 
@@ -195,6 +202,7 @@ Another option is to use the official [JPEGView on PortableApps](https://portabl
 Windows XP SP2 or later is needed to run the 32 bit version.
 
 64 bit Windows 7 or later is needed to run the 64 bit version.
+Mod only tested for >= Win 7 64 bit.
 
 ## What's New
 
