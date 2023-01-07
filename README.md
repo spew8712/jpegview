@@ -1,10 +1,10 @@
 # JPEGView - Image Viewer and Editor
 
-This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. And maybe add [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support in future.
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support has been added for viewing only (include animated AVIF); save as AVIF not yet implemented (low priority). 
 
 ## Description
 
-JPEGView is a lean, fast and highly configurable viewer/editor for JPEG, BMP, PNG, WEBP, TGA, GIF and TIFF images with a minimal GUI. Basic on-the-fly image processing is provided - allowing adjusting typical parameters as sharpness, color balance, rotation, perspective, contrast and local under-/overexposure.
+JPEGView is a lean, fast and highly configurable viewer/editor for AVIF (_beta_), JPEG, BMP, PNG, WEBP, TGA, GIF and TIFF images with a minimal GUI. Basic on-the-fly image processing is provided - allowing adjusting typical parameters as sharpness, color balance, rotation, perspective, contrast and local under-/overexposure.
 
 Features
 * Small and fast, uses SSE2 and up to 4 CPU cores
@@ -66,7 +66,70 @@ Other useful customizations, refer to this [guide](https://yunharla.wixsite.com/
 ### Wishlist
 
 * A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
-* Support for AVIF image format.
+
+# Developer Notes
+
+These notes are here in case anyone wishes to further enhance JPEGView =D and meddle with the troublesome-to-build avif+aom stuff.
+
+## AVIF Image Format
+![](https://github.com/sdneon/jpegview/releases/download/v1.1.41.3-beta/gentle-fists.avif)
+Support for viewing of AVIF images is via [AOMediaCodec/libavif](https://github.com/AOMediaCodec/libavif/) + [Alliance for Open Media](https://aomedia.googlesource.com/aom).
+* JPEGView uses `avif.dll` from libavif; JPEGView requires `avif.lib` from libavif.
+  * `libavif\examples\avif_example_decode_file.c` example is adapted into JPEGView's `ImageLoadThread.cpp`, `CImageLoadThread::ProcessReadAVIFRequest()` method, with reference to `ProcessReadWEBPRequest()`.
+* libavif issues:
+  *  c-based, using malloc/free for image buffer allocation - this has been modded in JPEGView to follow the latter's convention in using new[]/delete[] so as to let it (CJPEGImage) manage freeing of the memory itself.
+  *  uses char filenames, unlike JPEGView which uses wchar_t. So there's an ugly hack to convert filenames to char* and let libavif continue to handle the file load.
+* aom's `aom.lib` seems statically linked into libavif to produce `avif.lib`, so its aom.dll is not needed by JPEGView.
+
+### Building aom
+
+Roughly follow the steps in [aom's guide](https://aomedia.googlesource.com/aom) and roughly as such (for building in Win 7):
+* Clone [aom repo](https://aomedia.googlesource.com/aom)
+* These tools are needed. Install them:
+  * Microsoft Visual Studio 2019. Don't use VS2017, something will fail.
+  * CMake. Must be sufficiently new version in order to have (VS project generator for >= VS2019).
+  * [NASM](https://www.nasm.us/)
+  * [Strawberry Perl](https://strawberryperl.com/). There's another Perl listed by [perl.org](https://www.perl.org/) but that's troublesome needing registration to download.
+*  Open Developer Tools for VS2019 command prompt, launch CMake GUI from it.
+    * For 'Where the source code is', select the cloned aom folder.
+    * Create a new folder, say 'aom_build', elsewhere for CMake & build output.
+    * Check the (key) Name-Value pairs to ensure these are properly (detected and) filled in:
+        * AS_EXECUTABLE = <path to NASM's exe>
+        * PERL_EXECUTABLE = <path to Perl's exe>
+    * Click the 'Configure' button. Hopefully there're no errors, so as to be able to move to the next step. If not, good luck resolve any errors.
+    * Click the 'Generate' button to generate VS solution and projects files. If all goes well, click the 'Open Project' button to open in VS2019 =)
+    * Probably only need to initate build on the `aom` project to get `aom.lib`. Build will take quite some time as dependencies are built.
+        * Desired output: `aom_build/Release/aom.lib` which is needed by libavif below.
+
+### Building libavif
+
+* Download and unzip one of [libavif's latest release](https://github.com/AOMediaCodec/libavif/releases).
+* These tools are needed. Install them:
+  * Microsoft Visual Studio 2019.
+  * CMake. Must be sufficiently new version in order to have (VS project generator for >= VS2019).
+* These libraries are needed. Find, download and unzip them. Not sure if they're really needed for `avif.lib`, but CMake will scream and break if their Name-Value info aren't filled in. The (key) Name's in CMake are:
+    * JPEG_LIBRARY_DEBUG / JPEG_LIBRARY_RELEASE
+    * PNG_LIBRARY_DEBUG / PNG_LIBRARY_RELEASE
+    * ZLIB_LIBRARY_DEBUG / ZLIB_LIBRARY_RELEASE
+*  Open Developer Tools for VS2019 command prompt, launch CMake GUI from it.
+    * For 'Where the source code is', select the unzipped libavif folder.
+    * Create a new folder, say 'libavif_build', elsewhere for CMake & build output.
+    * Check these (key) Name-Value pairs to ensure these are properly (detected and) filled in: JPEG_LIBRARY_*, PNG_LIBRARY_* and ZLIB_LIBRARY_*
+    * Tick these (key) Name's:
+        * `AVIF_CODEC_AOM` and maybe `AVIF_CODEC_AOM_ENCODE` & `AVIF_CODEC_AOM_DECODE`
+        * `AOM_INCLUDE_FOLDER`: fill in the 'aom' folder path from earlier, like `c:/aom`.
+        * `AOM_LIBRARY`: fill in the earlier, like `c:/aom_build/Release/aom.lib`
+    * Click the 'Configure' button. Hopefully there're no errors, so as to be able to move to the next step. If not, good luck resolve any errors.
+    * Click the 'Generate' button to generate VS solution and projects files. If all goes well, click the 'Open Project' button to open in VS2019 =)
+    * Probably only need to initate build on the `ext/avif/avif` project to get `avif.lib` & `avif.dll`.
+        * Optional: build `ext/avid/examples/avif_example_decode_file` project to get a .EXE to test decoding AVIF images.
+        * Many project may fail to build (like owing to bad jpeg libs, etc), but they probably don't matter / aren't needed.
+        * Desired output: `libavif_build/avif.lib` and `avif.dll`, which are needed by JPEGView =)
+
+### JPEGView
+The above `avif.lib` then goes into `src\JPEGView\libavif\lib64`.
+`avif.dll` goes to `src\JPEGView\bin\x64\Release` and/or Debug folder.
+These are added in `JPEGView.vcxproj`'s configuration.
 
 # Installation
 
