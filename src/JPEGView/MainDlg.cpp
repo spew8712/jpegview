@@ -2087,9 +2087,7 @@ bool CMainDlg::SaveImage(bool bFullSize) {
 	}
 	CFileDialog fileDlg(FALSE, sExtension, sCurrentFile, 
 			OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT,
-			//For future save as AVIF (not yet implemented)
-			//Helpers::CReplacePipe(CString(_T("JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP (*.bmp)|*.bmp|PNG (*.png)|*.png|TIFF (*.tiff;*.tif)|*.tiff;*.tif|WEBP (*.webp)|*.webp|WEBP lossless (*.webp)|*.webp|AVIF (*.avif)|*.avif|")) +
-			Helpers::CReplacePipe(CString(_T("JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP (*.bmp)|*.bmp|PNG (*.png)|*.png|TIFF (*.tiff;*.tif)|*.tiff;*.tif|WEBP (*.webp)|*.webp|WEBP lossless (*.webp)|*.webp|")) +
+			Helpers::CReplacePipe(CString(_T("JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP (*.bmp)|*.bmp|PNG (*.png)|*.png|TIFF (*.tiff;*.tif)|*.tiff;*.tif|WEBP (*.webp)|*.webp|WEBP lossless (*.webp)|*.webp|AVIF (*.avif)|*.avif|AVIF lossless (*.avif)|*.avif|")) +
 			CNLS::GetString(_T("All Files")) + _T("|*.*|")), m_hWnd);
 	if (sExtension.CompareNoCase(_T("bmp")) == 0) {
 		fileDlg.m_ofn.nFilterIndex = 2;
@@ -2099,13 +2097,16 @@ bool CMainDlg::SaveImage(bool bFullSize) {
 		fileDlg.m_ofn.nFilterIndex = 4;
 	} else if (sExtension.CompareNoCase(_T("webp")) == 0) {
 		fileDlg.m_ofn.nFilterIndex = m_bUseLosslessWEBP ? 6 : 5;
+	} else if (sExtension.CompareNoCase(_T("avif")) == 0) {
+		//reuse m_bUseLosslessWEBP to indicate lossless AVIF as well
+		fileDlg.m_ofn.nFilterIndex = m_bUseLosslessWEBP ? 8 : 7;
 	}
 	if (!bFullSize) {
 		fileDlg.m_ofn.lpstrTitle = CNLS::GetString(_T("Save as (in screen size/resolution)"));
 	}
 	if (IDOK == fileDlg.DoModal(m_hWnd)) {
 		m_sSaveDirectory = fileDlg.m_szFileName;
-		m_bUseLosslessWEBP = fileDlg.m_ofn.nFilterIndex == 6;
+		m_bUseLosslessWEBP = (fileDlg.m_ofn.nFilterIndex == 6) || (fileDlg.m_ofn.nFilterIndex == 8);
 		m_sSaveExtension = m_sSaveDirectory.Right(m_sSaveDirectory.GetLength() - m_sSaveDirectory.ReverseFind(_T('.')) - 1);
 		m_sSaveDirectory = m_sSaveDirectory.Left(m_sSaveDirectory.ReverseFind(_T('\\')) + 1);
 		return SaveImageNoPrompt(fileDlg.m_szFileName, bFullSize);

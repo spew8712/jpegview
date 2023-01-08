@@ -669,14 +669,14 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 				// * this frame's sequence timing
 
 				avifRGBImageSetDefaults(&rgb, m_avifDecoder->image); //internally chooses RGBA
+				// Override YUV(A)->RGB(A) defaults here:
+				//   depth, format, chromaUpsampling, avoidLibYUV, ignoreAlpha, alphaPremultiplied, etc.
 				rgb.format = AVIF_RGB_FORMAT_BGRA; //CJPEGImage desires BGRA, so change it
 				if (rgb.depth > 8)
 				{
 					//CJPEGImage only supports 8bpp? so force downgrade to 8pp if original of higher bpp
 					rgb.depth = 8;
 				}
-				// Override YUV(A)->RGB(A) defaults here:
-				//   depth, format, chromaUpsampling, avoidLibYUV, ignoreAlpha, alphaPremultiplied, etc.
 
 				// Alternative: set rgb.pixels and rgb.rowBytes yourself, which should match your chosen rgb.format
 				// Be sure to use uint16_t* instead of uint8_t* for rgb.pixels/rgb.rowBytes if (rgb.depth > 8)

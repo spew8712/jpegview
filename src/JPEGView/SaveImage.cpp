@@ -9,6 +9,7 @@
 #include "TJPEGWrapper.h"
 #include "libjpeg-turbo\include\turbojpeg.h"
 #include <gdiplus.h>
+#include "avif/avif.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Helpers
@@ -259,6 +260,97 @@ static bool SaveWebP(LPCTSTR sFileName, void* pData, int nWidth, int nHeight, bo
 	return true;
 }
 
+// pData must point to 32 bit BGRA DIB
+static bool SaveAVIF(LPCTSTR sFileName, void* pData, int nWidth, int nHeight, bool bUseLossless)
+{
+	FILE* fptr = _tfopen(sFileName, _T("wb"));
+	if (fptr == NULL) {
+		return false;
+	}
+
+	avifEncoder* encoder = NULL;
+	avifRWData avifOutput = AVIF_DATA_EMPTY;
+	avifRGBImage rgb;
+	memset(&rgb, 0, sizeof(rgb));
+	avifImage* image = avifImageCreate(nWidth, nHeight, 8, AVIF_PIXEL_FORMAT_YUV444); // these values dictate what goes into the final AVIF
+
+	bool bSuccess = false;
+	try {
+		avifRGBImageSetDefaults(&rgb, image);
+		// Override RGB(A)->YUV(A) defaults here:
+		//   depth, format, chromaDownsampling, avoidLibYUV, ignoreAlpha, alphaPremultiplied, etc.
+		rgb.format = AVIF_RGB_FORMAT_BGRA; //CJPEGImage provides BGRA
+		rgb.pixels = (uint8_t*)pData;
+		rgb.rowBytes = 4 * nWidth;
+
+		avifResult convertResult = avifImageRGBToYUV(image, &rgb);
+		if (convertResult != AVIF_RESULT_OK) {
+			/*
+			TCHAR buffer[100];
+			CString s(avifResultToString(convertResult));
+			_stprintf_s(buffer, 100, _T("Failed to convert to YUV(A): %s"), s.GetString());
+			::MessageBox(NULL, CString(_T("Save As AVIF: ")) + buffer, _T("Error"), MB_OK);
+			*/
+			goto cleanup;
+		}
+
+		encoder = avifEncoderCreate();
+		// Configure your encoder here (see avif/avif.h):
+		// * maxThreads
+		// * quality
+		// * qualityAlpha
+		// * tileRowsLog2
+		// * tileColsLog2
+		// * speed
+		// * keyframeInterval
+		// * timescale
+		encoder->quality = 60;
+		encoder->qualityAlpha = bUseLossless? AVIF_QUALITY_LOSSLESS: AVIF_QUALITY_DEFAULT;
+
+		// Call avifEncoderAddImage() for each image in your sequence
+		// Only set AVIF_ADD_IMAGE_FLAG_SINGLE if you're not encoding a sequence
+		// Use avifEncoderAddImageGrid() instead with an array of avifImage* to make a grid image
+		avifResult addImageResult = avifEncoderAddImage(encoder, image, 1, AVIF_ADD_IMAGE_FLAG_SINGLE);
+		if (addImageResult != AVIF_RESULT_OK) {
+			//fprintf(stderr, "Failed to add image to encoder: %s\n", avifResultToString(addImageResult));
+			goto cleanup;
+		}
+
+		avifResult finishResult = avifEncoderFinish(encoder, &avifOutput);
+		if (finishResult != AVIF_RESULT_OK) {
+			//fprintf(stderr, "Failed to finish encode: %s\n", avifResultToString(finishResult));
+			goto cleanup;
+		}
+
+		size_t bytesWritten = fwrite(avifOutput.data, 1, avifOutput.size, fptr);
+		if (bytesWritten != avifOutput.size) {
+			//fprintf(stderr, "Failed to write %zu bytes\n", avifOutput.size);
+			goto cleanup;
+		}
+		fclose(fptr);
+		bSuccess = true;
+	}
+	catch (...) {
+		fclose(fptr);
+	}
+
+cleanup:
+	if (image) {
+		avifImageDestroy(image);
+	}
+	if (encoder) {
+		avifEncoderDestroy(encoder);
+	}
+	avifRWDataFree(&avifOutput);
+	// delete partial file if no success
+	if (!bSuccess) {
+		_tunlink(sFileName);
+		return false;
+	}
+
+	return true;
+}
+
 // Copied from MS sample
 static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
    UINT  num = 0;          // number of image encoders
@@ -347,10 +439,14 @@ bool CSaveImage::SaveImage(LPCTSTR sFileName, CJPEGImage * pImage, const CImageP
 
 	uint32 nSizeLinePadded = Helpers::DoPadding(imageSize.cx*3, 4);
 	uint32 nSizeBytes = nSizeLinePadded*imageSize.cy;
-	char* pDIB24bpp = new char[nSizeBytes];
-	CBasicProcessing::Convert32bppTo24bppDIB(imageSize.cx, imageSize.cy, pDIB24bpp, pDIB32bpp, false);
-
+	char* pDIB24bpp = 0;
 	EImageFormat eFileFormat = Helpers::GetImageFormat(sFileName);
+	if (eFileFormat != IF_AVIF)
+	{
+		pDIB24bpp = new char[nSizeBytes];
+		CBasicProcessing::Convert32bppTo24bppDIB(imageSize.cx, imageSize.cy, pDIB24bpp, pDIB32bpp, false);
+	}
+
 	bool bSuccess = false;
 	__int64 nPixelHash = 0;
 	if (eFileFormat == IF_JPEG || eFileFormat == IF_JPEG_Embedded) {
@@ -371,6 +467,8 @@ bool CSaveImage::SaveImage(LPCTSTR sFileName, CJPEGImage * pImage, const CImageP
 	} else {
 		if (eFileFormat == IF_WEBP) {
 			bSuccess = SaveWebP(sFileName, pDIB24bpp, imageSize.cx, imageSize.cy, bUseLosslessWEBP);
+		} else if (eFileFormat == IF_AVIF) {
+			bSuccess = SaveAVIF(sFileName, pDIB32bpp, imageSize.cx, imageSize.cy, bUseLosslessWEBP);
 		} else {
 			bSuccess = SaveGDIPlus(sFileName, eFileFormat, pDIB24bpp, imageSize.cx, imageSize.cy);
 		}
@@ -381,8 +479,11 @@ bool CSaveImage::SaveImage(LPCTSTR sFileName, CJPEGImage * pImage, const CImageP
 		}
 	}
 
-	delete[] pDIB24bpp;
-	pDIB24bpp = NULL;
+	if (pDIB24bpp)
+	{
+		delete[] pDIB24bpp;
+		pDIB24bpp = NULL;
+	}
 
 	// Create database entry to avoid processing image again
 	if (bSuccess && bCreateParameterDBEntry && CSettingsProvider::This().CreateParamDBEntryOnSave()) {

@@ -1,6 +1,6 @@
 # JPEGView - Image Viewer and Editor
 
-This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support has been added for viewing only (include animated AVIF); save as AVIF not yet implemented (low priority). 
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support has been added for viewing (include animated AVIF), and 'save as AVIF' (non-animated). 
 
 ## Description
 
@@ -66,6 +66,9 @@ Other useful customizations, refer to this [guide](https://yunharla.wixsite.com/
 ### Wishlist
 
 * A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
+* Support uncommon 'crop' type AVIF?
+* Quality options for 'Save image'.
+* Save animated AVIF/WEBP?
 
 # Developer Notes
 
@@ -77,7 +80,14 @@ These notes are here in case anyone wishes to further enhance JPEGView =D and me
 
 Support for viewing of AVIF images is via [AOMediaCodec/libavif](https://github.com/AOMediaCodec/libavif/) + [Alliance for Open Media](https://aomedia.googlesource.com/aom).
 * JPEGView uses `avif.dll` from libavif; JPEGView requires `avif.lib` from libavif.
-  * `libavif\examples\avif_example_decode_file.c` example is adapted into JPEGView's `ImageLoadThread.cpp`, `CImageLoadThread::ProcessReadAVIFRequest()` method, with reference to `ProcessReadWEBPRequest()`.
+  * Load AVIF image: `libavif\examples\avif_example_decode_file.c` example is adapted into JPEGView's `ImageLoadThread.cpp`, `CImageLoadThread::ProcessReadAVIFRequest()` method, with reference to `ProcessReadWEBPRequest()`.
+  * Save As AVIF image: `libavif\examples\avif_example_encode.c` example is adapted into JPEGView's `SaveImage.cpp`, `SaveAVIF()` method.
+     * JPEGView only saves _current_ image frame, as it only tries to save the current instance of CJPEGImage. To save animated AVIF, will have to cache the CJPEGImage instances of every frame? OR iterate through them.
+     * Save is extremely slow, so have patience!
+     * JPEGView's 'Save As' dialog box is simplistic, so no choice of image quality.
+       * JPEGView uses WTL's CFileDialog instead of MFC's. The latter has AddEditBox() et al, that could be used to add options selection. WTL's can't; so much rework is needed to add customizable options.
+       * Choice of lossy or lossless is via file extension filter selection.
+       * AVIF save quality defaults to 60 (on a scale up to 100).
 * libavif issues:
   *  [Resolved] c-based, using malloc/free for image buffer allocation - this has been modded in JPEGView to follow the latter's convention in using new[]/delete[] so as to let it (CJPEGImage) manage freeing of the memory itself.
   *  [Resolved] uses char filenames, unlike JPEGView which uses wchar_t. Switched to use of `avifDecoderSetIOMemory` instead of `avifDecoderSetIOFile`, so images with unicode filenames can now be opened.
@@ -222,3 +232,4 @@ I'm hoping with this project, some devs might help me keep the project alive!  I
 
 Thanks to [sylikc](https://github.com/sylikc) et al for maintaining JPEGView =D
 Special thanks to [qbnu](https://github.com/qbnu) who added Animated WebP and Animated PNG support!
+Thanks to Alliance for Open Media for [libavif](https://github.com/AOMediaCodec/libavif/) + [aom](https://aomedia.googlesource.com/aom) for AVIF image read/write.
