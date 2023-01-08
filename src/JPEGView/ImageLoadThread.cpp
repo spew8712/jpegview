@@ -298,6 +298,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
+		//DeleteCachedAvifDecoder(); //somehow this tends to cause failure of loading subsquent AVIF animation frames
 		ProcessReadJPEGRequest(&rq);
 		break;
 	case IF_WindowsBMP:
@@ -405,6 +406,11 @@ void CImageLoadThread::DeleteCachedPngDecoder() {
 void CImageLoadThread::DeleteCachedAvifDecoder() {
 	if (m_avifDecoder)
 	{
+		if (m_avifDecoder->io && m_avifDecoder->io->data)
+		{
+			delete[] m_avifDecoder->io->data;
+			m_avifDecoder->io->data = 0;
+		}
 		avifDecoderDestroy(m_avifDecoder);
 		m_avifDecoder = 0;
 	}
@@ -577,7 +583,6 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 	sFileName = (const wchar_t*)request->FileName;
 	if (sFileName != m_sLastAvifFileName) {
 		DeleteCachedAvifDecoder();
-		m_avifDecoder = avifDecoderCreate();
 	}
 	else {
 		bUseCachedDecoder = true;
@@ -585,100 +590,139 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 		bHasAnimation = m_avifDecoder->imageCount > 1;
 	}
 
+	HANDLE hFile;
+	if (!bUseCachedDecoder) {
+		hFile = ::CreateFile(request->FileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+		if (hFile == INVALID_HANDLE_VALUE) {
+			return;
+		}
+	}
+	char* pBuffer = NULL;
 	try {
+		unsigned int nFileSize = 0;
+		if (!bUseCachedDecoder) {
+			// Don't read too huge files
+			nFileSize = ::GetFileSize(hFile, NULL);
+			/*
+			* Use PNG limit for now; as it's amongst highest.
+			* AVIF supports 3 bit depths: 8, 10 and 12 bits,
+			* and the maximum dimensions of a coded image is 65536x65536,
+			* when seq_level_idx is set to 31 (maximum parameters level).
+			*/
+			if (nFileSize > MAX_PNG_FILE_SIZE) {
+				request->OutOfMemory = true;
+				::CloseHandle(hFile);
+				return;
+			}
+
+			pBuffer = new(std::nothrow) char[nFileSize];
+			if (pBuffer == NULL) {
+				request->OutOfMemory = true;
+				::CloseHandle(hFile);
+				return;
+			}
+		}
+
 		avifRGBImage rgb;
 		memset(&rgb, 0, sizeof(rgb));
 		// Override decoder defaults here (codecChoice, requestedSource, ignoreExif, ignoreXMP, etc)
 
-		if (!bUseCachedDecoder)
+		void* pExifData = 0;
+		unsigned int nNumBytesRead;
+		if (bUseCachedDecoder || (::ReadFile(hFile, pBuffer, nFileSize, (LPDWORD)&nNumBytesRead, NULL) && (nNumBytesRead == nFileSize)))
 		{
-			//TODO: upgrade libavif to use wchar_t
-			//int nLen = request->FileName.GetLength();
-			char str[256];
-			str[0] = 0;
-			wcstombs(str, sFileName, 256);
-			const char* inputFilename = str;
+			if (!bUseCachedDecoder)
+			{
+				pExifData = Helpers::FindEXIFBlock(pBuffer, nFileSize);
+				::CloseHandle(hFile);
 
-			avifResult result = avifDecoderSetIOFile(m_avifDecoder, inputFilename);
-			if (result != AVIF_RESULT_OK) {
-				goto cleanup; //Cannot open file for read
+				m_avifDecoder = avifDecoderCreate();
+
+				avifResult result = avifDecoderSetIOMemory(m_avifDecoder, (const uint8_t*)pBuffer, nFileSize);
+				if (result != AVIF_RESULT_OK) {
+					goto cleanup; //won't happen
+				}
+				m_avifDecoder->io->data = pBuffer; //keep a copy of pointer for our cleanup
+
+				result = avifDecoderParse(m_avifDecoder);
+				if (result != AVIF_RESULT_OK) {
+					goto cleanup; //Failed to decode image
+				}
+				bHasAnimation = m_avifDecoder->imageCount > 1;
 			}
 
-			result = avifDecoderParse(m_avifDecoder);
-			if (result != AVIF_RESULT_OK) {
-				goto cleanup; //Failed to decode image
-			}
-			bHasAnimation = m_avifDecoder->imageCount > 1;
-		}
-
-		// Now available:
-		// * All decoder->image information other than pixel data:
-		//   * width, height, depth
-		//   * transformations (pasp, clap, irot, imir)
-		//   * color profile (icc, CICP)
-		//   * metadata (Exif, XMP)
-		// * decoder->alphaPresent
-		// * number of total images in the AVIF (decoder->imageCount)
-		// * overall image sequence timing (including per-frame timing with avifDecoderNthImageTiming())
+			// Now available:
+			// * All decoder->image information other than pixel data:
+			//   * width, height, depth
+			//   * transformations (pasp, clap, irot, imir)
+			//   * color profile (icc, CICP)
+			//   * metadata (Exif, XMP)
+			// * decoder->alphaPresent
+			// * number of total images in the AVIF (decoder->imageCount)
+			// * overall image sequence timing (including per-frame timing with avifDecoderNthImageTiming())
 		
-		if (avifDecoderNextImage(m_avifDecoder) == AVIF_RESULT_OK)
-		{
-			// Now available (for this frame):
-			// * All decoder->image YUV pixel data (yuvFormat, yuvPlanes, yuvRange, yuvChromaSamplePosition, yuvRowBytes)
-			// * decoder->image alpha data (alphaPlane, alphaRowBytes)
-			// * this frame's sequence timing
-
-			avifRGBImageSetDefaults(&rgb, m_avifDecoder->image); //internally chooses RGBA
-			rgb.format = AVIF_RGB_FORMAT_BGRA; //CJPEGImage desires BGRA, so change it
-			if (rgb.depth > 8)
+			if (avifDecoderNextImage(m_avifDecoder) == AVIF_RESULT_OK)
 			{
-				//CJPEGImage only supports 8bpp? so force downgrade to 8pp if original of higher bpp
-				rgb.depth = 8;
-			}
-			// Override YUV(A)->RGB(A) defaults here:
-			//   depth, format, chromaUpsampling, avoidLibYUV, ignoreAlpha, alphaPremultiplied, etc.
+				// Now available (for this frame):
+				// * All decoder->image YUV pixel data (yuvFormat, yuvPlanes, yuvRange, yuvChromaSamplePosition, yuvRowBytes)
+				// * decoder->image alpha data (alphaPlane, alphaRowBytes)
+				// * this frame's sequence timing
 
-			// Alternative: set rgb.pixels and rgb.rowBytes yourself, which should match your chosen rgb.format
-			// Be sure to use uint16_t* instead of uint8_t* for rgb.pixels/rgb.rowBytes if (rgb.depth > 8)
-			// Use new(std::nothrow) unsigned char[] as per JPEGView internals (so it can cleanup itself), instead of avifRGBImageAllocatePixels(&rgb)'s c-based malloc.
-			if (rgb.pixels) {
-				delete [] rgb.pixels;
-				rgb.pixels = 0;
-			}
-			rgb.rowBytes = rgb.width * avifRGBImagePixelSize(&rgb);
-			rgb.pixels = new(std::nothrow) unsigned char[(size_t)rgb.rowBytes * rgb.height];
-			if (rgb.pixels)
-			{
-				if (avifImageYUVToRGB(m_avifDecoder->image, &rgb) != AVIF_RESULT_OK) {
-					goto cleanup; //Conversion from YUV failed
+				avifRGBImageSetDefaults(&rgb, m_avifDecoder->image); //internally chooses RGBA
+				rgb.format = AVIF_RGB_FORMAT_BGRA; //CJPEGImage desires BGRA, so change it
+				if (rgb.depth > 8)
+				{
+					//CJPEGImage only supports 8bpp? so force downgrade to 8pp if original of higher bpp
+					rgb.depth = 8;
 				}
+				// Override YUV(A)->RGB(A) defaults here:
+				//   depth, format, chromaUpsampling, avoidLibYUV, ignoreAlpha, alphaPremultiplied, etc.
 
-				// Now available:
-				// * RGB(A) pixel data (rgb.pixels, rgb.rowBytes)
-
-				int nFrameTimeMs = (int)(m_avifDecoder->duration * 1000);
-				if (bHasAnimation) {
-					m_sLastAvifFileName = sFileName;
+				// Alternative: set rgb.pixels and rgb.rowBytes yourself, which should match your chosen rgb.format
+				// Be sure to use uint16_t* instead of uint8_t* for rgb.pixels/rgb.rowBytes if (rgb.depth > 8)
+				// Use new(std::nothrow) unsigned char[] as per JPEGView internals (so it can cleanup itself), instead of avifRGBImageAllocatePixels(&rgb)'s c-based malloc.
+				if (rgb.pixels) {
+					delete [] rgb.pixels;
+					rgb.pixels = 0;
 				}
-				request->Image = new CJPEGImage(m_avifDecoder->image->width, m_avifDecoder->image->height, rgb.pixels, NULL, 4, 0, IF_AVIF, bHasAnimation, request->FrameIndex, m_avifDecoder->imageCount, nFrameTimeMs);
-				bSuccess = true;
-			}
-			else
-			{
-				request->OutOfMemory = true;
+				rgb.rowBytes = rgb.width * avifRGBImagePixelSize(&rgb);
+				rgb.pixels = new(std::nothrow) unsigned char[(size_t)rgb.rowBytes * rgb.height];
+				if (rgb.pixels)
+				{
+					if (avifImageYUVToRGB(m_avifDecoder->image, &rgb) != AVIF_RESULT_OK) {
+						delete[] rgb.pixels;
+						rgb.pixels = 0;
+						goto cleanup; //Conversion from YUV failed
+					}
+
+					// Now available:
+					// * RGB(A) pixel data (rgb.pixels, rgb.rowBytes)
+
+					int nFrameTimeMs = (int)(m_avifDecoder->duration * 1000);
+					if (bHasAnimation) {
+						m_sLastAvifFileName = sFileName;
+					}
+					request->Image = new CJPEGImage(m_avifDecoder->image->width, m_avifDecoder->image->height, rgb.pixels, pExifData, 4, 0, IF_AVIF, bHasAnimation, request->FrameIndex, m_avifDecoder->imageCount, nFrameTimeMs);
+					bSuccess = true;
+				}
+				else
+				{
+					request->OutOfMemory = true;
+				}
 			}
 		}
-
-cleanup:
-		if (!bHasAnimation) DeleteCachedAvifDecoder();
 	}
 	catch (...) {
 		delete request->Image;
 		request->Image = NULL;
 	}
 
+cleanup:
 	if (!bSuccess)
+	{
+		DeleteCachedAvifDecoder();
 		return ProcessReadGDIPlusRequest(request);
+	}
 }
 
 void CImageLoadThread::ProcessReadBMPRequest(CRequest* request) {
