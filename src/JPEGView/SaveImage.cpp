@@ -9,7 +9,6 @@
 #include "TJPEGWrapper.h"
 #include "libjpeg-turbo\include\turbojpeg.h"
 #include <gdiplus.h>
-#include "avif/avif.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Helpers
@@ -260,95 +259,221 @@ static bool SaveWebP(LPCTSTR sFileName, void* pData, int nWidth, int nHeight, bo
 	return true;
 }
 
-// pData must point to 32 bit BGRA DIB
-static bool SaveAVIF(LPCTSTR sFileName, void* pData, int nWidth, int nHeight, bool bUseLossless)
+CAvifEncoder::CAvifEncoder():
+	m_sFileName(0),
+	m_fOutput(0),
+	m_pEncoder(0),
+	m_pAvifOuput(0),
+	m_nWidth(0), m_nHeight(0),
+	m_nTimeScaleHz(1), m_nFrameIntervalMs(1000),
+	m_nQuality(60),
+	m_bLossless(false),
+	m_bSuccess(false)
 {
-	FILE* fptr = _tfopen(sFileName, _T("wb"));
-	if (fptr == NULL) {
+}
+
+CAvifEncoder::~CAvifEncoder()
+{
+	if (m_pEncoder)
+	{
+		avifEncoderDestroy(m_pEncoder);
+		m_pEncoder = 0;
+	}
+}
+
+/*
+* Initialize AVIF image encoder by creating file and setting various image properties
+*/
+bool CAvifEncoder::Init(LPCTSTR sFileName, int nWidth, int nHeight, bool bUseLossless, int nQuality, uint64_t nFrameIntervalMs)
+{
+	if (m_pEncoder || m_pAvifOuput)
+	{
+		return false; //cannot init twice! abort
+	}
+	m_sFileName = sFileName;
+	m_fOutput = _tfopen(sFileName, _T("wb"));
+	if (!m_fOutput) {
 		return false;
 	}
 
-	avifEncoder* encoder = NULL;
-	avifRWData avifOutput = AVIF_DATA_EMPTY;
-	avifRGBImage rgb;
-	memset(&rgb, 0, sizeof(rgb));
-	avifImage* image = avifImageCreate(nWidth, nHeight, 8, AVIF_PIXEL_FORMAT_YUV444); // these values dictate what goes into the final AVIF
+	memset(&m_rgb, 0, sizeof(m_rgb));
+	m_nWidth = nWidth;
+	m_nHeight = nHeight;
 
-	bool bSuccess = false;
+	m_pEncoder = avifEncoderCreate();
+	// Configure your encoder here (see avif/avif.h):
+	// * maxThreads
+	// * quality
+	// * qualityAlpha
+	// * tileRowsLog2
+	// * tileColsLog2
+	// * speed
+	// * keyframeInterval
+	// * timescale
+	m_pEncoder->quality = m_nQuality = nQuality;
+	m_bLossless = bUseLossless;
+	m_pEncoder->qualityAlpha = bUseLossless ? AVIF_QUALITY_LOSSLESS : AVIF_QUALITY_DEFAULT;
+	m_nFrameIntervalMs = nFrameIntervalMs;
+	m_nTimeScaleHz = (uint64_t)(1.0 / (0.001 * nFrameIntervalMs));
+	m_pEncoder->timescale = m_nTimeScaleHz;
+
+	return true;
+}
+
+/*
+bool CAvifEncoder::WriteSingleImage(void* pData, bool bUseLossless, int nQuality)
+{
+	return AppendImage(pData, bUseLossless, nQuality);
+}
+*/
+
+/*
+* Write single image of non-animated AVIF
+*/
+bool CAvifEncoder::WriteSingleImage(void* pData, bool bUseLossless, int nQuality)
+{
+	return WriteImage(pData, bUseLossless, nQuality);
+}
+
+/*
+* Append an image frame for an animated AVIF
+*/
+bool CAvifEncoder::AppendImage(void* pData, bool bUseLossless, int nQuality,
+	uint64_t nFrameIntervalMs, bool bKeyFrame)
+{
+	return WriteImage(pData, bUseLossless, nQuality, nFrameIntervalMs,
+		bKeyFrame? AVIF_ADD_IMAGE_FLAG_FORCE_KEYFRAME: AVIF_ADD_IMAGE_FLAG_NONE);
+}
+
+/*
+* [Internal use] Write an image frame of AVIF
+* nFrameIntervalMs: duration of this frame in ms; applies to animated AVIF only
+* nFrameType: AVIF_ADD_IMAGE_FLAG_SINGLE = single image of a non-animated AVIF
+*			  AVIF_ADD_IMAGE_FLAG_FORCE_KEYFRAME = keyframe of an animated AVIF
+*			  AVIF_ADD_IMAGE_FLAG_NONE = subsequent frame of an animated AVIF
+*/
+bool CAvifEncoder::WriteImage(void* pData, bool bUseLossless, int nQuality,
+	uint64_t nFrameIntervalMs, avifAddImageFlag nFrameType)
+{
+	if (!m_pEncoder || !m_fOutput
+		|| m_pAvifOuput) //already finished output, so no more writes allowed
+	{
+		return false;
+	}
+	bool bOk = false;
+	avifImage* image = 0;
 	try {
-		avifRGBImageSetDefaults(&rgb, image);
+		image = avifImageCreate(m_nWidth, m_nHeight, 8, AVIF_PIXEL_FORMAT_YUV444); // these values dictate what goes into the final AVIF
+
+		avifRGBImageSetDefaults(&m_rgb, image);
 		// Override RGB(A)->YUV(A) defaults here:
 		//   depth, format, chromaDownsampling, avoidLibYUV, ignoreAlpha, alphaPremultiplied, etc.
-		rgb.format = AVIF_RGB_FORMAT_BGRA; //CJPEGImage provides BGRA
-		rgb.pixels = (uint8_t*)pData;
-		rgb.rowBytes = 4 * nWidth;
+		m_rgb.format = AVIF_RGB_FORMAT_BGRA; //CJPEGImage provides BGRA
+		m_rgb.rowBytes = 4 * m_nWidth;
+		m_rgb.pixels = (uint8_t*)pData;
 
-		avifResult convertResult = avifImageRGBToYUV(image, &rgb);
-		if (convertResult != AVIF_RESULT_OK) {
-			/*
+		avifResult result = avifImageRGBToYUV(image, &m_rgb);
+		if (result == AVIF_RESULT_OK)
+		{
+			uint64_t nDurationInNumOfTimescales = 1;
+			if (nFrameType != AVIF_ADD_IMAGE_FLAG_SINGLE)
+			{
+				if (nFrameIntervalMs != 0)
+				{
+					nDurationInNumOfTimescales = (uint64_t)(((double)nFrameIntervalMs) / m_nFrameIntervalMs);
+					if (nDurationInNumOfTimescales < 1)
+						nDurationInNumOfTimescales = 1;
+				}
+			}
+			// Add single image in your sequence
+			result = avifEncoderAddImage(m_pEncoder, image, nDurationInNumOfTimescales, nFrameType);
+			if (result == AVIF_RESULT_OK)
+			{
+				bOk = true;
+			}
+			//else fprintf(stderr, "Failed to add image to encoder: %s\n", avifResultToString(addImageResult));
+		}
+		/*
+		else
+		{
 			TCHAR buffer[100];
 			CString s(avifResultToString(convertResult));
 			_stprintf_s(buffer, 100, _T("Failed to convert to YUV(A): %s"), s.GetString());
 			::MessageBox(NULL, CString(_T("Save As AVIF: ")) + buffer, _T("Error"), MB_OK);
-			*/
-			goto cleanup;
 		}
-
-		encoder = avifEncoderCreate();
-		// Configure your encoder here (see avif/avif.h):
-		// * maxThreads
-		// * quality
-		// * qualityAlpha
-		// * tileRowsLog2
-		// * tileColsLog2
-		// * speed
-		// * keyframeInterval
-		// * timescale
-		encoder->quality = 60;
-		encoder->qualityAlpha = bUseLossless? AVIF_QUALITY_LOSSLESS: AVIF_QUALITY_DEFAULT;
-
-		// Call avifEncoderAddImage() for each image in your sequence
-		// Only set AVIF_ADD_IMAGE_FLAG_SINGLE if you're not encoding a sequence
-		// Use avifEncoderAddImageGrid() instead with an array of avifImage* to make a grid image
-		avifResult addImageResult = avifEncoderAddImage(encoder, image, 1, AVIF_ADD_IMAGE_FLAG_SINGLE);
-		if (addImageResult != AVIF_RESULT_OK) {
-			//fprintf(stderr, "Failed to add image to encoder: %s\n", avifResultToString(addImageResult));
-			goto cleanup;
-		}
-
-		avifResult finishResult = avifEncoderFinish(encoder, &avifOutput);
-		if (finishResult != AVIF_RESULT_OK) {
-			//fprintf(stderr, "Failed to finish encode: %s\n", avifResultToString(finishResult));
-			goto cleanup;
-		}
-
-		size_t bytesWritten = fwrite(avifOutput.data, 1, avifOutput.size, fptr);
-		if (bytesWritten != avifOutput.size) {
-			//fprintf(stderr, "Failed to write %zu bytes\n", avifOutput.size);
-			goto cleanup;
-		}
-		fclose(fptr);
-		bSuccess = true;
+		*/
 	}
 	catch (...) {
-		fclose(fptr);
 	}
-
-cleanup:
 	if (image) {
 		avifImageDestroy(image);
 	}
-	if (encoder) {
-		avifEncoderDestroy(encoder);
-	}
-	avifRWDataFree(&avifOutput);
-	// delete partial file if no success
-	if (!bSuccess) {
-		_tunlink(sFileName);
+	return bOk;
+}
+
+/*
+* Cleanup. Delete file if not complete success.
+* Retval: true if encoding succeeded; false o.w.
+*/
+bool CAvifEncoder::Finish()
+{
+	if (!m_pEncoder)
+	{
 		return false;
 	}
+	try {
+		m_pAvifOuput = new avifRWData;
+		*m_pAvifOuput = AVIF_DATA_EMPTY;
 
-	return true;
+		avifResult result = avifEncoderFinish(m_pEncoder, m_pAvifOuput);
+		if (result == AVIF_RESULT_OK)
+		{
+			size_t bytesWritten = fwrite(m_pAvifOuput->data, 1, m_pAvifOuput->size, m_fOutput);
+			if (bytesWritten == m_pAvifOuput->size)
+			{
+				m_bSuccess = true;
+			}
+			//else fprintf(stderr, "Failed to write %zu bytes\n", avifOutput.size);
+		}
+		//else fprintf(stderr, "Failed to finish encode: %s\n", avifResultToString(finishResult));
+	}
+	catch (...) {
+	}
+	if (m_fOutput)
+	{
+		fclose(m_fOutput);
+		m_fOutput = 0;
+	}
+	if (m_pAvifOuput)
+	{
+		avifRWDataFree(m_pAvifOuput);
+		delete m_pAvifOuput;
+		m_pAvifOuput = 0;
+	}
+	if (!m_bSuccess) {
+		_tunlink(m_sFileName);
+	}
+	return m_bSuccess;
+}
+
+// Convenience method to write a non-animated AVIF image
+bool CAvifEncoder::SaveAVIF(LPCTSTR sFileName, void* pData, int nWidth, int nHeight, bool bUseLossless, int nQuality)
+{
+	if (Init(sFileName, nWidth, nHeight, bUseLossless, nQuality))
+	{
+		if (WriteSingleImage(pData, bUseLossless, nQuality))
+		{
+			return Finish();
+		}
+	}
+	return false;
+}
+
+// Convenience method to write a non-animated AVIF image
+static bool SaveAVIF(LPCTSTR sFileName, void* pData, int nWidth, int nHeight, bool bUseLossless)
+{
+	CAvifEncoder enc;
+	return enc.SaveAVIF(sFileName, pData, nWidth, nHeight, bUseLossless);
 }
 
 // Copied from MS sample

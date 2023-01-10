@@ -1,6 +1,6 @@
 # JPEGView - Image Viewer and Editor
 
-This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support has been added for viewing (include animated AVIF), and 'save as AVIF' (non-animated). 
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support has been added for viewing (include animated AVIF), and 'save as AVIF'. 
 
 ## Description
 
@@ -81,8 +81,7 @@ These notes are here in case anyone wishes to further enhance JPEGView =D and me
 Support for viewing of AVIF images is via [AOMediaCodec/libavif](https://github.com/AOMediaCodec/libavif/) + [Alliance for Open Media](https://aomedia.googlesource.com/aom).
 * JPEGView uses `avif.dll` from libavif; JPEGView requires `avif.lib` from libavif.
   * Load AVIF image: `libavif\examples\avif_example_decode_file.c` example is adapted into JPEGView's `ImageLoadThread.cpp`, `CImageLoadThread::ProcessReadAVIFRequest()` method, with reference to `ProcessReadWEBPRequest()`.
-  * Save As AVIF image: `libavif\examples\avif_example_encode.c` example is adapted into JPEGView's `SaveImage.cpp`, `SaveAVIF()` method.
-     * JPEGView only saves _current_ image frame, as it only tries to save the current instance of CJPEGImage. To save animated AVIF, will have to cache the CJPEGImage instances of every frame? OR iterate through them.
+  * Save As AVIF image: `libavif\examples\avif_example_encode.c` example is adapted into JPEGView's `SaveImage.cpp`, `CAvifEncoder` class.
      * Save is extremely slow, so have patience!
      * JPEGView's 'Save As' dialog box is simplistic, so no choice of image quality.
        * JPEGView uses WTL's CFileDialog instead of MFC's. The latter has AddEditBox() et al, that could be used to add options selection. WTL's can't; so much rework is needed to add customizable options.

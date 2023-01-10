@@ -2114,6 +2114,64 @@ bool CMainDlg::SaveImage(bool bFullSize) {
 	return false;
 }
 
+//retval: true if successful
+bool CMainDlg::SaveAnimatedImageAVIF(LPCTSTR sFileName, bool bFullSize)
+{
+	CAvifEncoder enc;
+	bool b1stImage = true, bFailed = false;
+	CProcessParams procParams = CreateProcessParams(false);
+	int nNumFrames = m_pCurrentImage->NumberOfFrames();
+	EProcessingFlags eFlags = CreateDefaultProcessingFlags();
+	CSize imageSize;
+	for (int nFrameIndex = 0; nFrameIndex < nNumFrames; ++nFrameIndex)
+	{
+		CJPEGImage* pImage = m_pJPEGProvider->RequestImage(m_pFileList, CJPEGProvider::NONE,
+			m_pFileList->Current(), nFrameIndex, procParams, m_bOutOfMemoryLastImage);
+		if (!pImage)
+		{
+			if (m_bOutOfMemoryLastImage)
+			{
+				::MessageBox(NULL, CString(_T("Save As Animated AVIF: Out of Memeory")), _T("Error"), MB_OK);
+				bFailed = true;
+				break;
+			}
+			else
+			{
+				::MessageBox(NULL, CString(_T("Save As Animated AVIF: Unknown reason; failed getting frame")), _T("Error"), MB_OK);
+				//try skipping it!
+			}
+			continue;
+		}
+		uint64_t nFrameIntervalMs = m_pCurrentImage->FrameTimeMs();
+		if (b1stImage)
+		{
+			imageSize = bFullSize? pImage->OrigSize() :
+				CSize(pImage->DIBWidth(), pImage->DIBHeight());
+			if (!enc.Init(sFileName, imageSize.cx, imageSize.cy, m_bUseLosslessWEBP, 60, nFrameIntervalMs))
+			{
+				//fail!
+				::MessageBox(NULL, CString(_T("Save As Animated AVIF: Initialization failed!")), _T("Error"), MB_OK);
+				//try skipping it!
+			}
+		}
+		void* pData = pImage->GetDIB(imageSize, imageSize, CPoint(0, 0), *m_pImageProcParams, eFlags);
+		if (!enc.AppendImage(pData, m_bUseLosslessWEBP, 60, nFrameIntervalMs, b1stImage))
+		{
+			//fail!
+			::MessageBox(NULL, CString(_T("Save As Animated AVIF: Append frame failed")), _T("Error"), MB_OK);
+			//try skipping it!
+		}
+		b1stImage = false;
+	}
+	if (!enc.Finish())
+	{
+		//fail!
+		::MessageBox(NULL, CString(_T("Save As AVIF: Finishing up failed")), _T("Error"), MB_OK);
+		bFailed = true;
+	}
+	return !bFailed;
+}
+
 bool CMainDlg::SaveImageNoPrompt(LPCTSTR sFileName, bool bFullSize) {
 	if (m_bMovieMode) {
 		return false;
@@ -2123,8 +2181,23 @@ bool CMainDlg::SaveImageNoPrompt(LPCTSTR sFileName, bool bFullSize) {
 
 	HCURSOR hOldCursor = ::SetCursor(::LoadCursor(NULL, IDC_WAIT));	
 
+	CString sCurFilename = m_pFileList->CurrentFileTitle();
+	if (m_pCurrentImage->IsAnimation() && (m_sSaveExtension.CompareNoCase(_T("avif")) == 0))
+	{
+		if (SaveAnimatedImageAVIF(sFileName, bFullSize))
+		{
+			m_pFileList->Reload(); // maybe image is stored to current directory - needs reload
+			::SetCursor(hOldCursor);
+			Invalidate();
+			return true;
+		}
+		::MessageBox(m_hWnd, CNLS::GetString(_T("Error saving file")),
+			CNLS::GetString(_T("Error writing file to disk!")), MB_ICONSTOP | MB_OK);
+		return false;
+	}
 	if (CSaveImage::SaveImage(sFileName, m_pCurrentImage, *m_pImageProcParams, 
-		CreateDefaultProcessingFlags(), bFullSize, m_bUseLosslessWEBP)) {
+		CreateDefaultProcessingFlags(), bFullSize, m_bUseLosslessWEBP))
+	{
 		m_pFileList->Reload(); // maybe image is stored to current directory - needs reload
 		::SetCursor(hOldCursor);
 		Invalidate();

@@ -698,7 +698,7 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 					// Now available:
 					// * RGB(A) pixel data (rgb.pixels, rgb.rowBytes)
 
-					int nFrameTimeMs = (int)(m_avifDecoder->duration * 1000);
+					int nFrameTimeMs = (int)(m_avifDecoder->imageTiming.duration * 1000);
 					if (bHasAnimation) {
 						m_sLastAvifFileName = sFileName;
 					}
