@@ -87,6 +87,8 @@ Support for viewing of AVIF images is via [AOMediaCodec/libavif](https://github.
        * JPEGView uses WTL's CFileDialog instead of MFC's. The latter has AddEditBox() et al, that could be used to add options selection. WTL's can't; so much rework is needed to add customizable options.
        * Choice of lossy or lossless is via file extension filter selection.
        * AVIF save quality defaults to 60 (on a scale up to 100).
+     * Can now save animated AVIF too.
+       * You may also try creating AVIF at [this ezgif website](https://ezgif.com/avif-maker) using a series of images.
 * libavif issues:
   *  [Resolved] c-based, using malloc/free for image buffer allocation - this has been modded in JPEGView to follow the latter's convention in using new[]/delete[] so as to let it (CJPEGImage) manage freeing of the memory itself.
   *  [Resolved] uses char filenames, unlike JPEGView which uses wchar_t. Switched to use of `avifDecoderSetIOMemory` instead of `avifDecoderSetIOFile`, so images with unicode filenames can now be opened.
