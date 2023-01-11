@@ -171,7 +171,9 @@ static EProcessingFlags _SetLandscapeModeFlags(EProcessingFlags eFlags) {
 // Public
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-CMainDlg::CMainDlg(bool bForceFullScreen) {
+CMainDlg::CMainDlg(bool bForceFullScreen):
+	m_bSelectMode(false)
+{
 	CSettingsProvider& sp = CSettingsProvider::This();
 
 	CResizeFilterCache::This(); // Access before multiple threads are created
@@ -480,7 +482,9 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		m_dRealizedZoom = (double)newSize.cx / m_pCurrentImage->OrigSize().cx;
 		CPoint unlimitedOffsets = m_offsets;
 		m_offsets = Helpers::LimitOffsets(m_offsets, m_clientRect.Size(), newSize);
-		m_DIBOffsets = m_bZoomMode ? (unlimitedOffsets - m_offsets) : CPoint(0, 0);
+		//ignore this 'm_bZoomMode' thingy, which somehow disables panning!
+		//m_DIBOffsets = m_bZoomMode ? (unlimitedOffsets - m_offsets) : CPoint(0, 0);
+		m_DIBOffsets = unlimitedOffsets;
 
 		// Clip to client rectangle and request the DIB
 		CSize clippedSize(min(m_clientRect.Width(), newSize.cx), min(m_clientRect.Height(), newSize.cy));
@@ -519,7 +523,9 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			// The DIB is also blitted into the memory DCs of the panels
 			memDCMgr.BlitImageToMemDC(pDIBData, &bmInfo, ptDIBStart, m_pNavPanelCtl->CurrentBlendingFactor());
 		}
-		if (m_bZoomMode) m_offsets = unlimitedOffsets;
+		//ignore this 'm_bZoomMode' thingy, which somehow disables panning!
+		//if (m_bZoomMode) m_offsets = unlimitedOffsets;
+		m_offsets = unlimitedOffsets; //restore pan offsets possibly 'trashed'/limited by Helpers::LimitOffsets()
 	}
 
 	// Restore the old clipping region by adding the excluded rectangles again
@@ -755,7 +761,9 @@ LRESULT CMainDlg::OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 				m_bZoomMode = true;
 				m_dStartZoom = m_dZoom;
 				m_nCapturedX = m_nMouseX; m_nCapturedY = m_nMouseY;
-			} else if ((bCtrl || !bDraggingRequired || bHandleByCropping) && !bTransformPanelShown) {
+			} else if (m_bSelectMode &&
+				((bCtrl || !bDraggingRequired || bHandleByCropping) && !bTransformPanelShown))
+			{
 				m_pCropCtl->StartCropping(pointClicked.x, pointClicked.y);
 			} else if (!bTransformPanelShown) {
 				StartDragging(pointClicked.x, pointClicked.y, false);
@@ -2003,6 +2011,8 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 				SetDesktopWallpaper::SetProcessedImageAsWallpaper(*m_pCurrentImage);
 			}
 			break;
+		case IDC_SELECT_MODE:
+			m_bSelectMode = !m_bSelectMode;
 	}
 	if (nCommand >= IDM_FIRST_USER_CMD && nCommand <= IDM_LAST_USER_CMD) {
 		ExecuteUserCommand(HelpersGUI::FindUserCommand(nCommand - IDM_FIRST_USER_CMD));
@@ -2610,8 +2620,9 @@ void CMainDlg::PerformZoom(double dValue, bool bExponent, bool bZoomToMouse, boo
 }
 
 bool CMainDlg::PerformPan(int dx, int dy, bool bAbsolute) {
-	if ((m_virtualImageSize.cx > 0 && m_virtualImageSize.cx > m_clientRect.Width()) ||
-		(m_virtualImageSize.cy > 0 && m_virtualImageSize.cy > m_clientRect.Height())) {
+	//Remove these checks which disables panning!
+	//if ((m_virtualImageSize.cx > 0 && m_virtualImageSize.cx > m_clientRect.Width()) ||
+	//	(m_virtualImageSize.cy > 0 && m_virtualImageSize.cy > m_clientRect.Height())) {
 		if (bAbsolute) {
 			m_offsets = CPoint(dx, dy);
 		} else {
@@ -2621,8 +2632,8 @@ bool CMainDlg::PerformPan(int dx, int dy, bool bAbsolute) {
 
 		this->Invalidate(FALSE);
 		return true;
-	}
-	return false;
+	//}
+	//return false;
 }
 
 void CMainDlg::ZoomToSelection() {
