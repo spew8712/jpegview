@@ -1,6 +1,6 @@
 # JPEGView - Image Viewer and Editor
 
-This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the slideshow aspect of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support has been added for viewing (include animated AVIF), and 'save as AVIF'. 
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the _**slideshow aspect and ease of use**_ thereof of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support has been added for viewing (include animated AVIF), and 'save as AVIF'. 
 
 ## Description
 
@@ -13,6 +13,12 @@ Features
 * Movie mode to play folder of JPEGs as movie
 
 (summary from the original SourceForge project page)
+
+Mod features
+* Slideshow stuff - see next section.
+* Add read/write AVIF, include animated. Dev notes below.
+* Fix: pan image by mouse drag, or SHIFT+<arrow keys>
+* Default to panning mode. Old 'Selection mode' can be toggled via remapped 'S' hotkey.
 
 ### Slideshow
 
@@ -63,12 +69,32 @@ WARNING: errors will render all hotkeys disabled.
 
 Other useful customizations, refer to this [guide](https://yunharla.wixsite.com/softwaremmm/post/alternate-photo-viewer-for-windows-10-xnview)
 
+### Panning vs Selection Modes
+
+The new default is **panning** mode.
+* The old pesky 'Selection mode' can be toggled via 'S' hotkey.
+  * In selection mode, left mouse click on image starts rectangular area selection. Once a rectangular area is selected, popup menu offers options of
+        * cropping to selection, and
+        * zooming to selection.
+  * If you wish to select, hit 'S' to enter selection mode. It lasts until exit (hit 'S' again).
+  * Maybe there could be a revamped press 'Z' to 'quick zoom to selection' that works like this:
+    * Press 'Z'
+    * Drag to select area
+    * Once area is selected (mouse released), zoom immediately occurs.
+    * Resume in panning mode.
+    Basically don't ever stay in the pesky selection mode that leave ugly selection boxes defiling the image.
+* Changed hotkeys to reuse 'S' for toggling Selection mode.
+  * Dunno what 'save/delete param DB' are, but presuming they're infrequently used junk features, their hotkeys 'S' & 'D' are changed to ALT+S/D.
+  Hence, update the KeyMap.txt for this change to take effect!
+
 ### Wishlist
 
+* Increase pinch-to-zoom amount!
+* Quick zoom to selection?
 * A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
 * Support uncommon 'crop' type AVIF?
 * Quality options for 'Save image'.
-* Save animated AVIF/WEBP?
+* Save animated WEBP?
 
 # Developer Notes
 
