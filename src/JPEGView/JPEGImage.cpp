@@ -632,8 +632,15 @@ void* CJPEGImage::InternalResize(void* pixels, int channels, EResizeFilter filte
 }
 
 CPoint CJPEGImage::ConvertOffset(CSize fullTargetSize, CSize clippingSize, CPoint targetOffset) {
-	int nStartX = (fullTargetSize.cx - clippingSize.cx)/2 - targetOffset.x;
-	int nStartY = (fullTargetSize.cy - clippingSize.cy)/2 - targetOffset.y;
+	//always show top left corner of image if said corner is in view (i.e. offset x >= 0, offset y >= 0)
+	int nStartX = 0;
+	int nStartY = 0;
+	//only 'optimize' by starting further into image by offset amount (hence clipping)
+	// when top left corner is out of view (i.e. offset x < 0 and/or offset y < 0)
+	if (targetOffset.x < 0)
+		nStartX = -targetOffset.x;
+	if (targetOffset.y < 0)
+		nStartY = -targetOffset.y;
 	return CSize(nStartX, nStartY);
 }
 
