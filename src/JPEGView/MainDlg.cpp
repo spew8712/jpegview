@@ -487,8 +487,71 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		m_DIBOffsets = unlimitedOffsets;
 
 		// Clip to client rectangle and request the DIB
-		CSize clippedSize(min(m_clientRect.Width(), newSize.cx), min(m_clientRect.Height(), newSize.cy));
+		int nWinWidth = m_clientRect.Width(),
+			nWinHeight = m_clientRect.Height();
+		CSize clippedSize(min(nWinWidth, newSize.cx), min(nWinHeight, newSize.cy));
 		CPoint offsetsInImage = m_pCurrentImage->ConvertOffset(newSize, clippedSize, m_offsets);
+		if (nWinWidth < newSize.cx) //wider image than window (i.e. viewport) width
+		{
+			//clippedSize.cx = nWinWidth;
+			//x coordinate of [left] edge of window in iamge coordinates system:
+			/*
+			* [   (  |  )   ]  <= [image] larger than (window)
+			* [ ( | )       ]  <= x offset = -ve
+			* [       ( | ) ]  <= x offset = +ve
+			*
+			* Example of (window) out of left edge of [image]:
+			* ( |[)    |      ]
+			* ^^ <= to subtract this width looking at nothing.
+			*   ^-- to set offsetsInImage.x to this x=0 edge.
+			* 
+			* Example of (window) out of right edge of [image]:
+			* [      |     (]| )
+			*                 ^^ <= to subtract this width looking at nothing.
+			*              ^-- assume ConvertOffset's output of x is correct, so no need to change.
+			*/
+			/*
+			* x coordinate of [left] edge of window in iamge coordinates system:
+			* x = centre of image - half width of window + x offset
+			*   = (newSize.cx / 2) - (nWinWidth / 2) + m_offsets.x
+			*   = ((newSize.cx - nWinWidth) / 2) + m_offsets.x
+			*/
+			int x = (newSize.cx - nWinWidth) / 2 + m_offsets.x;
+			if (x < 0)
+			{
+				//left side of window has gone beyond left edge of image, looking at partial nothingness.
+				//hence, adjust these:
+				offsetsInImage.x = 0; //can only see from leftmost of image i.e. x = 0
+				clippedSize.cx -= -x; //subtract the width in nothingness
+			}
+			//[right] edge:
+			x = (newSize.cx + nWinWidth) / 2 + m_offsets.x;
+			if (x > newSize.cx)
+			{
+				//right side of window has gone beyond right edge of image, looking at partial nothingness.
+				clippedSize.cx -= (x - newSize.cx); //hence, substract this width in nothingness
+			}
+		}
+		if (nWinHeight < newSize.cy) //taller image than window (i.e. viewport) height
+		{
+			//clippedSize.cy = nWinHeight;
+			//y coordinate of [top] edge of window in iamge coordinates system:
+			int y = (newSize.cy - nWinHeight) / 2 + m_offsets.y;
+			if (y < 0)
+			{
+				//top side of window has gone over top edge of image, looking at partial nothingness.
+				//hence, adjust these:
+				offsetsInImage.y = 0; //can only see from topmost of image i.e. y = 0
+				clippedSize.cy -= -y; //subtract the height in nothingness
+			}
+			//[bottom] edge:
+			y = (newSize.cy + nWinHeight) / 2 + m_offsets.y;
+			if (y > newSize.cy)
+			{
+				//bottom side of window has gone below bottom edge of image, looking at partial nothingness.
+				clippedSize.cy -= (y - newSize.cy); //hence, substract this height in nothingness
+			}
+		}
 
 		void* pDIBData;
 		if (m_pUnsharpMaskPanelCtl->IsVisible()) {
@@ -519,7 +582,12 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		// Paint the DIB
 		if (pDIBData != NULL) {
 			BITMAPINFO bmInfo;
-			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, m_DIBOffsets);
+			/*
+			* If image dimension is larger than window, that dimension should not be offset, so view from 0.
+			* Conversely, if image is 'smaller', the offset is needed.
+			*/
+			CPoint offset(nWinWidth > newSize.cx? m_DIBOffsets.x: 0, nWinHeight > newSize.cy? m_DIBOffsets.y:0);
+			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, offset);
 			// The DIB is also blitted into the memory DCs of the panels
 			memDCMgr.BlitImageToMemDC(pDIBData, &bmInfo, ptDIBStart, m_pNavPanelCtl->CurrentBlendingFactor());
 		}
