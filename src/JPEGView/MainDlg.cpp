@@ -422,6 +422,191 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	return TRUE;
 }
 
+/*
+* Adjust & compute clipped size and offsets given the desired panning offset 'ox'.
+* Allow panning image further out of view until 1 pixel remains on any edge.
+* 
+* It actually computes only 1 dimension (width or height) at a time,
+* so simply run AdjustClip twice with width inputs, then height inputs.
+* 
+* clippedSizeX: width (or height) of visible area of image in window
+* ww: width (or height) of window
+* wi: width (or height) of image
+* ox: panning x (or y) offset  <- to limit if needed
+* oxi: x (or y) of top left corner of image visible in window <- to compute
+* cx:  x (or y) of top left corner in window of top left pixel of image visible <- to compute
+*/
+void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
+{
+	ox = -ox; //convention inverted, so negative offset and restore before return
+	//top-left (TL) corner of win offset'd (in img coords sys)
+	int tlx = 0, brx = 0;
+	if (wi >= ww)
+	{
+		// Before offset:
+		//   clippedSize.cx == ww
+		//   ox: unknown; to be computed
+		//   cx: 0
+		// 
+		// |<----wi---->|
+		//    |<-ww->|
+		// |<>| delta is width of this gap
+		// [  ( win  )  ]      Legend: (win) [img]
+		// 0  ^      ^                 0 => origin in img coords sys
+		//    |      |
+		//   tlx    brx
+
+		//left edge
+		int delta = (wi - ww) / 2;
+		tlx = delta + ox;
+		brx = tlx + ww;
+		oxi = tlx; //this is the leftmost pixel of img visible in win, i.e. @tlx
+		//check win going out of left edge of img
+		if (tlx < 0)
+		{
+			// (xx[  )  ] left edge of win out of left edge of img
+			// ^  0
+			// |
+			// tlx
+			oxi = 0; //cap it
+
+			//limit right edge of win to barely (1px) still in (left side of) img
+			//       |<-wi->|
+			// |<-ww->|
+			// (xxxxx[)     ]
+			// ^     0^
+			// |      |
+			// tlx    brx
+			if (brx < 1)
+			{
+				// (  ) [   ]  -change-> ( [) ]
+				ox = -(ww - 1); //cap to limit
+				clippedSizeX = 1;
+				cx = ww - 1;
+			}
+			else
+			{
+				//remain as ( [ ) ]
+				clippedSizeX += tlx; //subtract out of view area marked 'xxxxx'; -(-tlx) => +tlx
+				cx = -tlx;
+			}
+		}
+
+		//right edge
+		if (brx > wi)
+		{
+			// |<-wi->|
+			//    |<-ww->|
+			// [  (   ]xx) right edge of win out of right edge of img
+			// 0         ^
+			//           |
+			//          brx
+
+			//limit to left edge of win barely (1px) still in (right side of) img
+			// |<-wi->|
+			//       |<-ww->|
+			// [     (]XXXXX)
+			// 0     ^^
+			//       ||
+			//       |ww
+			//      tlx
+			if (tlx >= wi)
+			{
+				ox = wi - 1; //cap to limit
+				oxi = wi - 1; //cap
+				clippedSizeX = 1;
+			}
+			else
+			{
+				clippedSizeX -= (brx - wi); //subtract out of view area marked 'xx'
+			}
+		}
+	}
+	else //wi < ww
+	{
+		//   clippedSize.cx == wi
+		//   ox: unknown; to be computed
+		//   cx: 0
+		// 
+		// Before offset:
+		//    |<-wi->|
+		// |<----ww---->|
+		// |<>| delta is width of this gap
+		// (  [ img  ]  )
+		// ^  0         ^
+		// |            |
+		//tlx          brx
+
+		int delta = (ww - wi) / 2;
+		tlx = -delta + ox;
+		brx = tlx + ww;
+		cx = -tlx;
+		//oxi = 0;
+
+		//check img going out of left edge of win
+		if (tlx > 0)
+		{
+			// [xx(  ]  ) left edge of img out of left edge of win
+			// 0  ^
+			//    |
+			//   tlx
+			cx = 0;
+			oxi = tlx; //leftmost pixel of img visible in win is @tlx, instead of 0
+
+			//limit right edge of image to barely (1px) still in (left side of) win
+			//       |<-ww->|
+			// |<-wi->|
+			// [XXXXX(]     )
+			// 0     ^      ^
+			//       |      |
+			//      tlx    brx
+			if (tlx >= wi)
+			{
+				// [   ] ( )  -change-> [ (] )
+				ox = wi - 1; //cap to limit
+				oxi = ox; //cap
+				clippedSizeX = 1;
+			}
+			else
+			{
+				//remain as [ ( ] )
+				clippedSizeX -= tlx; //subtract out of view area marked 'xx'; -(-tlx) => +tlx
+			}
+		}
+
+		//check img going out of right edge of win
+		if (brx < wi)
+		{
+			//       |<-wi->|
+			// |<--ww-->|
+			// (     [  )xxx] right edge of img out of right edge of win
+			// ^     0  ^
+			// |        |
+			//tlx      brx
+			cx = -tlx;
+
+			//limit left edge of img to barely (1px) still in (right side of) win
+			//         |<-wi->|
+			// |<--ww-->|
+			// (       [)XXXXX] left edge of img out of left edge of win
+			// ^       0^
+			// |        |
+			//tlx      brx
+			if (brx <= 0)
+			{
+				cx = ww -1;
+				ox = -ww + 1; //cap to limit
+				clippedSizeX = 1;
+			}
+			else
+			{
+				clippedSizeX -= wi - brx; //subtract out of view area marked 'XXXXX'
+			}
+		}
+	}
+	ox = -ox;
+}
+
 LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	static bool s_bFirst = true;
@@ -480,78 +665,33 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			   (m_isUserFitToScreen ? m_autoZoomFitToScreen : GetAutoZoomMode()), m_dZoom);
 		m_virtualImageSize = newSize;
 		m_dRealizedZoom = (double)newSize.cx / m_pCurrentImage->OrigSize().cx;
-		CPoint unlimitedOffsets = m_offsets;
+		/*
+		* Replace functionality of LimitOffsets et al with all-in-one AdjustClip
+		*
+		CPoint unlimitedOffsets = m_offsets; //no longer needed, LimitOffsets()'s aggressive limits have been removed 
 		m_offsets = Helpers::LimitOffsets(m_offsets, m_clientRect.Size(), newSize);
 		//ignore this 'm_bZoomMode' thingy, which somehow disables panning!
-		//m_DIBOffsets = m_bZoomMode ? (unlimitedOffsets - m_offsets) : CPoint(0, 0);
+		m_DIBOffsets = m_bZoomMode ? (unlimitedOffsets - m_offsets) : CPoint(0, 0);
 		m_DIBOffsets = unlimitedOffsets;
+		*/
 
 		// Clip to client rectangle and request the DIB
+		//let's compute offset limits, clipping area, etc. together!
 		int nWinWidth = m_clientRect.Width(),
-			nWinHeight = m_clientRect.Height();
-		CSize clippedSize(min(nWinWidth, newSize.cx), min(nWinHeight, newSize.cy));
-		CPoint offsetsInImage = m_pCurrentImage->ConvertOffset(newSize, clippedSize, m_offsets);
-		if (nWinWidth < newSize.cx) //wider image than window (i.e. viewport) width
-		{
-			//clippedSize.cx = nWinWidth;
-			//x coordinate of [left] edge of window in iamge coordinates system:
-			/*
-			* [   (  |  )   ]  <= [image] larger than (window)
-			* [ ( | )       ]  <= x offset = -ve
-			* [       ( | ) ]  <= x offset = +ve
-			*
-			* Example of (window) out of left edge of [image]:
-			* ( |[)    |      ]
-			* ^^ <= to subtract this width looking at nothing.
-			*   ^-- to set offsetsInImage.x to this x=0 edge.
-			* 
-			* Example of (window) out of right edge of [image]:
-			* [      |     (]| )
-			*                 ^^ <= to subtract this width looking at nothing.
-			*              ^-- assume ConvertOffset's output of x is correct, so no need to change.
-			*/
-			/*
-			* x coordinate of [left] edge of window in iamge coordinates system:
-			* x = centre of image - half width of window + x offset
-			*   = (newSize.cx / 2) - (nWinWidth / 2) + m_offsets.x
-			*   = ((newSize.cx - nWinWidth) / 2) + m_offsets.x
-			*/
-			int x = (newSize.cx - nWinWidth) / 2 + m_offsets.x;
-			if (x < 0)
-			{
-				//left side of window has gone beyond left edge of image, looking at partial nothingness.
-				//hence, adjust these:
-				offsetsInImage.x = 0; //can only see from leftmost of image i.e. x = 0
-				clippedSize.cx -= -x; //subtract the width in nothingness
-			}
-			//[right] edge:
-			x = (newSize.cx + nWinWidth) / 2 + m_offsets.x;
-			if (x > newSize.cx)
-			{
-				//right side of window has gone beyond right edge of image, looking at partial nothingness.
-				clippedSize.cx -= (x - newSize.cx); //hence, substract this width in nothingness
-			}
-		}
-		if (nWinHeight < newSize.cy) //taller image than window (i.e. viewport) height
-		{
-			//clippedSize.cy = nWinHeight;
-			//y coordinate of [top] edge of window in iamge coordinates system:
-			int y = (newSize.cy - nWinHeight) / 2 + m_offsets.y;
-			if (y < 0)
-			{
-				//top side of window has gone over top edge of image, looking at partial nothingness.
-				//hence, adjust these:
-				offsetsInImage.y = 0; //can only see from topmost of image i.e. y = 0
-				clippedSize.cy -= -y; //subtract the height in nothingness
-			}
-			//[bottom] edge:
-			y = (newSize.cy + nWinHeight) / 2 + m_offsets.y;
-			if (y > newSize.cy)
-			{
-				//bottom side of window has gone below bottom edge of image, looking at partial nothingness.
-				clippedSize.cy -= (y - newSize.cy); //hence, substract this height in nothingness
-			}
-		}
+			nWinHeight = m_clientRect.Height(),
+			nImageWidth = newSize.cx,
+			nImageHeight = newSize.cy,
+			clippedSizeX = min(nWinWidth, nImageWidth), //<- need to check if clippedSize has to be reduced
+			clippedSizeY = min(nWinHeight, nImageHeight),
+
+			ox = m_offsets.x, oy = m_offsets.y, //offsets in win coords system
+			cx = 0, cy = 0, //top-left (TL) corner of win with image visible
+			oxi = 0, oyi = 0; //offsets in image coords system //<- need this to crop visible area from image
+		AdjustClip(clippedSizeX, nWinWidth, nImageWidth, ox, oxi, cx);
+		AdjustClip(clippedSizeY, nWinHeight, nImageHeight, oy, oyi, cy);
+		CPoint offsetsInImage(oxi, oyi);
+		CSize clippedSize(clippedSizeX, clippedSizeY);
+		m_offsets.x = ox; m_offsets.y = oy;
 
 		void* pDIBData;
 		if (m_pUnsharpMaskPanelCtl->IsVisible()) {
@@ -582,18 +722,13 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		// Paint the DIB
 		if (pDIBData != NULL) {
 			BITMAPINFO bmInfo;
-			/*
-			* If image dimension is larger than window, that dimension should not be offset, so view from 0.
-			* Conversely, if image is 'smaller', the offset is needed.
-			*/
-			CPoint offset(nWinWidth > newSize.cx? m_DIBOffsets.x: 0, nWinHeight > newSize.cy? m_DIBOffsets.y:0);
-			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, offset);
+			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, CPoint(cx, cy));
 			// The DIB is also blitted into the memory DCs of the panels
 			memDCMgr.BlitImageToMemDC(pDIBData, &bmInfo, ptDIBStart, m_pNavPanelCtl->CurrentBlendingFactor());
 		}
 		//ignore this 'm_bZoomMode' thingy, which somehow disables panning!
 		//if (m_bZoomMode) m_offsets = unlimitedOffsets;
-		m_offsets = unlimitedOffsets; //restore pan offsets possibly 'trashed'/limited by Helpers::LimitOffsets()
+		//m_offsets = unlimitedOffsets; //restore pan offsets possibly 'trashed'/limited by Helpers::LimitOffsets()
 	}
 
 	// Restore the old clipping region by adding the excluded rectangles again

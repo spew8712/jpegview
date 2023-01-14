@@ -227,6 +227,11 @@ namespace HelpersGUI {
 		}
 	}
 
+	/*
+	[Reworked]
+	Paint given 'pDIBData' image of 'dibSize' size to destination of 'targetArea' size at top-left point given by 'offset'.
+	Draws black borders if image does not fully cover destination area.
+	*/
 	CPoint DrawDIB32bppWithBlackBorders(CDC& dc, BITMAPINFO& bmInfo, void* pDIBData, HBRUSH backBrush, const CRect& targetArea, CSize dibSize, CPoint offset) {
 		memset(&bmInfo, 0, sizeof(BITMAPINFO));
 		bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -235,31 +240,32 @@ namespace HelpersGUI {
 		bmInfo.bmiHeader.biPlanes = 1;
 		bmInfo.bmiHeader.biBitCount = 32;
 		bmInfo.bmiHeader.biCompression = BI_RGB;
-		int xDest = (targetArea.Width() - dibSize.cx) / 2 + offset.x;
-		int yDest = (targetArea.Height() - dibSize.cy) / 2 + offset.y;
-
-		// remaining client area is painted black
-		if (xDest > 0) {
-			CRect r(0, 0, xDest, targetArea.Height());
+	
+		int nWindowWidth = targetArea.Width(),
+			nWindowHeight = targetArea.Height();
+		if (offset.x > 0)
+		{
+			CRect r(0, 0, offset.x, nWindowHeight);
 			dc.FillRect(&r, backBrush);
 		}
-		if (xDest + dibSize.cx < targetArea.Width()) {
-			CRect r(xDest + dibSize.cx, 0, targetArea.Width(), targetArea.Height());
+		if ((offset.x + dibSize.cx) < nWindowWidth)
+		{
+			CRect r(offset.x + dibSize.cx, 0, nWindowWidth, nWindowHeight);
 			dc.FillRect(&r, backBrush);
 		}
-		if (yDest > 0) {
-			CRect r(xDest, 0, xDest + dibSize.cx, yDest);
+		if (offset.y > 0)
+		{
+			CRect r(0, 0, nWindowWidth, offset.y);
 			dc.FillRect(&r, backBrush);
 		}
-		if (yDest + dibSize.cy < targetArea.Height()) {
-			CRect r(xDest, yDest + dibSize.cy, xDest + dibSize.cx, targetArea.Height());
+		if ((offset.y + dibSize.cy) < nWindowHeight)
+		{
+			CRect r(0, offset.y + dibSize.cy, nWindowWidth, nWindowHeight);
 			dc.FillRect(&r, backBrush);
 		}
-
-		dc.SetDIBitsToDevice(xDest, yDest, dibSize.cx, dibSize.cy, 0, 0, 0, dibSize.cy, pDIBData, 
+		dc.SetDIBitsToDevice(offset.x, offset.y, dibSize.cx, dibSize.cy, 0, 0, 0, dibSize.cy, pDIBData,
 			&bmInfo, DIB_RGB_COLORS);
-
-		return CPoint(xDest, yDest);
+		return CPoint(offset);
 	}
 
 	CString GetINIFileSaveConfirmationText(const CImageProcessingParams& procParams, 
