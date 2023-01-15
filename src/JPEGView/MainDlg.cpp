@@ -172,7 +172,8 @@ static EProcessingFlags _SetLandscapeModeFlags(EProcessingFlags eFlags) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 CMainDlg::CMainDlg(bool bForceFullScreen):
-	m_bSelectMode(false)
+	m_bSelectMode(false),
+	m_bSingleZoom(false)
 {
 	CSettingsProvider& sp = CSettingsProvider::This();
 
@@ -963,8 +964,9 @@ LRESULT CMainDlg::OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 				m_bZoomMode = true;
 				m_dStartZoom = m_dZoom;
 				m_nCapturedX = m_nMouseX; m_nCapturedY = m_nMouseY;
-			} else if (m_bSelectMode &&
-				((bCtrl || !bDraggingRequired || bHandleByCropping) && !bTransformPanelShown))
+			} else if (m_bSingleZoom
+				//Removed bCtrl and bDraggingRequired as since it's now a 'dedicated' selection mode
+				|| ((m_bSelectMode || bHandleByCropping) && !bTransformPanelShown))
 			{
 				m_pCropCtl->StartCropping(pointClicked.x, pointClicked.y);
 			} else if (!bTransformPanelShown) {
@@ -986,7 +988,13 @@ LRESULT CMainDlg::OnLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 	} else if (m_bDragging) {
 		EndDragging();
 	} else if (m_pCropCtl->IsCropping()) {
-		m_pCropCtl->EndCropping();
+		m_pCropCtl->EndCropping(m_bSingleZoom);
+		if (m_bSingleZoom)
+		{
+			m_bSingleZoom = false;
+			ZoomToSelection();
+			m_pCropCtl->AbortCropping();
+		}
 	} else {
 		m_pPanelMgr->OnMouseLButton(MouseEvent_BtnUp, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 	}
@@ -2220,6 +2228,10 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDC_SELECT_MODE:
 			m_bSelectMode = !m_bSelectMode;
+			break;
+		case IDC_SINGLE_ZOOM:
+			m_bSingleZoom = true;
+			break;
 	}
 	if (nCommand >= IDM_FIRST_USER_CMD && nCommand <= IDM_LAST_USER_CMD) {
 		ExecuteUserCommand(HelpersGUI::FindUserCommand(nCommand - IDM_FIRST_USER_CMD));

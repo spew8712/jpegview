@@ -148,7 +148,7 @@ bool CCropCtl::DoCropping(int nX, int nY) {
 	return m_bTrackingMode;
 }
 
-void CCropCtl::EndCropping() {
+void CCropCtl::EndCropping(bool bDoZoom) {
 	if (m_eHitHandle != HH_None) {
 		m_bDontStartCropOnNextClick = true;
 		m_bDoTracking = false;
@@ -171,7 +171,8 @@ void CCropCtl::EndCropping() {
 	}
 
 	// Display the crop menu
-	ShowCropContextMenu();
+	if (!bDoZoom)
+		ShowCropContextMenu();
 }
 
 void CCropCtl::AbortCropping() {

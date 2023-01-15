@@ -115,6 +115,7 @@
 #define IDM_SHARPEN_DEC		15301			// decrease sharpness
 #define IDM_CONTEXT_MENU	16000			// display context menu
 #define IDC_SELECT_MODE     1016
+#define IDC_SINGLE_ZOOM     1017
 
 // This section contains the key map. A small number of keys is predefined and cannot be changed:
 // F1 for help, Alt+F4 for exit, 0..9 for slide show
@@ -196,7 +197,7 @@ N                       IDM_SORT_NAME
 Ctrl+M                  IDM_MARK_FOR_TOGGLE
 Ctrl+Shift+M            IDM_TOUCH_IMAGE
 M                       IDM_SORT_MOD_DATE
-Z                       IDM_SORT_RANDOM
+Alt+Z                   IDM_SORT_RANDOM
 Ctrl+S                  IDM_SAVE_ALLOW_NO_PROMPT
 Ctrl+Shift+S            IDM_SAVE_SCREEN
 Alt+S                   IDM_SAVE_PARAM_DB
@@ -215,3 +216,4 @@ W                       IDM_EXPLORE
 Shift+Space             IDM_SLIDESHOW_1
 Alt+Shift+R             IDM_SLIDESHOW_CUSTOM
 S                       IDC_SELECT_MODE
+Z                       IDC_SINGLE_ZOOM
