@@ -1,6 +1,6 @@
 # JPEGView - Image Viewer and Editor
 
-This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the _**slideshow aspect and ease of use**_ thereof of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support has been added for viewing (include animated AVIF), and 'save as AVIF'. 
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the _**slideshow aspect and ease of use**_ thereof of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support (include animated AVIF) has been added for viewing, and 'save as AVIF'. 
 
 ## Description
 
@@ -16,8 +16,7 @@ Features
 
 Mod features
 * Slideshow stuff - see next section.
-* Add read/write AVIF, include animated. Dev notes below.
-* Fix: pan image by mouse drag, or SHIFT+<arrow keys>
+* Read/write AVIF, include animated. Dev notes below.
 * Default to panning mode. Old 'Selection mode' can be toggled via remapped 'S' hotkey.
 
 ### Slideshow
@@ -68,6 +67,7 @@ WARNING: errors will render all hotkeys disabled.
 * The bottom section are the hotkey mappings to the above commands.
 
 Other useful customizations, refer to this [guide](https://yunharla.wixsite.com/softwaremmm/post/alternate-photo-viewer-for-windows-10-xnview)
+* Suggest increasing zoom amount by increasing `MouseWheelZoomSpeed` to 1.5 from 1.0.
 
 ### Panning vs Selection Modes
 
@@ -86,11 +86,14 @@ The new default is **panning** mode.
 * Changed hotkeys to reuse 'S' for toggling Selection mode.
   * Dunno what 'save/delete param DB' are, but presuming they're infrequently used junk features, their hotkeys 'S' & 'D' are changed to ALT+S/D.
   Hence, update the KeyMap.txt for this change to take effect!
+* Added ALT+SHIFT+<arrow keys> for forcing 'fine grain' panning.
+  * SHIFT+<arrow keys> panning now scales up proportionally to larger panning amounts when image is larger than window.
+* Can pan till 1 pixels on any edge.
+  * If you can't find your out of view image, try zooming, and using the zoom mini-map to pan our image back into view.
 
 ### Wishlist
 
-* Increase pinch-to-zoom amount!
-* Quick zoom to selection?
+* Quick zoom to selection? via 'Z' hotkey. Like activating selection mode, but select happens only once, and it zooms and auto-offs.
 * A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
 * Support uncommon 'crop' type AVIF?
 * Quality options for 'Save image'.

@@ -195,7 +195,7 @@ public:
 	void ReloadImage(bool keepParameters, bool updateWindow = true);
 	void ResetZoomTo100Percents(bool bZoomToMouse);
 	void ResetZoomToFitScreen(bool bFillWithCrop, bool bAllowEnlarge, bool bAdjustWindowSize);
-	bool PerformPan(int dx, int dy, bool bAbsolute);
+	bool PerformPan(int dx, int dy, bool bAbsolute, bool bPreventScaling = false);
 	void StartDragging(int nX, int nY, bool bDragWithZoomNavigator);
 	void DoDragging();
 	void EndDragging();

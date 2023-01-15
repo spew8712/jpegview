@@ -429,24 +429,22 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 * It actually computes only 1 dimension (width or height) at a time,
 * so simply run AdjustClip twice with width inputs, then height inputs.
 * 
-* clippedSizeX: width (or height) of visible area of image in window
+* clippedSizeX: width (or height) of visible area of image in viewing window.
+*               initially set to minimum of window or image.
 * ww: width (or height) of window
 * wi: width (or height) of image
-* ox: panning x (or y) offset  <- to limit if needed
-* oxi: x (or y) of top left corner of image visible in window <- to compute
-* cx:  x (or y) of top left corner in window of top left pixel of image visible <- to compute
+* ox: panning x (or y) offset  <- to limit if needed; +ve: image moved right, -ve: image moved left
+* oxi: x (or y) of top left corner of image visible in window <- to compute; must pass in zero
+* cx:  x (or y) of top left corner in window of top left pixel of image visible <- to compute; must pass in zero
 */
 void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 {
-	ox = -ox; //convention inverted, so negative offset and restore before return
+	clippedSizeX = min(ww, wi);
 	//top-left (TL) corner of win offset'd (in img coords sys)
 	int tlx = 0, brx = 0;
 	if (wi >= ww)
 	{
-		// Before offset:
-		//   clippedSize.cx == ww
-		//   ox: unknown; to be computed
-		//   cx: 0
+		// Before offset: img & win aligned along centre
 		// 
 		// |<----wi---->|
 		//    |<-ww->|
@@ -458,7 +456,7 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 
 		//left edge
 		int delta = (wi - ww) / 2;
-		tlx = delta + ox;
+		tlx = delta - ox;
 		brx = tlx + ww;
 		oxi = tlx; //this is the leftmost pixel of img visible in win, i.e. @tlx
 		//check win going out of left edge of img
@@ -471,16 +469,17 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 			oxi = 0; //cap it
 
 			//limit right edge of win to barely (1px) still in (left side of) img
-			//       |<-wi->|
+			//       |<--wi-->|
+			//       |<>| delta 
 			// |<-ww->|
-			// (xxxxx[)     ]
+			// (xxxxx[)       ]
 			// ^     0^
 			// |      |
 			// tlx    brx
 			if (brx < 1)
 			{
 				// (  ) [   ]  -change-> ( [) ]
-				ox = -(ww - 1); //cap to limit
+				ox = (ww - 1) + delta; //cap to limit
 				clippedSizeX = 1;
 				cx = ww - 1;
 			}
@@ -503,16 +502,17 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 			//          brx
 
 			//limit to left edge of win barely (1px) still in (right side of) img
-			// |<-wi->|
-			//       |<-ww->|
-			// [     (]XXXXX)
-			// 0     ^^
-			//       ||
-			//       |ww
-			//      tlx
+			// |<--wi-->|
+			//       |<>| delta 
+			//          |<-ww->|
+			// [       (]XXXXX)
+			// 0       ^^
+			//         ||
+			//         |ww
+			//        tlx
 			if (tlx >= wi)
 			{
-				ox = wi - 1; //cap to limit
+				ox = -(wi - 1) + delta; //cap to limit
 				oxi = wi - 1; //cap
 				clippedSizeX = 1;
 			}
@@ -524,11 +524,8 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 	}
 	else //wi < ww
 	{
-		//   clippedSize.cx == wi
-		//   ox: unknown; to be computed
-		//   cx: 0
-		// 
-		// Before offset:
+		// Before offset: img & win aligned along centre
+		//
 		//    |<-wi->|
 		// |<----ww---->|
 		// |<>| delta is width of this gap
@@ -538,7 +535,7 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 		//tlx          brx
 
 		int delta = (ww - wi) / 2;
-		tlx = -delta + ox;
+		tlx = -delta - ox;
 		brx = tlx + ww;
 		cx = -tlx;
 		//oxi = 0;
@@ -554,17 +551,18 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 			oxi = tlx; //leftmost pixel of img visible in win is @tlx, instead of 0
 
 			//limit right edge of image to barely (1px) still in (left side of) win
-			//       |<-ww->|
+			//       |<--ww-->|
+			//       |<>| delta 
 			// |<-wi->|
-			// [XXXXX(]     )
-			// 0     ^      ^
-			//       |      |
-			//      tlx    brx
+			// [XXXXX(]       )
+			// 0     ^        ^
+			//       |        |
+			//      tlx      brx
 			if (tlx >= wi)
 			{
 				// [   ] ( )  -change-> [ (] )
-				ox = wi - 1; //cap to limit
-				oxi = ox; //cap
+				ox = -(wi - 1) + delta; //cap to limit
+				oxi = -ox; //cap
 				clippedSizeX = 1;
 			}
 			else
@@ -587,6 +585,7 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 
 			//limit left edge of img to barely (1px) still in (right side of) win
 			//         |<-wi->|
+			//       |<>| delta 
 			// |<--ww-->|
 			// (       [)XXXXX] left edge of img out of left edge of win
 			// ^       0^
@@ -595,7 +594,7 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 			if (brx <= 0)
 			{
 				cx = ww -1;
-				ox = -ww + 1; //cap to limit
+				ox = -(- ww + 1) + delta; //cap to limit
 				clippedSizeX = 1;
 			}
 			else
@@ -604,7 +603,6 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 			}
 		}
 	}
-	ox = -ox;
 }
 
 LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -681,10 +679,11 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			nWinHeight = m_clientRect.Height(),
 			nImageWidth = newSize.cx,
 			nImageHeight = newSize.cy,
-			clippedSizeX = min(nWinWidth, nImageWidth), //<- need to check if clippedSize has to be reduced
-			clippedSizeY = min(nWinHeight, nImageHeight),
-
 			ox = m_offsets.x, oy = m_offsets.y, //offsets in win coords system
+
+			//clippedSize: dimensions of visible area of image in window
+			clippedSizeX = 0,
+			clippedSizeY = 0,
 			cx = 0, cy = 0, //top-left (TL) corner of win with image visible
 			oxi = 0, oyi = 0; //offsets in image coords system //<- need this to crop visible area from image
 		AdjustClip(clippedSizeX, nWinWidth, nImageWidth, ox, oxi, cx);
@@ -2194,7 +2193,12 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_PAN_RIGHT:
 		case IDM_PAN_LEFT:
 			PerformPan((nCommand == IDM_PAN_LEFT) ? PAN_STEP : (nCommand == IDM_PAN_RIGHT) ? -PAN_STEP : 0,
-				(nCommand == IDM_PAN_UP) ? PAN_STEP : (nCommand == IDM_PAN_DOWN) ? -PAN_STEP : 0, false);
+				(nCommand == IDM_PAN_UP) ? PAN_STEP : (nCommand == IDM_PAN_DOWN) ? -PAN_STEP : 0,
+				false,
+				//VK_MENU means ALT key. Hold to use 'fine grain' panning;
+				//Otherwise, allow scaling for larger panning movement for large images.
+				//These ALT+SHIFT+<arrow> hotkeys actually has to be added in KeyMap.txt
+				(::GetKeyState(VK_MENU) & 0x8000) != 0);
 			break;
 		case IDM_SHARPEN_INC:
 		case IDM_SHARPEN_DEC:
@@ -2547,7 +2551,8 @@ void CMainDlg::DoDragging() {
 		if (m_pZoomNavigatorCtl->IsDragging()) {
 			m_pZoomNavigatorCtl->DoDragging(nXDelta, nYDelta);
 		} else {
-			if (PerformPan(nXDelta, nYDelta, false)) {
+			//VK_MENU means ALT key. Hold to use 'fine grain' panning
+			if (PerformPan(nXDelta, nYDelta, false, (::GetKeyState(VK_MENU) & 0x8000) != 0)) {
 				m_nCapturedX = m_nMouseX;
 				m_nCapturedY = m_nMouseY;
 			}
@@ -2822,13 +2827,30 @@ void CMainDlg::PerformZoom(double dValue, bool bExponent, bool bZoomToMouse, boo
 	}
 }
 
-bool CMainDlg::PerformPan(int dx, int dy, bool bAbsolute) {
+bool CMainDlg::PerformPan(int dx, int dy, bool bAbsolute, bool bPreventScaling) {
 	//Remove these checks which disables panning!
 	//if ((m_virtualImageSize.cx > 0 && m_virtualImageSize.cx > m_clientRect.Width()) ||
 	//	(m_virtualImageSize.cy > 0 && m_virtualImageSize.cy > m_clientRect.Height())) {
 		if (bAbsolute) {
 			m_offsets = CPoint(dx, dy);
 		} else {
+			if (!bPreventScaling)
+			{
+				/*
+				* Scaling allowed, so increase pan amount by some factor
+				* proportional to how much bigger image is than view window.
+				* Only applies when image is larger than window (in either dimension).
+				*/
+				double dFactorX = m_virtualImageSize.cx / (double)(m_clientRect.Size().cx),
+					dFactorY = m_virtualImageSize.cy / (double)(m_clientRect.Size().cy),
+					dFactor = max(dFactorX, dFactorY);
+				if (dFactor > 1.0)
+				{
+					dFactor *= 1.2;
+					dx = (int)(dx * dFactor);
+					dy = (int)(dy * dFactor);
+				}
+			}
 			m_offsets = CPoint(m_offsets.x + dx, m_offsets.y + dy);
 		}
 		m_bUserPan = true;
