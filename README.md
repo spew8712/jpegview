@@ -308,4 +308,5 @@ Special thanks to [qbnu](https://github.com/qbnu) for adding additional codec su
 * Animated WebP
 * Animated PNG
 * JPEG XL with animation support
+
 Thanks to Alliance for Open Media for [libavif](https://github.com/AOMediaCodec/libavif/) + [aom](https://aomedia.googlesource.com/aom) for AVIF image read/write.
