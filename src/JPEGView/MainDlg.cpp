@@ -173,7 +173,8 @@ static EProcessingFlags _SetLandscapeModeFlags(EProcessingFlags eFlags) {
 
 CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_bSelectMode(false),
-	m_bSingleZoom(false)
+	m_bSingleZoom(false),
+	m_bUseCheckerboard(true)
 {
 	CSettingsProvider& sp = CSettingsProvider::This();
 
@@ -446,14 +447,15 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 	if (wi >= ww)
 	{
 		// Before offset: img & win aligned along centre
-		// 
+		//
+		// <--ox: +ve -ve -->
 		// |<----wi---->|
 		//    |<-ww->|
 		// |<>| delta is width of this gap
 		// [  ( win  )  ]      Legend: (win) [img]
-		// 0  ^      ^                 0 => origin in img coords sys
-		//    |      |
-		//   tlx    brx
+		// ^  ^      ^                 0 => origin in img coords sys
+		// |  |      |
+		// 0 tlx    brx --> coords w.r.t. [img]
 
 		//left edge
 		int delta = (wi - ww) / 2;
@@ -467,6 +469,8 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 			// ^  0
 			// |
 			// tlx
+			//
+			// |->| cx w.r.t. (win)
 			oxi = 0; //cap it
 
 			//limit right edge of win to barely (1px) still in (left side of) img
@@ -534,6 +538,7 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 		// ^  0         ^
 		// |            |
 		//tlx          brx
+		//-ve          +ve
 
 		int delta = (ww - wi) / 2;
 		tlx = -delta - ox;
@@ -552,18 +557,18 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 			oxi = tlx; //leftmost pixel of img visible in win is @tlx, instead of 0
 
 			//limit right edge of image to barely (1px) still in (left side of) win
-			//       |<--ww-->|
-			//       |<>| delta 
-			// |<-wi->|
-			// [XXXXX(]       )
-			// 0     ^        ^
-			//       |        |
-			//      tlx      brx
+			//          |<--ww-->|
+			// |<>| delta 
+			//    |<-wi->|
+			//    [XXXXX(]       )
+			//    0     ^        ^
+			//          |        |
+			//         tlx      brx
 			if (tlx >= wi)
 			{
 				// [   ] ( )  -change-> [ (] )
-				ox = -(wi - 1) + delta; //cap to limit
-				oxi = -ox; //cap
+				ox = -(wi - 1) - delta; //cap to limit
+				oxi = wi - 1; //cap
 				clippedSizeX = 1;
 			}
 			else
@@ -594,8 +599,8 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 			//tlx      brx
 			if (brx <= 0)
 			{
-				cx = ww -1;
-				ox = -(- ww + 1) + delta; //cap to limit
+				cx = ww - 1;
+				ox = (ww - 1) - delta; //cap to limit
 				clippedSizeX = 1;
 			}
 			else
@@ -1393,6 +1398,7 @@ LRESULT CMainDlg::OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		::EnableMenuItem(hMenuTrackPopup, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
 		::EnableMenuItem(hMenuTrackPopup, IDM_COPY, MF_BYCOMMAND | MF_GRAYED);
 		::EnableMenuItem(hMenuTrackPopup, IDM_COPY_FULL, MF_BYCOMMAND | MF_GRAYED);
+		::EnableMenuItem(hMenuTrackPopup, IDM_COPY_PATH, MF_BYCOMMAND | MF_GRAYED);
 		::EnableMenuItem(hMenuTrackPopup, IDM_SAVE_PARAM_DB, MF_BYCOMMAND | MF_GRAYED);
 		::EnableMenuItem(hMenuTrackPopup, IDM_CLEAR_PARAM_DB, MF_BYCOMMAND | MF_GRAYED);
 		::EnableMenuItem(hMenuTrackPopup, SUBMENU_POS_ZOOM, MF_BYPOSITION  | MF_GRAYED);
@@ -1406,6 +1412,8 @@ LRESULT CMainDlg::OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		if (m_bKeepParams || m_pCurrentImage->IsClipboardImage())
 			::EnableMenuItem(hMenuTrackPopup, IDM_SAVE_PARAM_DB, MF_BYCOMMAND | MF_GRAYED);
 		if (m_pCurrentImage->IsClipboardImage()) {
+			::EnableMenuItem(hMenuTrackPopup, IDM_EXPLORE, MF_BYCOMMAND | MF_GRAYED);  // cannot explore clipboard image
+			::EnableMenuItem(hMenuTrackPopup, IDM_COPY_PATH, MF_BYCOMMAND | MF_GRAYED);
 			::EnableMenuItem(hMenuModDate, IDM_TOUCH_IMAGE, MF_BYCOMMAND | MF_GRAYED);
 			::EnableMenuItem(hMenuModDate, IDM_TOUCH_IMAGE_EXIF, MF_BYCOMMAND | MF_GRAYED);
 		}
@@ -1531,7 +1539,9 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			OpenFileWithDialog(false, false);
 			break;
 		case IDM_EXPLORE:
-			ExploreFile();
+			if (!m_pCurrentImage->IsClipboardImage()) {
+				ExploreFile();
+			}
 			break;
 		case IDM_SAVE:
 		case IDM_SAVE_SCREEN:
@@ -1564,6 +1574,11 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			if (m_pCurrentImage != NULL) {
 				CClipboard::CopyFullImageToClipboard(this->m_hWnd, m_pCurrentImage, *m_pImageProcParams, CreateDefaultProcessingFlags(), m_pFileList->Current());
 				this->Invalidate(FALSE);
+			}
+			break;
+		case IDM_COPY_PATH:
+			if (m_pCurrentImage != NULL && !m_pCurrentImage->IsClipboardImage()) {
+				CClipboard::CopyPathToClipboard(this->m_hWnd, m_pCurrentImage, m_pFileList->Current());
 			}
 			break;
 		case IDM_PASTE:
@@ -2174,6 +2189,10 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_CONTRAST_INC:
 		case IDM_CONTRAST_DEC:
 			AdjustContrast((nCommand == IDM_CONTRAST_INC)? CONTRAST_INC : -CONTRAST_INC);
+			break;
+		case IDM_TOGGLE_TRANSPARENCY:
+			m_bUseCheckerboard = !m_bUseCheckerboard;
+			ReloadImage(true);
 			break;
 		case IDM_GAMMA_INC:
 		case IDM_GAMMA_DEC:
@@ -2970,6 +2989,7 @@ CProcessParams CMainDlg::CreateProcessParams(bool bNoProcessingAfterLoad) {
 			m_dZoomKept,
 			eAutoZoomMode,
 			m_offsetKept,
+			m_bUseCheckerboard,
 			_SetLandscapeModeParams(m_bLandscapeMode, *m_pImageProcParamsKept), 
 			SetProcessingFlag(_SetLandscapeModeFlags(m_eProcessingFlagsKept), PFLAG_NoProcessingAfterLoad, bNoProcessingAfterLoad));
 	} else {
@@ -2977,7 +2997,7 @@ CProcessParams CMainDlg::CreateProcessParams(bool bNoProcessingAfterLoad) {
 		CSettingsProvider& sp = CSettingsProvider::This();
 		return CProcessParams(nClientWidth, nClientHeight, 
 			CMultiMonitorSupport::GetMonitorRect(m_hWnd).Size(),
-			CRotationParams(0), 0, -1, eAutoZoomMode, CPoint(0, 0),
+			CRotationParams(0), 0, -1, eAutoZoomMode, CPoint(0, 0), m_bUseCheckerboard,
 			_SetLandscapeModeParams(m_bLandscapeMode, GetDefaultProcessingParams()),
 			SetProcessingFlag(_SetLandscapeModeFlags(GetDefaultProcessingFlags(m_bLandscapeMode)), PFLAG_NoProcessingAfterLoad, bNoProcessingAfterLoad));
 	}
@@ -3361,6 +3381,11 @@ bool CMainDlg::ImageToScreen(float & fX, float & fY) {
 	return true;
 }
 
+/// <summary>
+/// Get current filename/filepath
+/// </summary>
+/// <param name="bFileTitle">If true, returns only the filename part.  If false, returns complete filepath</param>
+/// <returns>Returns the filename either just the title or full filepath</returns>
 LPCTSTR CMainDlg::CurrentFileName(bool bFileTitle) {
 	if (m_pCurrentImage != NULL && m_pCurrentImage->IsClipboardImage()) {
 		return _T("Clipboard Image");
@@ -3451,7 +3476,9 @@ void CMainDlg::EditINIFile(bool bGlobalINI) {
 }
 
 void CMainDlg::UpdateWindowTitle() {
-	LPCTSTR sCurrentFileName = CurrentFileName(true);
+	bool bShowFullPathInTitle  = CSettingsProvider::This().ShowFullPathInTitle();
+	LPCTSTR sCurrentFileName = CurrentFileName(!bShowFullPathInTitle);
+
 	if (sCurrentFileName == NULL || m_pCurrentImage == NULL) {
 		this->SetWindowText(_T("JPEGView"));
 	} else {

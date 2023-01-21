@@ -32,6 +32,7 @@ public:
 	bool ShowFileName() { return m_bShowFileName; }
 	bool ShowFileInfo() { return m_bShowFileInfo; }
 	bool ShowEXIFDateInTitle() { return m_bShowEXIFDateInTitle; }
+	bool ShowFullPathInTitle() { return m_bShowFullPathInTitle; }
 	bool ShowHistogram() { return m_bShowHistogram; }
 	bool ShowJPEGComments() { return m_bShowJPEGComments; }
 	bool ShowNavPanel() { return m_bShowNavPanel; }
@@ -196,6 +197,7 @@ private:
 	bool m_bShowFileName;
 	bool m_bShowFileInfo;
 	bool m_bShowEXIFDateInTitle;
+	bool m_bShowFullPathInTitle;
 	bool m_bShowHistogram;
 	bool m_bShowJPEGComments;
 	bool m_bShowNavPanel;
@@ -313,7 +315,7 @@ private:
 	bool GetBool(LPCTSTR sKey, bool bDefault);
 	CRect GetRect(LPCTSTR sKey, const CRect& defaultRect);
 	CSize GetSize(LPCTSTR sKey, const CSize& defaultSize);
-	COLORREF GetColor(LPCTSTR sKey, COLORREF defaultColor);
+	COLORREF GetColor(LPCTSTR sKey, COLORREF defaultColor, bool bReverse = false);
 	Helpers::EAutoZoomMode GetAutoZoomMode(LPCTSTR sKey, Helpers::EAutoZoomMode defaultZoomMode);
 	LPCTSTR GetAutoZoomModeString(Helpers::EAutoZoomMode autoZoomMode);
 	void WriteString(LPCTSTR sKey, LPCTSTR sString);

@@ -92,6 +92,7 @@ private:
 	CString m_sLastFileName; // Only for GDI+ files
 	CString m_sLastWebpFileName; // Only for WebP files
 	CString m_sLastPngFileName; // Only for Png files
+	CString m_sLastJxlFileName; // Only for animated JPEG XL files
 	CString m_sLastAvifFileName; // Only for AVIF files
 	avifDecoder *m_avifDecoder;
 
@@ -100,14 +101,17 @@ private:
 	void DeleteCachedGDIBitmap();
 	void DeleteCachedWebpDecoder();
 	void DeleteCachedPngDecoder();
+	void DeleteCachedJxlDecoder();
 	void DeleteCachedAvifDecoder();
 
+	void BlendAlpha(uint32* pImage32, int nWidth, int nHeight, bool bUseCheckerboard);
 	void ProcessReadJPEGRequest(CRequest * request);
 	void ProcessReadPNGRequest(CRequest* request);
 	void ProcessReadAVIFRequest(CRequest* request);
 	void ProcessReadBMPRequest(CRequest * request);
 	void ProcessReadTGARequest(CRequest * request);
 	void ProcessReadWEBPRequest(CRequest * request);
+	void ProcessReadJXLRequest(CRequest* request);
 	void ProcessReadRAWRequest(CRequest * request);
 	void ProcessReadGDIPlusRequest(CRequest * request);
 	void ProcessReadWICRequest(CRequest* request);

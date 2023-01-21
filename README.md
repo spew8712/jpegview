@@ -4,21 +4,51 @@ This is a mod of [sylikc's official re-release of JPEGView](https://github.com/s
 
 ## Description
 
-JPEGView is a lean, fast and highly configurable viewer/editor for AVIF (_beta_), JPEG, BMP, PNG, WEBP, TGA, GIF and TIFF images with a minimal GUI. Basic on-the-fly image processing is provided - allowing adjusting typical parameters as sharpness, color balance, rotation, perspective, contrast and local under-/overexposure.
+JPEGView is a lean, fast and highly configurable viewer/editor with a minimal GUI.
+Basic on-the-fly image processing is provided - allowing adjusting typical parameters as sharpness, color balance, rotation, perspective, contrast and local under-/overexposure.
 
-Features
+### Formats Supported
+
+JPEGView has built-in support the following formats:
+
+* Popular: JPEG, GIF
+* Lossless: BMP, PNG, TIFF
+* Web: WEBP, JXL, AVIF (common subset)
+* Legacy: TGA, WDP, HDP, JXR
+* Camera RAW formats:
+  * Adobe (DNG), Canon (CRW, CR2), Nikon (NEF, NRW), Sony (ARW, SR2)
+  * Olympus (ORF), Panasonic (RW2), Fujifilm (RAF)
+  * Sigma (X3F), Pentax (PEF),  Minolta (MRW), Kodak (KDC, DCR)
+
+Many additional formats are supported by Windows Imaging Component (WIC)
+
+### Basic Image Editor
+
+Basic on-the-fly image processing is provided - allowing adjusting typical parameters:
+
+* sharpness
+* color balance
+* rotation
+* perspective
+* contrast
+* local under-/over-exposure
+
+### Other Features:
+
 * Small and fast, uses SSE2 and up to 4 CPU cores
 * High quality resampling filter, preserving sharpness of images
 * Basic image processing tools can be applied realtime during viewing
-* Movie mode to play folder of JPEGs as movie
+* Movie/Slideshow mode - to play folder of JPEGs as movie
 
-(summary from the original SourceForge project page)
-
-Mod features
+**Mod features**
 * Slideshow stuff - see next section.
-* Read/write AVIF, include animated. Dev notes below.
-* Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
-  * Quick zoom to selection mode via remapped hotkey 'Z'.
+* Read/write (most common) AVIF, include animated. Dev notes below.
+*  (_beta_) Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
+   * Quick zoom to selection mode via remapped hotkey 'Z'.
+   * Known issue: zoom/crop selection is messed up and pending fix.
+*  Toggle transparent image background between checkerboard pattern (default) and solid background colour, via hotkey: SHIFT+V.
+
+(Last sync'd up to original's ~8 Jan 2023 updates, with JXL support).
 
 ### Slideshow
 
@@ -95,13 +125,19 @@ The new default is **panning** mode.
 * Can pan till 1 pixels on any edge.
   * If you can't find your out of view image, try zooming, and using the zoom mini-map to pan our image back into view.
 * _**Known issue(s)**_:
-  * Owing to expanded panning, crop/zoom to selection sometimes gets the wrong area!
+  * Owing to expanded panning, crop/zoom selection is messed up! This does not matter for viewing purpose.
+
+### Transparency
+
+Currently, alpha channel appears to be blended into RGB pixels. Thus, alpha data is 'lost', and won't be saved. This is done in `LoadImageThread.cpp`'s `WebpAlphaBlendBackground()`. CJPEGImage does not seem to bother with alpha channel.
+
+For now, added ability to toggle transparency between checkerboard pattern and solid colour background, via SHIFT-V hotkey. You'll need to update `KeyMap.txt` as usual.
 
 ### Wishlist
 
-* Quick zoom to selection? via 'Z' hotkey. Like activating selection mode, but select happens only once, and it zooms and auto-offs.
 * A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
 * Add 'selection mode' toggle/indicator in toolbar.
+* Proper support for transparent images.
 * Support uncommon 'crop' type AVIF?
 * Quality options for 'Save image'.
 * Save animated WEBP?
@@ -217,7 +253,7 @@ For those who prefer to have JPEGView installed for All Users, a 32-bit/64-bit i
 
 ### WinGet
 
-If you're on Windows 11, or Windows 10 1709 or later, you can also download it directly from the official [Microsoft WinGet tool](https://docs.microsoft.com/en-us/windows/package-manager/winget/) repository.  This downloads the latest MSI installer directly from GitHub for installation.
+If you're on Windows 11, or Windows 10 (build 1709 or later), you can also download it directly from the official [Microsoft WinGet tool](https://docs.microsoft.com/en-us/windows/package-manager/winget/) repository.  This downloads the latest MSI installer directly from GitHub for installation.
 
 Example Usage:
 
@@ -246,9 +282,9 @@ Another option is to use the official [JPEGView on PortableApps](https://portabl
 
 ## System Requirements
 
-Windows XP SP2 or later is needed to run the 32 bit version.
+32-bit version: Windows XP SP2 or later
 
-64 bit Windows 7 or later is needed to run the 64 bit version.
+64-bit version: Windows 7/8/10/11 64-bit or later
 Mod only tested for >= Win 7 64 bit.
 
 ## What's New
@@ -268,5 +304,8 @@ I'm hoping with this project, some devs might help me keep the project alive!  I
 ## Special Thanks
 
 Thanks to [sylikc](https://github.com/sylikc) et al for maintaining JPEGView =D
-Special thanks to [qbnu](https://github.com/qbnu) who added Animated WebP and Animated PNG support!
+Special thanks to [qbnu](https://github.com/qbnu) for adding additional codec support!
+* Animated WebP
+* Animated PNG
+* JPEG XL with animation support
 Thanks to Alliance for Open Media for [libavif](https://github.com/AOMediaCodec/libavif/) + [aom](https://aomedia.googlesource.com/aom) for AVIF image read/write.

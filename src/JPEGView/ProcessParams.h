@@ -155,6 +155,7 @@ public:
 		int nUserRotation,
 		double dZoom,
 		Helpers::EAutoZoomMode eAutoZoomMode, CPoint offsets,
+		bool bUseCheckerboard,
 		const CImageProcessingParams& imageProcParams,
 		EProcessingFlags eProcFlags) : ImageProcParams(imageProcParams), RotationParams(rotationParams) {
 		UserRotation = nUserRotation;
@@ -164,6 +165,7 @@ public:
 		Zoom = dZoom;
 		AutoZoomMode = eAutoZoomMode;
 		Offsets = offsets;
+		UseCheckerboard = bUseCheckerboard;
 		ProcFlags = eProcFlags;
 	}
 
@@ -174,6 +176,7 @@ public:
 	int UserRotation;
 	double Zoom;
 	CPoint Offsets;
+	bool UseCheckerboard; //for transparent background
 	CImageProcessingParams ImageProcParams;
 	EProcessingFlags ProcFlags;
 	Helpers::EAutoZoomMode AutoZoomMode;

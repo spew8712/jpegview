@@ -113,6 +113,7 @@ CSettingsProvider::CSettingsProvider(void) {
 	m_bAutoFullScreen = GetString(_T("ShowFullScreen"), _T("")).CompareNoCase(_T("auto")) == 0;
 	m_bShowFullScreen = m_bAutoFullScreen ? true : GetBool(_T("ShowFullScreen"), true);
 	m_bShowEXIFDateInTitle = GetBool(_T("ShowEXIFDateInTitle"), true);
+	m_bShowFullPathInTitle = GetBool(_T("ShowFilePathInTitle"), false);
 	m_bShowHistogram = GetBool(_T("ShowHistogram"), false);
 	m_bShowJPEGComments = GetBool(_T("ShowJPEGComments"), true);
 	m_bShowBottomPanel = GetBool(_T("ShowBottomPanel"), true);
@@ -252,7 +253,8 @@ CSettingsProvider::CSettingsProvider(void) {
 	m_colorSelected = GetColor(_T("SelectionColor"), RGB(255, 205, 0));
 	m_colorSlider = GetColor(_T("SliderColor"), RGB(255, 0, 80));
 	m_colorFileName = GetColor(_T("FileNameColor"), m_colorGUI);
-	m_colorTransparency = GetColor(_T("TransparencyColor"), m_colorBackground);
+	//this actually needs to be reversed for WebpAlphaBlendBackground use!
+	m_colorTransparency = GetColor(_T("TransparencyColor"), m_colorBackground, true);
 
 	m_defaultGUIFont = GetString(_T("DefaultGUIFont"), _T("Default"));
 	m_fileNameFont = GetString(_T("FileNameFont"), _T("Default"));
@@ -834,14 +836,17 @@ CSize CSettingsProvider::GetSize(LPCTSTR sKey, const CSize& defaultSize) {
 	}
 }
 
-COLORREF CSettingsProvider::GetColor(LPCTSTR sKey, COLORREF defaultColor) {
+COLORREF CSettingsProvider::GetColor(LPCTSTR sKey, COLORREF defaultColor, bool bReverse) {
 	int nRed, nGreen, nBlue;
 	CString sColor = GetString(sKey, _T(""));
 	if (sColor.IsEmpty()) {
 		return defaultColor;
 	}
 	if (_stscanf(sColor, _T(" %d %d %d"), &nRed, &nGreen, &nBlue) == 3) {
-		return RGB(nRed, nGreen, nBlue);
+		if (!bReverse)
+			return RGB(nRed, nGreen, nBlue);
+		else
+			return RGB(nBlue, nGreen, nRed);
 	} else {
 		return defaultColor;
 	}

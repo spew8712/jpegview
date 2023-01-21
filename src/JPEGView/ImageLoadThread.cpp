@@ -12,6 +12,7 @@
 #include "dcraw_mod.h"
 #include "TJPEGWrapper.h"
 #include "PNGWrapper.h"
+#include "JXLWrapper.h"
 #include "MaxImageDef.h"
 
 using namespace Gdiplus;
@@ -19,19 +20,37 @@ using namespace Gdiplus;
 // static initializers
 volatile int CImageLoadThread::m_curHandle = 0;
 
-static inline uint32 WebpAlphaBlendBackground(uint32 pixel, uint32 backgroundColor)
+/*
+ * Inrevocably blends alpha data into RGB pixel, with choice of solid colour or checkerboard pattern backgrounds.
+ *
+ * bUseCheckerboard: whether to use checkerboard pattern instead of solid colour
+ * x, y: location of current pixel
+*/
+static inline uint32 WebpAlphaBlendBackground(uint32 pixel, uint32 backgroundColor, bool bUseCheckerboard = false, int x = -1, int y = -1)
 {
 	uint32 alpha = pixel & 0xFF000000;
 
-	if (alpha == 0) {
-		return backgroundColor;
-	}
-	else if (alpha == 0xFF000000)
+	if (alpha == 0xFF000000)
 	{
 		return pixel;
 	}
+	if (bUseCheckerboard)
+	{
+		//ignore configured backgroundColor, and use white and light gray for checkerboard
+		if (((x & 0x10) && ((y & 0x10) == 0))
+			|| ((y & 0x10) && ((x & 0x10) == 0)))
+		{
+			backgroundColor = 0x00ffffff;
+		}
+		else
+		{
+			backgroundColor = 0x00c0c0c0;
+		}
+	}
+	if (alpha == 0) {
+		return backgroundColor;
+	}
 	else {
-
 		uint8 r = GetRValue(pixel);
 		uint8 g = GetGValue(pixel);
 		uint8 b = GetBValue(pixel);
@@ -83,6 +102,9 @@ static EImageFormat GetImageFormat(LPCTSTR sFileName) {
 	else if (header[0] == 'R' && header[1] == 'I' && header[2] == 'F' && header[3] == 'F' &&
 		header[8] == 'W' && header[9] == 'E' && header[10] == 'B' && header[11] == 'P') {
 		return IF_WEBP;
+	} else if ((header[0] == 0xff && header[1] == 0x0a) ||
+		memcmp(header, "\x00\x00\x00\x0cJXL\x20\x0d\x0a\x87\x0a", 12) == 0) {
+		return IF_JXL;
 
 		// Unfortunately, TIFF detection by header bytes is not reliable
 		// A few RAW image formats use TIFF as the container
@@ -163,7 +185,6 @@ static CJPEGImage* ConvertGDIPlusBitmapToJPEGImage(Gdiplus::Bitmap* pBitmap, int
 			PropertyItem* pPropertyItem = (PropertyItem*)new char[nTagFrameDelaySize];
 			if (pBitmap->GetPropertyItem(PropertyTagFrameDelay, nTagFrameDelaySize, pPropertyItem) == Gdiplus::Ok) {
 				nFrameTimeMs = ((long*)pPropertyItem->value)[nFrameIndex] * 10;
-				if (nFrameTimeMs <= 0) nFrameTimeMs = 100;
 			}
 			delete[] pPropertyItem;
 		}
@@ -234,6 +255,7 @@ CImageLoadThread::~CImageLoadThread(void) {
 	DeleteCachedGDIBitmap();
 	DeleteCachedWebpDecoder();
 	DeleteCachedPngDecoder();
+	DeleteCachedJxlDecoder();
 }
 
 int CImageLoadThread::AsyncLoad(LPCTSTR strFileName, int nFrameIndex, const CProcessParams& processParams, HWND targetWnd, HANDLE eventFinished) {
@@ -298,6 +320,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
 		//DeleteCachedAvifDecoder(); //somehow this tends to cause failure of loading subsquent AVIF animation frames
 		ProcessReadJPEGRequest(&rq);
 		break;
@@ -305,33 +328,46 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
 		ProcessReadBMPRequest(&rq);
 		break;
 	case IF_TGA:
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
 		ProcessReadTGARequest(&rq);
 		break;
 	case IF_WEBP:
 		DeleteCachedGDIBitmap();
 		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
 		ProcessReadWEBPRequest(&rq);
+		break;
+	case IF_JXL:
+		DeleteCachedGDIBitmap();
+		DeleteCachedWebpDecoder();
+		DeleteCachedPngDecoder();
+		ProcessReadJXLRequest(&rq);
 		break;
 	case IF_CameraRAW:
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
 		ProcessReadRAWRequest(&rq);
 		break;
 	case IF_WIC:
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
 		ProcessReadWICRequest(&rq);
 		break;
 	case IF_PNG:
 		DeleteCachedGDIBitmap();
+		DeleteCachedWebpDecoder();
+		DeleteCachedJxlDecoder();
 		ProcessReadPNGRequest(&rq);
 		break;
 	case IF_AVIF:
@@ -344,6 +380,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		// try with GDI+
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
 		ProcessReadGDIPlusRequest(&rq);
 		break;
 	}
@@ -401,6 +438,11 @@ void CImageLoadThread::DeleteCachedWebpDecoder() {
 void CImageLoadThread::DeleteCachedPngDecoder() {
 	PngReader::DeleteCache();
 	m_sLastPngFileName.Empty();
+}
+
+void CImageLoadThread::DeleteCachedJxlDecoder() {
+	JxlReader::DeleteCache();
+	m_sLastJxlFileName.Empty();
 }
 
 void CImageLoadThread::DeleteCachedAvifDecoder() {
@@ -503,6 +545,19 @@ void CImageLoadThread::ProcessReadJPEGRequest(CRequest* request) {
 	if (hFileBuffer) ::GlobalFree(hFileBuffer);
 }
 
+void CImageLoadThread::BlendAlpha(uint32* pImage32, int nWidth, int nHeight, bool bUseCheckerboard)
+{
+	if (!bUseCheckerboard)
+	{
+		for (int i = 0; i < nWidth * nHeight; i++)
+			*pImage32++ = WebpAlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+	} else {
+		for (int y = 0; y < nHeight; ++y)
+			for (int x = 0; x < nWidth; ++x)
+				*pImage32++ = WebpAlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency(), true, x, y);
+	}
+}
+
 void CImageLoadThread::ProcessReadPNGRequest(CRequest* request) {
 	bool bSuccess = false;
 	bool bUseCachedDecoder = false;
@@ -551,10 +606,7 @@ void CImageLoadThread::ProcessReadPNGRequest(CRequest* request) {
 				if (bHasAnimation)
 					m_sLastPngFileName = sFileName;
 				// Multiply alpha value into each AABBGGRR pixel
-				uint32* pImage32 = (uint32*)pPixelData;
-				for (int i = 0; i < nWidth * nHeight; i++)
-					*pImage32++ = WebpAlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
-
+				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, 4, 0, IF_PNG, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 			}
 			else {
@@ -702,6 +754,7 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 					if (bHasAnimation) {
 						m_sLastAvifFileName = sFileName;
 					}
+					BlendAlpha((uint32*)(rgb.pixels), m_avifDecoder->image->width, m_avifDecoder->image->height, request->ProcessParams.UseCheckerboard);
 					request->Image = new CJPEGImage(m_avifDecoder->image->width, m_avifDecoder->image->height, rgb.pixels, pExifData, 4, 0, IF_AVIF, bHasAnimation, request->FrameIndex, m_avifDecoder->imageCount, nFrameTimeMs);
 					bSuccess = true;
 				}
@@ -812,10 +865,7 @@ void CImageLoadThread::ProcessReadWEBPRequest(CRequest* request) {
 							if ((bHasAnimation && Webp_Dll_AnimDecodeBGRAInto((uint8*)pBuffer, nFileSize, pPixelData, nStride * nHeight, nFrameCount, nFrameTimeMs)) ||
 								(!bHasAnimation && Webp_Dll_DecodeBGRAInto((uint8*)pBuffer, nFileSize, pPixelData, nStride * nHeight, nStride))) {
 								// Multiply alpha value into each AABBGGRR pixel
-								uint32* pImage32 = (uint32*)pPixelData;
-								for (int i = 0; i < nWidth * nHeight; i++)
-									*pImage32++ = WebpAlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
-
+								BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
 								request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, 4, 0, IF_WEBP, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 							}
 							else {
@@ -844,7 +894,72 @@ void CImageLoadThread::ProcessReadWEBPRequest(CRequest* request) {
 	}
 }
 
-void CImageLoadThread::ProcessReadRAWRequest(CRequest* request) {
+void CImageLoadThread::ProcessReadJXLRequest(CRequest* request) {
+	bool bUseCachedDecoder = false;
+	const wchar_t* sFileName;
+	sFileName = (const wchar_t*)request->FileName;
+	if (sFileName != m_sLastJxlFileName) {
+		DeleteCachedJxlDecoder();
+	} else {
+		bUseCachedDecoder = true;
+	}
+
+	HANDLE hFile;
+	if (!bUseCachedDecoder) {
+		hFile = ::CreateFile(request->FileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+		if (hFile == INVALID_HANDLE_VALUE) {
+			return;
+		}
+	}
+	char* pBuffer = NULL;
+	UINT nPrevErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+	try {
+		unsigned int nFileSize = 0;
+		unsigned int nNumBytesRead;
+		if (!bUseCachedDecoder) {
+			// Don't read too huge files
+			nFileSize = ::GetFileSize(hFile, NULL);
+			if (nFileSize > MAX_JXL_FILE_SIZE) {
+				request->OutOfMemory = true;
+				::CloseHandle(hFile);
+				return;
+			}
+
+			pBuffer = new(std::nothrow) char[nFileSize];
+			if (pBuffer == NULL) {
+				request->OutOfMemory = true;
+				::CloseHandle(hFile);
+				return;
+			}
+		}
+		if (bUseCachedDecoder || (::ReadFile(hFile, pBuffer, nFileSize, (LPDWORD)&nNumBytesRead, NULL) && nNumBytesRead == nFileSize)) {
+			int nWidth, nHeight, nBPP, nFrameCount, nFrameTimeMs;
+			bool bHasAnimation;
+			uint8* pPixelData = (uint8*)JxlReader::ReadImage(nWidth, nHeight, nBPP, bHasAnimation, nFrameCount, nFrameTimeMs, request->OutOfMemory, pBuffer, nFileSize);
+			if (pPixelData != NULL) {
+				if (bHasAnimation)
+					m_sLastJxlFileName = sFileName;
+				// Multiply alpha value into each AABBGGRR pixel
+				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
+
+				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, 4, 0, IF_JXL, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
+			} else {
+				DeleteCachedJxlDecoder();
+			}
+		}
+	}
+	catch (...) {
+		delete request->Image;
+		request->Image = NULL;
+	}
+	SetErrorMode(nPrevErrorMode);
+	if (!bUseCachedDecoder) {
+		::CloseHandle(hFile);
+		// delete[] pBuffer;
+	}
+}
+
+void CImageLoadThread::ProcessReadRAWRequest(CRequest * request) {
 	bool bOutOfMemory = false;
 	try {
 		request->Image = CReaderRAW::ReadRawImage(request->FileName, bOutOfMemory);
@@ -901,6 +1016,7 @@ void CImageLoadThread::ProcessReadWICRequest(CRequest* request) {
 		uint32 nWidth, nHeight;
 		unsigned char* pDIB = LoadImageWithWIC(sFileName, &alloc, &dealloc, &nWidth, &nHeight);
 		if (pDIB != NULL) {
+			BlendAlpha((uint32*)(pDIB), nWidth, nHeight, request->ProcessParams.UseCheckerboard);
 			request->Image = new CJPEGImage(nWidth, nHeight, pDIB, NULL, 4, 0, IF_WIC, false, 0, 1, 0);
 		}
 	}
