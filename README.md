@@ -1,6 +1,6 @@
 # JPEGView - Image Viewer and Editor
 
-This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the _**slideshow aspect and ease of use**_ thereof of the app. _**Beta**_: [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support (include animated AVIF) has been added for viewing, and 'save as AVIF'. 
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the _**slideshow aspect and ease of use**_ of the app. Panning is now enabled by default. [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support (include animated AVIF) has been added for viewing, and 'save as AVIF'.
 
 ## Description
 
@@ -43,9 +43,8 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 **Mod features**
 * Slideshow stuff - see next section.
 * Read/write (most common) AVIF, include animated. Dev notes below.
-*  (_beta_) Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
+*  Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
-   * Known issue: zoom/crop selection is messed up and pending fix.
 *  Toggle transparent image background between checkerboard pattern (default) and solid background colour, via hotkey: SHIFT+V.
 
 (Last sync'd up to original's ~8 Jan 2023 updates, with JXL support).
@@ -124,14 +123,14 @@ The new default is **panning** mode.
   * SHIFT+<arrow keys> panning now scales up proportionally to larger panning amounts when image is larger than window.
 * Can pan till 1 pixels on any edge.
   * If you can't find your out of view image, try zooming, and using the zoom mini-map to pan our image back into view.
-* _**Known issue(s)**_:
-  * Owing to expanded panning, crop/zoom selection is messed up! This does not matter for viewing purpose.
 
 ### Transparency
 
 Currently, alpha channel appears to be blended into RGB pixels. Thus, alpha data is 'lost', and won't be saved. This is done in `LoadImageThread.cpp`'s `WebpAlphaBlendBackground()`. CJPEGImage does not seem to bother with alpha channel.
 
-For now, added ability to toggle transparency between checkerboard pattern and solid colour background, via SHIFT-V hotkey. You'll need to update `KeyMap.txt` as usual.
+For now, added ability to toggle transparency between checkerboard pattern and solid colour background, via SHIFT-V hotkey. Update your `KeyMap.txt` as usual.
+
+Now calls the blend alpha for all image types.
 
 ### Wishlist
 
@@ -245,7 +244,7 @@ JPEGView _does not require installation_ to run.  Just **unzip, and run** either
 
 Strangely, there's a [portable app version of JPEGView](https://portableapps.com/apps/graphics_pictures/jpegview_portable) on [portableapps.com](https://portableapps.com/).
 
-To use this mod, simply replace the JPEGView.exe, *.DLL and KeyMap.txt in the `App/JPEGView` sub-folder.
+To use this mod, simply replace the JPEGView.exe, *.DLL, JPEGView.ini and KeyMap.txt in the `App/JPEGView` sub-folder.
 
 ## MSI Installer
 
