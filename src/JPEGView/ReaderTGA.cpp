@@ -32,15 +32,30 @@ static bool IsAlphaChannelValid(int width, int height, uint32* pImageData)
 	return pixel != 0;
 }
 
-static inline uint32 AlphaBlendBackground(uint32 pixel, uint32 backgroundColor)
+static inline uint32 AlphaBlendBackground(uint32 pixel, uint32 backgroundColor, bool bUseCheckerboard = false, int x = -1, int y = -1)
 {
 	uint32 alpha = pixel & ALPHA_OPAQUE;
-	if (alpha == 0) {
-		return backgroundColor;
-	} else if (alpha == ALPHA_OPAQUE)
+	if (alpha == ALPHA_OPAQUE)
 	{
 		return pixel;
-	} else {
+	}
+	if (bUseCheckerboard)
+	{
+		//ignore configured backgroundColor, and use white and light gray for checkerboard
+		if (((x & 0x10) && ((y & 0x10) == 0))
+			|| ((y & 0x10) && ((x & 0x10) == 0)))
+		{
+			backgroundColor = 0x00ffffff;
+		}
+		else
+		{
+			backgroundColor = 0x00c0c0c0;
+		}
+	}
+	if (alpha == 0) {
+		return backgroundColor;
+	}
+	else {
 		uint8 b = GetBValue(pixel);
 		uint8 g = GetGValue(pixel);
 		uint8 r = GetRValue(pixel);
@@ -57,7 +72,7 @@ static inline uint32 AlphaBlendBackground(uint32 pixel, uint32 backgroundColor)
 }
 
 
-CJPEGImage* CReaderTGA::ReadTgaImage(LPCTSTR strFileName, COLORREF backgroundColor, bool& bOutOfMemory) {
+CJPEGImage* CReaderTGA::ReadTgaImage(LPCTSTR strFileName, COLORREF backgroundColor, bool& bOutOfMemory, bool bUseCheckerboard) {
 
 	bOutOfMemory = false;
 
@@ -372,9 +387,18 @@ CJPEGImage* CReaderTGA::ReadTgaImage(LPCTSTR strFileName, COLORREF backgroundCol
 		uint32* pImage32 = (uint32*)pImageData;
 		if (IsAlphaChannelValid(width, height, (uint32*)pImageData))
 		{
-			for (int i = 0; i < width*height; i++)
+			if (!bUseCheckerboard)
 			{
-				*pImage32++ = AlphaBlendBackground(*pImage32, backgroundColor | ALPHA_OPAQUE);
+				for (int i = 0; i < width * height; ++i)
+				{
+					*pImage32++ = AlphaBlendBackground(*pImage32, backgroundColor | ALPHA_OPAQUE);
+				}
+			}
+			else
+			{
+				for (int y = 0; y < height; ++y)
+					for (int x = 0; x < width; ++x)
+						*pImage32++ = AlphaBlendBackground(*pImage32, backgroundColor | ALPHA_OPAQUE, true, x, y);
 			}
 		}
 		else

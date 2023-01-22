@@ -2898,9 +2898,25 @@ void CMainDlg::ZoomToSelection() {
 		float fZoom;
 		CPoint offsets;
 		Helpers::GetZoomParameters(fZoom, offsets, m_pCurrentImage->OrigSize(), m_clientRect.Size(), zoomRect);
-		if (fZoom > 0) {
-			PerformZoom(fZoom, false, m_bMouseOn, false);
-			m_offsets = offsets;
+		if (fZoom > 0)
+		{
+			/*
+			 * Use bAdjustWindowToImage:true and bZoomToMouse for more accuracy,
+			 * while faking the mouse position to centre of zoomRect.
+			*/
+			float x = zoomRect.left, y = zoomRect.top,
+				x2 = zoomRect.right, y2 = zoomRect.bottom;
+			//convert zoomRect in image coords back to win/screen coords
+			ImageToScreen(x, y);
+			ImageToScreen(x2, y2);
+			int oldMouseX = m_nMouseX,
+				oldMouseY = m_nMouseY;
+			//use centre of zoomRect (in win coords) as mouse position
+			m_nMouseX = (x2 + x) / 2;
+			m_nMouseY = (y2 + y) / 2;
+			PerformZoom(fZoom, false, true, true);
+			m_nMouseX = oldMouseX; //restore in case of adverse side effect
+			m_nMouseY = oldMouseY;
 			m_bUserPan = true;
 		}
 	}

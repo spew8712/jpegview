@@ -442,9 +442,8 @@ CRect CCropCtl::GetImageCropRect(bool losslessCrop) {
 	if (pCurrentImage == NULL) {
 		return CRect(0, 0, 0, 0);
 	} else {
-		//CRect cropRect = CRect(max(0, min(m_cropStart.x, m_cropEnd.x)), max(0, min(m_cropStart.y, m_cropEnd.y)),
-		//	min(pCurrentImage->OrigWidth(), max(m_cropStart.x, m_cropEnd.x) + 1), min(pCurrentImage->OrigHeight(), max(m_cropStart.y, m_cropEnd.y) + 1));
-
+		NormalizeCroppingRect();
+		//allow selection even if x/y is outside (negative value) of image
 		int x = m_cropStart.x, xEnd = m_cropEnd.x,
 			y = m_cropStart.y, yEnd = m_cropEnd.y,
 			selW = xEnd - x,

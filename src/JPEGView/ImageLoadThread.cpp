@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include "ImageLoadThread.h"
 #include <gdiplus.h>
+#include <GdiplusEnums.h>
 #include "JPEGImage.h"
 #include "MessageDef.h"
 #include "Helpers.h"
@@ -148,7 +149,7 @@ static EImageFormat GetBitmapFormat(Gdiplus::Bitmap* pBitmap) {
 }
 
 static CJPEGImage* ConvertGDIPlusBitmapToJPEGImage(Gdiplus::Bitmap* pBitmap, int nFrameIndex, void* pEXIFData,
-	__int64 nJPEGHash, bool& isOutOfMemory, bool& isAnimatedGIF) {
+	__int64 nJPEGHash, bool& isOutOfMemory, bool& isAnimatedGIF, bool bUseCheckerboard = false) {
 
 	isOutOfMemory = false;
 	isAnimatedGIF = false;
@@ -205,8 +206,18 @@ static CJPEGImage* ConvertGDIPlusBitmapToJPEGImage(Gdiplus::Bitmap* pBitmap, int
 		pBmTarget = new Gdiplus::Bitmap(pBitmap->GetWidth(), pBitmap->GetHeight(), PixelFormat32bppRGB);
 		pBmGraphics = new Gdiplus::Graphics(pBmTarget);
 		COLORREF bkColor = CSettingsProvider::This().ColorTransparency();
-		Gdiplus::SolidBrush bkBrush(Gdiplus::Color(GetRValue(bkColor), GetGValue(bkColor), GetBValue(bkColor)));
-		pBmGraphics->FillRectangle(&bkBrush, 0, 0, pBmTarget->GetWidth(), pBmTarget->GetHeight());
+		if (!bUseCheckerboard)
+		{
+			//Somehow unlike WebpAlphaBlendBackground, needs to reverse the colour bytes!
+			//Gdiplus::SolidBrush bkBrush(Gdiplus::Color(GetRValue(bkColor), GetGValue(bkColor), GetBValue(bkColor)));
+			Gdiplus::SolidBrush bkBrush(Gdiplus::Color(GetBValue(bkColor), GetGValue(bkColor), GetRValue(bkColor)));
+			pBmGraphics->FillRectangle(&bkBrush, 0, 0, pBmTarget->GetWidth(), pBmTarget->GetHeight());
+		}
+		else
+		{
+			Gdiplus::HatchBrush bkBrush(HatchStyleLargeCheckerBoard, Gdiplus::Color(0xffc0c0c0), Gdiplus::Color(0xffffffff));
+			pBmGraphics->FillRectangle(&bkBrush, 0, 0, pBmTarget->GetWidth(), pBmTarget->GetHeight());
+		}
 		pBmGraphics->DrawImage(pBitmap, 0, 0, pBmTarget->GetWidth(), pBmTarget->GetHeight());
 		pBitmapToUse = pBmTarget;
 		if (pBmGraphics->GetLastStatus() == Gdiplus::OutOfMemory) {
@@ -491,7 +502,7 @@ void CImageLoadThread::ProcessReadJPEGRequest(CRequest* request) {
 					Gdiplus::Bitmap* pBitmap = Gdiplus::Bitmap::FromStream(pStream, CSettingsProvider::This().UseEmbeddedColorProfiles());
 					bool isOutOfMemory, isAnimatedGIF;
 					request->Image = ConvertGDIPlusBitmapToJPEGImage(pBitmap, 0, Helpers::FindEXIFBlock(pBuffer, nFileSize),
-						Helpers::CalculateJPEGFileHash(pBuffer, nFileSize), isOutOfMemory, isAnimatedGIF);
+						Helpers::CalculateJPEGFileHash(pBuffer, nFileSize), isOutOfMemory, isAnimatedGIF, request->ProcessParams.UseCheckerboard);
 					request->OutOfMemory = request->Image == NULL && isOutOfMemory;
 					if (request->Image != NULL) {
 						request->Image->SetJPEGComment(Helpers::GetJPEGComment(pBuffer, nFileSize));
@@ -792,7 +803,7 @@ void CImageLoadThread::ProcessReadBMPRequest(CRequest* request) {
 
 void CImageLoadThread::ProcessReadTGARequest(CRequest* request) {
 	bool bOutOfMemory;
-	request->Image = CReaderTGA::ReadTgaImage(request->FileName, CSettingsProvider::This().ColorBackground(), bOutOfMemory);
+	request->Image = CReaderTGA::ReadTgaImage(request->FileName, CSettingsProvider::This().ColorTransparency(), bOutOfMemory, request->ProcessParams.UseCheckerboard);
 	if (bOutOfMemory) {
 		request->OutOfMemory = true;
 	}
@@ -987,7 +998,7 @@ void CImageLoadThread::ProcessReadGDIPlusRequest(CRequest* request) {
 		m_sLastFileName = sFileName;
 	}
 	bool isOutOfMemory, isAnimatedGIF;
-	request->Image = ConvertGDIPlusBitmapToJPEGImage(pBitmap, request->FrameIndex, NULL, 0, isOutOfMemory, isAnimatedGIF);
+	request->Image = ConvertGDIPlusBitmapToJPEGImage(pBitmap, request->FrameIndex, NULL, 0, isOutOfMemory, isAnimatedGIF, request->ProcessParams.UseCheckerboard);
 	request->OutOfMemory = request->Image == NULL && isOutOfMemory;
 	if (!isAnimatedGIF) {
 		DeleteCachedGDIBitmap();
