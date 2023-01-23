@@ -1539,9 +1539,12 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			OpenFileWithDialog(false, false);
 			break;
 		case IDM_EXPLORE:
-			if (!m_pCurrentImage->IsClipboardImage()) {
-				ExploreFile();
+			if (m_pCurrentImage != NULL && m_pCurrentImage->IsClipboardImage()) {
+				// don't try to "Explore" path if clipboard image
+				break;
 			}
+			// otherwise, allowed even for invalid file loads
+			ExploreFile();
 			break;
 		case IDM_SAVE:
 		case IDM_SAVE_SCREEN:
