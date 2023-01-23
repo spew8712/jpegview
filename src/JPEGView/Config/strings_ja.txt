@@ -284,7 +284,7 @@ Rotate...	回転...
 Mirror horizontally	横に反転
 Mirror vertically	縦に反転
 Random	ランダム
-Zoom mode (drag mouse to zoom)	拡大モード (マウスでドラッグ)
+Select mode (toggle selection tool)	選択モード(選択ツールの切り替え)
 Correct converging lines (perspective correction)	消失点の調整 (遠近法)
 Perspective Correction	遠近法の調整
 Perspective correction...	遠近法の調整...

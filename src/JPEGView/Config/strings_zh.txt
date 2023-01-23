@@ -279,7 +279,7 @@ Rotate...	旋转...
 Mirror horizontally	水平翻转
 Mirror vertically	垂直翻转
 Random	随机
-Zoom mode (drag mouse to zoom)	缩放模式 (拖动鼠标来缩放)
+Select mode (toggle selection tool)	选择模式 (切换部分图像选择工具)
 Correct converging lines (perspective correction)	正确的汇聚线 (透视校正)
 Perspective Correction	透视校正
 Perspective correction...	透视校正...
