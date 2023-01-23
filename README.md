@@ -110,22 +110,23 @@ The new default is **panning** mode.
         * cropping to selection, and
         * zooming to selection.
   * If you wish to select, hit 'S' to enter selection mode. It lasts until exit (hit 'S' again).
-  * Press 'Z' to **'quick zoom to selection'**. Like this:
+  * Press **'Z'** to **'quick zoom to selection'**. Like this:
     * Press 'Z'
     * Drag to select area
     * Once area is selected (mouse released), zoom immediately occurs.
     * Resume in panning mode.
     Basically don't ever stay in the pesky selection mode that leave ugly selection boxes defiling the image.
 * Changed hotkeys
-  * Reuse 'S' for toggling Selection mode.
+  * Reuse **'S'** for toggling Selection mode.
     * Dunno what 'save/delete param DB' are, but presuming they're infrequently used junk features, their hotkeys 'S' & 'D' are changed to ALT+S/D.
     Hence, update the KeyMap.txt for this change to take effect!
   * Reuse 'Z' for Quick Zoom to Selection mode.
     * Random sort hotkey changed to ALT+Z.
-* Added ALT+SHIFT+<arrow keys> for forcing 'fine grain' panning.
+* **ALT+SHIFT+<arrow keys>** for forcing 'fine grain' panning.
   * SHIFT+<arrow keys> panning now scales up proportionally to larger panning amounts when image is larger than window.
 * Can pan till 1 pixels on any edge.
   * If you can't find your out of view image, try zooming, and using the zoom mini-map to pan our image back into view.
+* **'-'/'='** (i.e. the ones between numbers and backspace) to zoom out/in for keyboards without Numpad -/+ keys.
 
 ### Transparency
 

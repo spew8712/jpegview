@@ -12,7 +12,7 @@ struct SKey {
 	int KeyCode;
 };
 
-#define NUM_KEYS 30
+#define NUM_KEYS 32
 
 static SKey KeyTable[NUM_KEYS] = {
 	{ _T("Alt"), M_ALT },
@@ -35,6 +35,8 @@ static SKey KeyTable[NUM_KEYS] = {
 	{ _T("Del"), VK_DELETE },
 	{ _T("Plus"), VK_PLUS },
 	{ _T("Minus"), VK_MINUS },
+	{ _T("Equals"), VK_OEM_PLUS },
+	{ _T("Dash"), VK_OEM_MINUS },
 	{ _T("Mul"), VK_MULTIPLY },
 	{ _T("Div"), VK_DIVIDE },
 	{ _T("Comma"), VK_OEM_COMMA },

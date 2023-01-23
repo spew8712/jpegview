@@ -149,12 +149,14 @@ Home                    IDM_FIRST
 End                     IDM_LAST
 Del                     IDM_MOVE_TO_RECYCLE_BIN_CONFIRM
 Plus                    IDM_ZOOM_INC
+Minus                   IDM_ZOOM_DEC
+Equals                  IDM_ZOOM_INC
+Dash                    IDM_ZOOM_DEC
 Ctrl+Shift+Plus         IDM_CONTRAST_CORRECTION_INC
 Ctrl+Alt+Plus           IDM_COLOR_CORRECTION_INC
 Ctrl+Plus               IDM_CONTRAST_INC
 Shift+Plus              IDM_GAMMA_INC
 Alt+Plus                IDM_SHARPEN_INC
-Minus                   IDM_ZOOM_DEC
 Ctrl+Shift+Minus        IDM_CONTRAST_CORRECTION_DEC
 Ctrl+Alt+Minus          IDM_COLOR_CORRECTION_DEC
 Ctrl+Minus              IDM_CONTRAST_DEC
