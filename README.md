@@ -111,7 +111,8 @@ The new default is **panning** mode.
   * In selection mode, left mouse click on image starts rectangular area selection. Once a rectangular area is selected, popup menu offers options of
         * cropping to selection, and
         * zooming to selection.
-  * If you wish to select, hit 'S' to enter selection mode. It lasts until exit (hit 'S' again).
+  * If you wish to select, hit **'S'** to **enter selection mode**. It lasts until exit (hit 'S' again).
+  * Navigation panel's zoom mode button has been changed to selection mode.
   * Press **'Z'** to **'quick zoom to selection'**. Like this:
     * Press 'Z'
     * Drag to select area
@@ -124,6 +125,7 @@ The new default is **panning** mode.
     Hence, update the KeyMap.txt for this change to take effect!
   * Reuse 'Z' for Quick Zoom to Selection mode.
     * Random sort hotkey changed to ALT+Z.
+  * CTRL+Z to toggle (left mouse drag) zoom mode. 
 * **ALT+SHIFT+<arrow key>** for forcing 'fine grain' panning.
   * **SHIFT+<arrow key>** panning now scales up proportionally to larger panning amounts when image is larger than window.
 * Can pan till 1 pixels on any edge.

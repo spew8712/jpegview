@@ -38,7 +38,7 @@ CNavigationPanel::CNavigationPanel(HWND hWnd, INotifiyMouseCapture* pNotifyMouse
 			keyMap->GetKeyStringForCommand(IDM_MOVE_TO_RECYCLE_BIN).IsEmpty() ? IDM_MOVE_TO_RECYCLE_BIN_CONFIRM : IDM_MOVE_TO_RECYCLE_BIN), &PaintDeleteBtn); 
 		AddGap(ID_gap3, 8);
 	}
-	AddUserPaintButton(ID_btnZoomMode, GetTooltip(keyMap, _T("Zoom mode (drag mouse to zoom)"), IDM_ZOOM_MODE), &PaintZoomModeBtn);
+	AddUserPaintButton(ID_btnSelectMode, GetTooltip(keyMap, _T("Select mode (toggle selection tool)"), IDC_SELECT_MODE), &PaintSelectModeBtn);
 	AddUserPaintButton(ID_btnFitToScreen, &ZoomFitToggleTooltip, &PaintZoomFitToggleBtn, NULL, this);
 	AddUserPaintButton(ID_btnWindowMode, &WindowModeTooltip, &PaintWindowModeBtn, NULL, this);
 	AddGap(ID_gap4, 8);
@@ -217,30 +217,31 @@ void CNavigationPanel::PaintDeleteBtn(void* pContext, const CRect& rect, CDC& dc
 	dc.LineTo(r.left + size , r.top);
 }
 
-void CNavigationPanel::PaintZoomModeBtn(void* pContext, const CRect& rect, CDC& dc) {
+void CNavigationPanel::PaintSelectModeBtn(void* pContext, const CRect& rect, CDC& dc) {
 	CRect r = Helpers::InflateRect(rect, 0.25f);
 
-	int nW = (int)(r.Width() * 0.8f);
-	if ((nW & 1) == 0) nW++;
-	dc.Ellipse(r.left, r.top, r.left + nW, r.top + nW);
+	dc.SelectStockBrush(HOLLOW_BRUSH);
+	//dc.Rectangle(&r);
+	int nDelta = r.Height() / 4,
+		nNearTop = r.top + nDelta,
+		nNearLeft = r.left + nDelta,
+		nNearRight = r.right - nDelta,
+		nNearBtm = r.bottom - nDelta;
+	dc.MoveTo(r.left, nNearTop); //top left corner
+	dc.LineTo(r.left, r.top);
+	dc.LineTo(nNearLeft, r.top);
 
-	int nZx = r.left + nW / 2;
-	int nZy = r.top + nW / 2;
-	int nWw = (int)(nW * 0.3f);
-	dc.MoveTo(nZx - nWw + 1, nZy);
-	dc.LineTo(nZx + nWw, nZy);
-	dc.MoveTo(nZx, nZy - nWw + 1);
-	dc.LineTo(nZx, nZy + nWw);
+	dc.MoveTo(nNearRight, r.top); //top right corner
+	dc.LineTo(r.right, r.top);
+	dc.LineTo(r.right, nNearTop);
 
-	int nO = (int)(nW * 0.35f);
-	int nL = (int)(nW * 0.4f);
-	int nLL = (int)(nW * 0.15f);
-	int nSx = nZx + nO - nLL / 2;
-	int nSy = nZy + nO + nLL / 2;
-	dc.MoveTo(nSx, nSy);
-	dc.LineTo(nSx + nL, nSy+ nL);
-	dc.LineTo(nSx + nL + nLL, nSy + nL - nLL);
-	dc.LineTo(nSx + nLL - 1, nSy - nLL - 1);
+	dc.MoveTo(r.right, nNearBtm); //bottom right corner
+	dc.LineTo(r.right, r.bottom);
+	dc.LineTo(nNearRight, r.bottom);
+
+	dc.MoveTo(nNearLeft, r.bottom); //bottom left corner
+	dc.LineTo(r.left, r.bottom);
+	dc.LineTo(r.left, nNearBtm);
 }
 
 void CNavigationPanel::PaintZoomToFitBtn(void* pContext, const CRect& rect, CDC& dc) {

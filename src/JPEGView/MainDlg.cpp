@@ -2094,7 +2094,10 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDM_ZOOM_MODE:
 			m_bZoomModeOnLeftMouse = !m_bZoomModeOnLeftMouse;
-			m_pNavPanelCtl->GetNavPanel()->GetBtnZoomMode()->SetActive(m_bZoomModeOnLeftMouse);
+			if (m_bZoomModeOnLeftMouse)
+			{
+				m_pNavPanelCtl->GetNavPanel()->GetBtnSelectMode()->SetActive(m_bSelectMode = false);
+			}
 			break;
 		case IDM_AUTO_ZOOM_FIT_NO_ZOOM:
 		case IDM_AUTO_ZOOM_FILL_NO_ZOOM:
@@ -2334,6 +2337,9 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDC_SELECT_MODE:
 			m_bSelectMode = !m_bSelectMode;
+			m_pNavPanelCtl->GetNavPanel()->GetBtnSelectMode()->SetActive(m_bSelectMode);
+			if (m_bSelectMode)
+				m_bZoomModeOnLeftMouse = false;
 			break;
 		case IDC_SINGLE_ZOOM:
 			m_bSingleZoom = true;

@@ -17,7 +17,7 @@ public:
 		ID_gap2,
 		ID_btnDelete,
 		ID_gap3,
-		ID_btnZoomMode,
+		ID_btnSelectMode,
 		ID_btnFitToScreen,
 		ID_btnWindowMode,
 		ID_gap4,
@@ -41,7 +41,7 @@ public:
 	CButtonCtrl* GetBtnNext() { return GetControl<CButtonCtrl*>(ID_btnNext); }
 	CButtonCtrl* GetBtnEnd() { return GetControl<CButtonCtrl*>(ID_btnEnd); }
 	CButtonCtrl* GetBtnDelete() { return GetControl<CButtonCtrl*>(ID_btnDelete); }
-	CButtonCtrl* GetBtnZoomMode() { return GetControl<CButtonCtrl*>(ID_btnZoomMode); }
+	CButtonCtrl* GetBtnSelectMode() { return GetControl<CButtonCtrl*>(ID_btnSelectMode); }
 	CButtonCtrl* GetBtnFitToScreen() { return GetControl<CButtonCtrl*>(ID_btnFitToScreen); }
 	CButtonCtrl* GetBtnWindowMode() { return GetControl<CButtonCtrl*>(ID_btnWindowMode); }
 	CButtonCtrl* GetBtnRotateCW() { return GetControl<CButtonCtrl*>(ID_btnRotateCW); }
@@ -67,7 +67,7 @@ private:
 	static void PaintNextBtn(void* pContext, const CRect& rect, CDC& dc);
 	static void PaintEndBtn(void* pContext, const CRect& rect, CDC& dc);
 	static void PaintDeleteBtn(void* pContext, const CRect& rect, CDC& dc);
-	static void PaintZoomModeBtn(void* pContext, const CRect& rect, CDC& dc);
+	static void PaintSelectModeBtn(void* pContext, const CRect& rect, CDC& dc);
 	static void PaintZoomToFitBtn(void* pContext, const CRect& rect, CDC& dc);
 	static void PaintZoomTo1to1Btn(void* pContext, const CRect& rect, CDC& dc);
 	static void PaintZoomFitToggleBtn(void* pContext, const CRect& rect, CDC& dc);

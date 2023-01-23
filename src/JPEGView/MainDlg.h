@@ -145,6 +145,7 @@ public:
 	bool IsShowFileName() { return m_bShowFileName; }
 	bool IsInMovieMode() { return m_bMovieMode; }
 	bool IsInZoomMode() { return m_bZoomModeOnLeftMouse; }
+	bool IsInSelectMode() { return m_bSelectMode; }
 	bool IsPlayingAnimation() { return m_bIsAnimationPlaying; }
 	bool IsFullScreenMode() { return m_bFullScreenMode; }
 	bool IsLandscapeMode() { return m_bLandscapeMode; }
