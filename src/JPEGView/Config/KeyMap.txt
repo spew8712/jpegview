@@ -33,6 +33,8 @@
 #define IDM_PREV		5000			// go to previous image
 #define IDM_NEXT_100		4001        //skip ahead 100 images
 #define IDM_PREV_100		5001        //skip back 100 images
+#define IDM_NEXT_FOLDER		4002        // go to next folder
+#define IDM_PREV_FOLDER		5002        // go to previous folder
 #define IDM_FIRST		5100			// go to first image
 #define IDM_LAST		5200			// go to last image
 #define IDM_LOOP_FOLDER		6000			// set navigation mode loop through folder
@@ -227,3 +229,5 @@ Z                       IDC_SINGLE_ZOOM
 Shift+V                 IDM_TOGGLE_TRANSPARENCY
 Alt+Right               IDM_NEXT_100
 Alt+Left                IDM_PREV_100
+Ctrl+Alt+Right          IDM_NEXT_FOLDER
+Ctrl+Alt+Left           IDM_PREV_FOLDER

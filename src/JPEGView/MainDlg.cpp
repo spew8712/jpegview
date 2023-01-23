@@ -1092,7 +1092,6 @@ LRESULT CMainDlg::OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 			}
 		}
 	}
-
 	// Do dragging or cropping when needed, else pass event to panel manager and zoom navigator
 	bool bMouseCursorSet = false;
 	if (m_bZoomMode) {
@@ -1644,6 +1643,12 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDM_PREV_100:
 			GotoImage(POS_Previous_100);
+			break;
+		case IDM_NEXT_FOLDER:
+			GotoImage(POS_Next_Folder);
+			break;
+		case IDM_PREV_FOLDER:
+			GotoImage(POS_Previous_Folder);
 			break;
 		case IDM_FIRST:
 			GotoImage(POS_First);
@@ -2658,23 +2663,23 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 			break;
 		case POS_Next:
 		case POS_NextAnimation:
-			{
-				bool bGotoNextImage = true;
-				nFrameIndex = Helpers::GetFrameIndex(m_pCurrentImage, true, ePos == POS_NextAnimation,  bGotoNextImage);
-				if (bGotoNextImage) m_pFileList = m_pFileList->Next();
-				break;
-			}
+		{
+			bool bGotoNextImage = true;
+			nFrameIndex = Helpers::GetFrameIndex(m_pCurrentImage, true, ePos == POS_NextAnimation, bGotoNextImage);
+			if (bGotoNextImage) m_pFileList = m_pFileList->Next();
+			break;
+		}
 		case POS_NextSlideShow:
 			m_pFileList = m_pFileList->Next();
 			break;
 		case POS_Previous:
-			{
-				bool bGotoPrevImage;
-				nFrameIndex = Helpers::GetFrameIndex(m_pCurrentImage, false, false, bGotoPrevImage);
-				if (bGotoPrevImage) m_pFileList = m_pFileList->Prev();
-				eDirection = CJPEGProvider::BACKWARD;
-				break;
-			}
+		{
+			bool bGotoPrevImage;
+			nFrameIndex = Helpers::GetFrameIndex(m_pCurrentImage, false, false, bGotoPrevImage);
+			if (bGotoPrevImage) m_pFileList = m_pFileList->Prev();
+			eDirection = CJPEGProvider::BACKWARD;
+			break;
+		}
 		case POS_Toggle:
 			m_pFileList->ToggleBetweenMarkedAndCurrentFile();
 			eDirection = CJPEGProvider::TOGGLE;
@@ -2696,6 +2701,16 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		{
 			for (int i = 0; i < 100; ++i)
 				m_pFileList = m_pFileList->Prev();
+			break;
+		}
+		case POS_Next_Folder:
+		{
+			m_pFileList = m_pFileList->WrapToNextImage();
+			break;
+		}
+		case POS_Previous_Folder:
+		{
+			m_pFileList = m_pFileList->WrapToPrevImage();
 			break;
 		}
 	}

@@ -690,15 +690,11 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 		memset(&rgb, 0, sizeof(rgb));
 		// Override decoder defaults here (codecChoice, requestedSource, ignoreExif, ignoreXMP, etc)
 
-		void* pExifData = 0;
 		unsigned int nNumBytesRead;
 		if (bUseCachedDecoder || (::ReadFile(hFile, pBuffer, nFileSize, (LPDWORD)&nNumBytesRead, NULL) && (nNumBytesRead == nFileSize)))
 		{
 			if (!bUseCachedDecoder)
 			{
-				pExifData = Helpers::FindEXIFBlock(pBuffer, nFileSize);
-				::CloseHandle(hFile);
-
 				m_avifDecoder = avifDecoderCreate();
 
 				avifResult result = avifDecoderSetIOMemory(m_avifDecoder, (const uint8_t*)pBuffer, nFileSize);
@@ -766,7 +762,7 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 						m_sLastAvifFileName = sFileName;
 					}
 					BlendAlpha((uint32*)(rgb.pixels), m_avifDecoder->image->width, m_avifDecoder->image->height, request->ProcessParams.UseCheckerboard);
-					request->Image = new CJPEGImage(m_avifDecoder->image->width, m_avifDecoder->image->height, rgb.pixels, pExifData, 4, 0, IF_AVIF, bHasAnimation, request->FrameIndex, m_avifDecoder->imageCount, nFrameTimeMs);
+					request->Image = new CJPEGImage(m_avifDecoder->image->width, m_avifDecoder->image->height, rgb.pixels, 0, 4, 0, IF_AVIF, bHasAnimation, request->FrameIndex, m_avifDecoder->imageCount, nFrameTimeMs);
 					bSuccess = true;
 				}
 				else
@@ -782,6 +778,10 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 	}
 
 cleanup:
+	if (!bUseCachedDecoder)
+	{
+		::CloseHandle(hFile);
+	}
 	if (!bSuccess)
 	{
 		DeleteCachedAvifDecoder();

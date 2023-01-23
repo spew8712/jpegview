@@ -53,7 +53,9 @@ public:
 		POS_Toggle,
 		POS_AwayFromCurrent,
 		POS_Next_100,
-		POS_Previous_100
+		POS_Previous_100,
+		POS_Next_Folder,
+		POS_Previous_Folder
 	};
 
 	CMainDlg(bool bForceFullScreen);

@@ -46,6 +46,9 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 *  Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
 *  Toggle transparent image background between checkerboard pattern (default) and solid background colour, via hotkey: SHIFT+V.
+*  Navigation
+   * **ALT+<Left/Right arrow>**: Jump back/forward 100 images.
+   * **CTRL+ALT+<Left/Right arrow>**: Jump to previous/next folder.
 
 (Last sync'd up to original's ~8 Jan 2023 updates, with JXL support).
 
@@ -66,7 +69,6 @@ JPEGView has a slideshow mode which can be activated in various ways:
   * **Minus** (_**added in mod**_; when in slideshow mode): decrease slideshow frame interval, i.e. speed it down, in steps. Steps are the available fps speeds listed below.
   * **Space** (_**modified in mod**_; when in slideshow mode): pause/resume slideshow.
   When not in slideshow, it toggles fit to window.
-  * ALT+<left/right arrow>: jump back/forward 100 images.
 * **context menu**: right click image, select "Play folder as slideshow/movie" any of the options available - which are different slideshow speeds.
   * available speeds in fps: 100, 50, 30, 25, 10, 5, 1, 0.5, 0.33, 0.25, 0.2, 0.143, 0.1, 0.05, and _custom_ (interval)
   * _custom_ (_**added in mod**_): as per `SlideShowCustomInterval` setting.
@@ -122,8 +124,8 @@ The new default is **panning** mode.
     Hence, update the KeyMap.txt for this change to take effect!
   * Reuse 'Z' for Quick Zoom to Selection mode.
     * Random sort hotkey changed to ALT+Z.
-* **ALT+SHIFT+<arrow keys>** for forcing 'fine grain' panning.
-  * SHIFT+<arrow keys> panning now scales up proportionally to larger panning amounts when image is larger than window.
+* **ALT+SHIFT+<arrow key>** for forcing 'fine grain' panning.
+  * **SHIFT+<arrow key>** panning now scales up proportionally to larger panning amounts when image is larger than window.
 * Can pan till 1 pixels on any edge.
   * If you can't find your out of view image, try zooming, and using the zoom mini-map to pan our image back into view.
 * **'-'/'='** (i.e. the ones between numbers and backspace) to zoom out/in for keyboards without Numpad -/+ keys.

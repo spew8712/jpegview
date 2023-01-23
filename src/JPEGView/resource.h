@@ -160,8 +160,10 @@
 #define IDM_SHOW_NAVPANEL   3100
 #define IDM_NEXT			4000
 #define IDM_NEXT_100		4001
+#define IDM_NEXT_FOLDER		4002
 #define IDM_PREV			5000
 #define IDM_PREV_100		5001
+#define IDM_PREV_FOLDER		5002
 #define IDM_FIRST			5100
 #define IDM_LAST			5200
 #define IDM_LOOP_FOLDER		6000
