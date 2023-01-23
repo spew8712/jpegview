@@ -125,7 +125,7 @@ The new default is **panning** mode.
     Hence, update the KeyMap.txt for this change to take effect!
   * Reuse 'Z' for Quick Zoom to Selection mode.
     * Random sort hotkey changed to ALT+Z.
-  * CTRL+Z to toggle (left mouse drag) zoom mode. 
+  * CTRL+Z to toggle (left mouse drag) zoom mode.
 * **ALT+SHIFT+<arrow key>** for forcing 'fine grain' panning.
   * **SHIFT+<arrow key>** panning now scales up proportionally to larger panning amounts when image is larger than window.
 * Can pan till 1 pixels on any edge.
@@ -143,7 +143,7 @@ Now calls the blend alpha for all image types.
 ### Wishlist
 
 * A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
-* Replace useless 'zoom mode' indicator with 'selection mode' toggle/indicator in toolbar. Get rid of 'zoom mode' - as it's rather useless zooming in/out while always centred?
+* Gestures?
   * Double finger drag pan while zoom.
   * Swipe gestures to skip images at varying amounts depending on swiping speed. Generally, add control via gestures.
 * Proper support for transparent images.
