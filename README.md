@@ -66,6 +66,7 @@ JPEGView has a slideshow mode which can be activated in various ways:
   * **Minus** (_**added in mod**_; when in slideshow mode): decrease slideshow frame interval, i.e. speed it down, in steps. Steps are the available fps speeds listed below.
   * **Space** (_**modified in mod**_; when in slideshow mode): pause/resume slideshow.
   When not in slideshow, it toggles fit to window.
+  * ALT+<left/right arrow>: jump back/forward 100 images.
 * **context menu**: right click image, select "Play folder as slideshow/movie" any of the options available - which are different slideshow speeds.
   * available speeds in fps: 100, 50, 30, 25, 10, 5, 1, 0.5, 0.33, 0.25, 0.2, 0.143, 0.1, 0.05, and _custom_ (interval)
   * _custom_ (_**added in mod**_): as per `SlideShowCustomInterval` setting.
@@ -75,6 +76,8 @@ JPEGView has a slideshow mode which can be activated in various ways:
     starts JPEGView in slideshow with image switching at 1s intervals, beginning with given image or folder.
     * E.g.: `JPEGView.exe /slideshow 2`
     (**modified in mod**) starts JPEGView in image selection mode, and then starts slideshow with image switching at 2s intervals. (Previously when an image/path is not specified, `/slideshow` is ignored)
+* Slideshow no longer paused when jumping into an image from a different folder.
+* Default to `FolderNavigation` to `LoopSubFolders` (loop into sub-folders as well), instead of `LoopFolder` (stay in same folder).
 
 This mod makes it easier to manipulate the slideshow, specifically to pause/resume it, and (shift) up/down its speed.
 
@@ -135,10 +138,13 @@ Now calls the blend alpha for all image types.
 ### Wishlist
 
 * A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
-* Add 'selection mode' toggle/indicator in toolbar.
+* Replace useless 'zoom mode' indicator with 'selection mode' toggle/indicator in toolbar. Get rid of 'zoom mode' - as it's rather useless zooming in/out while always centred?
+  * Double finger drag pan while zoom.
+  * Swipe gestures to skip images at varying amounts depending on swiping speed. Generally, add control via gestures.
 * Proper support for transparent images.
+  * At least preserve transparency for non-edit saves to a different image format?
 * Support uncommon 'crop' type AVIF?
-* Quality options for 'Save image'.
+* Quality options for 'Save image'. At least save as equivalent quality.
 * Save animated WEBP?
 
 # Developer Notes

@@ -1636,6 +1636,12 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_PREV:
 			GotoImage(POS_Previous);
 			break;
+		case IDM_NEXT_100:
+			GotoImage(POS_Next_100);
+			break;
+		case IDM_PREV_100:
+			GotoImage(POS_Previous_100);
+			break;
 		case IDM_FIRST:
 			GotoImage(POS_First);
 			break;
@@ -2620,7 +2626,9 @@ void CMainDlg::GotoImage(EImagePosition ePos) {
 
 void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	// Timer handling for slideshows
-	if (ePos == POS_Next || ePos == POS_NextSlideShow) {
+	//Don't pause slideshow for every little thing! Let slideshow run!
+	//if (ePos == POS_Next || ePos == POS_NextSlideShow) {
+	if (ePos != POS_Current && ePos != POS_Clipboard && ePos != POS_AwayFromCurrent) {
 		if (m_nCurrentTimeout > 0) {
 			StartSlideShowTimer(m_nCurrentTimeout);
 		}
@@ -2675,6 +2683,18 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		case POS_AwayFromCurrent:
 			m_pFileList = m_pFileList->AwayFromCurrent();
 			break;
+		case POS_Next_100:
+		{
+			for (int i = 0; i < 100; ++i)
+				m_pFileList = m_pFileList->Next();
+			break;
+		}
+		case POS_Previous_100:
+		{
+			for (int i = 0; i < 100; ++i)
+				m_pFileList = m_pFileList->Prev();
+			break;
+		}
 	}
 
 	if (bCheckIfSameImage && (m_pFileList == pOldFileList && nOldFrameIndex == nFrameIndex && !m_pFileList->ChangedSinceCheckpoint())) {

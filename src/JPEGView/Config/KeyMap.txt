@@ -31,6 +31,8 @@
 #define IDM_SHOW_NAVPANEL   	3100			// toggle show navigation panel
 #define IDM_NEXT		4000			// go to next image
 #define IDM_PREV		5000			// go to previous image
+#define IDM_NEXT_100		4001        //skip ahead 100 images
+#define IDM_PREV_100		5001        //skip back 100 images
 #define IDM_FIRST		5100			// go to first image
 #define IDM_LAST		5200			// go to last image
 #define IDM_LOOP_FOLDER		6000			// set navigation mode loop through folder
@@ -221,3 +223,5 @@ Alt+Shift+R             IDM_SLIDESHOW_CUSTOM
 S                       IDC_SELECT_MODE
 Z                       IDC_SINGLE_ZOOM
 Shift+V                 IDM_TOGGLE_TRANSPARENCY
+Alt+Right               IDM_NEXT_100
+Alt+Left                IDM_PREV_100
