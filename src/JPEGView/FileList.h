@@ -177,10 +177,12 @@ private:
 	CFileList* GotoFirstShown();
 	std::list<CFileDesc>::iterator FindFile(const CString& sName);
 	CFileList* FindFileRecursively (const CString& sDirectory, const CString& sFindAfter, 
-		bool bSearchThisFolder, int nLevel, int nRecursion);
-	CFileList* TryCreateFileList(const CString& directory, int nNewLevel);
+		bool bSearchThisFolder, int nLevel, int nRecursion, bool bInverse = false);
+	CFileList* TryCreateFileList(const CString& directory, int nNewLevel, bool bInverse = false);
 	CFileList* WrapToNextImage();
 	CFileList* WrapToPrevImage();
+	bool GetDirList(std::list<CString> &dirList, CString &sNextDirRoot, CString &sThisDirTitle);
+	CFileList* AnyAvailableLast();
 	void FindFiles();
 	void VerifyFiles();
 	bool IsImageFile(const CString & sEnding);

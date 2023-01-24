@@ -85,7 +85,7 @@ public:
 	bool TrimWithoutPromptLosslessJPEG() { return m_bTrimWithoutPromptLosslessJPEG; }
 	Helpers::EDeleteConfirmation DeleteConfirmation() { return m_eDeleteConfirmation; }
 	bool AllowFileDeletion() { return m_bAllowFileDeletion; }
-	bool WrapAroundFolder() { return m_bWrapAroundFolder && m_eNavigation == Helpers::NM_LoopDirectory; }
+	bool WrapAroundFolder() { return m_bWrapAroundFolder; }
 	bool ExchangeXButtons() { return m_bExchangeXButtons; }
 	bool AutoRotateEXIF() { return m_bAutoRotateEXIF; }
 	bool UseEmbeddedColorProfiles() { return m_bUseEmbeddedColorProfiles; }

@@ -49,6 +49,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 *  Navigation
    * **ALT+<Left/Right arrow>**: Jump back/forward 100 images.
    * **CTRL+ALT+<Left/Right arrow>**: Jump to previous/next folder.
+   * Wrap backwards. Allowed for `LoopSameFolderLevel` & `LoopSubFolders` too, not just`LoopFolder`. 
 
 (Last sync'd up to original's ~8 Jan 2023 updates, with JXL support).
 
