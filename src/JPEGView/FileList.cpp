@@ -427,6 +427,28 @@ CFileList* CFileList::Prev() {
 	return this;
 }
 
+CFileList* CFileList::NextFolder() {
+	CFileList* pNextList = WrapToNextImage();
+	if (pNextList != NULL) {
+		return pNextList;
+	}
+	if (m_fileList.size() > 0) {
+		Last();
+	}
+	return this;
+}
+
+CFileList* CFileList::PrevFolder() {
+	CFileList* pNextList = WrapToPrevImage();
+	if ((pNextList != NULL) && (pNextList != this)) {
+		return pNextList;
+	}
+	if (m_fileList.size() > 0) {
+		First();
+	}
+	return this;
+}
+
 void CFileList::First() {
 	m_nMarkedIndexShow = -1;
 	m_iter = m_iterStart = m_fileList.begin();

@@ -79,11 +79,11 @@ public:
 	// of the next item is returned (in most situation the same object)
 	CFileList* Next();
 	// Move to next folder in list.
-	CFileList* WrapToNextImage();
+	CFileList* NextFolder();
 	// Move to previous file in list. The filelist object of the prev item is returned.
 	CFileList* Prev();
 	// Move to previous folder in list.
-	CFileList* WrapToPrevImage();
+	CFileList* PrevFolder();
 	// Move to first file in current folder (according to sort order)
 	void First();
 	// Move to last file in current folder (according to sort order)
@@ -179,6 +179,8 @@ private:
 	CFileList* FindFileRecursively (const CString& sDirectory, const CString& sFindAfter, 
 		bool bSearchThisFolder, int nLevel, int nRecursion);
 	CFileList* TryCreateFileList(const CString& directory, int nNewLevel);
+	CFileList* WrapToNextImage();
+	CFileList* WrapToPrevImage();
 	void FindFiles();
 	void VerifyFiles();
 	bool IsImageFile(const CString & sEnding);

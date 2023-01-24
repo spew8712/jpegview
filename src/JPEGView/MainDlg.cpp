@@ -2796,12 +2796,12 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		}
 		case POS_Next_Folder:
 		{
-			m_pFileList = m_pFileList->WrapToNextImage();
+			m_pFileList = m_pFileList->NextFolder();
 			break;
 		}
 		case POS_Previous_Folder:
 		{
-			m_pFileList = m_pFileList->WrapToPrevImage();
+			m_pFileList = m_pFileList->PrevFolder();
 			break;
 		}
 	}
