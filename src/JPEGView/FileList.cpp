@@ -218,7 +218,7 @@ CFileList::CFileList(const CString & sInitialFile, CDirectoryWatcher & directory
 		if (bImageFile || bIsDirectory) {
 			FindFiles();
 			m_iter = FindFile(sInitialFile);
-			m_iterStart = bWrapAroundFolder ? m_iter : m_fileList.begin();
+			m_iterStart = m_fileList.begin();
 		} else {
 			// neither image file nor directory nor list of file names - try to read anyway but normally will fail
 			CFindFile fileFind;
@@ -278,11 +278,10 @@ void CFileList::Reload(LPCTSTR sFileName, bool clearForwardHistory) {
 
 	if (!m_bIsSlideShowList) {
 		FindFiles();
-		m_iterStart = m_bWrapAroundFolder ? FindFile(m_sInitialFile) : m_fileList.begin();
 	} else {
 		VerifyFiles(); // maybe some of the files got deleted or moved
-		m_iterStart = m_fileList.begin();
 	}
+	m_iterStart = m_fileList.begin();
 	m_iter = FindFile(sCurrentFile); // go again to current file
 }
 
@@ -405,7 +404,8 @@ CFileList* CFileList::AnyAvailableLast()
 		return m_prev;
 	//else forcibily return last image anyway
 	if (m_iter == m_fileList.begin()) {
-		MoveIterToLast();
+		if (m_bWrapAroundFolder)
+			MoveIterToLast();
 	}
 	else {
 		m_iter--;
@@ -561,7 +561,7 @@ void CFileList::SetSorting(Helpers::ESorting eSorting, bool sortUpcounting) {
 		CFileDesc::SetSorting(eSorting, sortUpcounting);
 		m_fileList.sort();
 		m_iter = FindFile(sThisFile);
-		m_iterStart = m_bWrapAroundFolder ? m_iter : m_fileList.begin();
+		m_iterStart = m_fileList.begin();
 	}
 }
 
@@ -581,7 +581,7 @@ void CFileList::SetNavigationMode(Helpers::ENavigationMode eMode) {
 	sm_eMode = eMode;
 	DeleteHistory();
 	m_nLevel = 0;
-	m_iterStart = m_bWrapAroundFolder ? m_iter : m_fileList.begin();
+	m_iterStart = m_fileList.begin();
 }
 
 void CFileList::MarkCurrentFile() {
@@ -660,12 +660,8 @@ void CFileList::DeleteHistory(bool onlyForward) {
 ///////////////////////////////////////////////////////////////////////////////////
 
 void CFileList::MoveIterToLast() {
-	std::list<CFileDesc>::iterator lastIter = m_iter;
-	while (m_iter != m_fileList.end()) {
-		lastIter = m_iter;
-		m_iter++;
-	}
-	m_iter = lastIter;
+	m_iter = m_fileList.end();
+	--m_iter;
 }
 
 std::list<CFileDesc>::iterator CFileList::FindFile(const CString& sName) {
@@ -862,14 +858,16 @@ CFileList* CFileList::WrapToPrevImage() {
 			return pFileList;
 		}
 	}
-	return this;
+	return AnyAvailableLast();
 }
 
 void CFileList::NextInFolder() {
 	if (m_fileList.size() > 0) {
 		m_iter++;
 		if (m_iter == m_fileList.end()) {
-			m_iter = m_fileList.begin();
+			if (m_bWrapAroundFolder)
+				m_iter = m_fileList.begin();
+			else --m_iter;
 		}
 	}
 }
