@@ -614,6 +614,46 @@ void AdjustClip(int &clippedSizeX, int &ww, int &wi, int& ox, int& oxi, int& cx)
 	}
 }
 
+CSize CMainDlg::ComputeAdjustments(CPoint& offsetsAdjusted, CPoint& offsetsInWin, CPoint & offsetsInImage, CSize &clippedSize)
+{
+	// find out the new vitual image size and the size of the bitmap to request
+	CSize newSize = Helpers::GetVirtualImageSize(m_pCurrentImage->OrigSize(),
+		m_clientRect.Size(), IsAdjustWindowToImage() ? Helpers::ZM_FitToScreenNoZoom :
+		(m_isUserFitToScreen ? m_autoZoomFitToScreen : GetAutoZoomMode()), m_dZoom);
+	m_dRealizedZoom = (double)newSize.cx / m_pCurrentImage->OrigSize().cx;
+	/*
+	* Replace functionality of LimitOffsets et al with all-in-one AdjustClip
+	*
+	CPoint unlimitedOffsets = m_offsets; //no longer needed, LimitOffsets()'s aggressive limits have been removed
+	m_offsets = Helpers::LimitOffsets(m_offsets, m_clientRect.Size(), newSize);
+	//ignore this 'm_bZoomMode' thingy, which somehow disables panning!
+	m_DIBOffsets = m_bZoomMode ? (unlimitedOffsets - m_offsets) : CPoint(0, 0);
+	m_DIBOffsets = unlimitedOffsets;
+	*/
+
+	// Clip to client rectangle and request the DIB
+	//let's compute offset limits, clipping area, etc. together!
+	int nWinWidth = m_clientRect.Width(),
+		nWinHeight = m_clientRect.Height(),
+		nImageWidth = newSize.cx,
+		nImageHeight = newSize.cy,
+		ox = m_offsets.x, oy = m_offsets.y, //offsets in win coords system
+
+		//clippedSize: dimensions of visible area of image in window
+		clippedSizeX = 0,
+		clippedSizeY = 0,
+		cx = 0, cy = 0, //top-left (TL) corner of win with image visible
+		oxi = 0, oyi = 0; //offsets in image coords system //<- need this to crop visible area from image
+	AdjustClip(clippedSizeX, nWinWidth, nImageWidth, ox, oxi, cx);
+	AdjustClip(clippedSizeY, nWinHeight, nImageHeight, oy, oyi, cy);
+	offsetsAdjusted.x = ox; offsetsAdjusted.y = oy;
+	offsetsInWin.x = cx; offsetsInWin.y = cy;
+	offsetsInImage.x = oxi; offsetsInImage.y = oyi;
+	clippedSize.cx = clippedSizeX;
+	clippedSize.cy = clippedSizeY;
+	return newSize;
+}
+
 LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	static bool s_bFirst = true;
@@ -665,41 +705,11 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		if (m_dZoomMult < 0.0) {
 			m_dZoomMult = GetZoomMultiplier(m_pCurrentImage, m_clientRect);
 		}
-
-		// find out the new vitual image size and the size of the bitmap to request
-		CSize newSize = Helpers::GetVirtualImageSize(m_pCurrentImage->OrigSize(),
-			m_clientRect.Size(), IsAdjustWindowToImage() ? Helpers::ZM_FitToScreenNoZoom : 
-			   (m_isUserFitToScreen ? m_autoZoomFitToScreen : GetAutoZoomMode()), m_dZoom);
+		CPoint offsetsAdjusted, offsetsInWin, offsetsInImage;
+		CSize clippedSize,
+			newSize = ComputeAdjustments(offsetsAdjusted, offsetsInWin, offsetsInImage, clippedSize);
 		m_virtualImageSize = newSize;
-		m_dRealizedZoom = (double)newSize.cx / m_pCurrentImage->OrigSize().cx;
-		/*
-		* Replace functionality of LimitOffsets et al with all-in-one AdjustClip
-		*
-		CPoint unlimitedOffsets = m_offsets; //no longer needed, LimitOffsets()'s aggressive limits have been removed 
-		m_offsets = Helpers::LimitOffsets(m_offsets, m_clientRect.Size(), newSize);
-		//ignore this 'm_bZoomMode' thingy, which somehow disables panning!
-		m_DIBOffsets = m_bZoomMode ? (unlimitedOffsets - m_offsets) : CPoint(0, 0);
-		m_DIBOffsets = unlimitedOffsets;
-		*/
-
-		// Clip to client rectangle and request the DIB
-		//let's compute offset limits, clipping area, etc. together!
-		int nWinWidth = m_clientRect.Width(),
-			nWinHeight = m_clientRect.Height(),
-			nImageWidth = newSize.cx,
-			nImageHeight = newSize.cy,
-			ox = m_offsets.x, oy = m_offsets.y, //offsets in win coords system
-
-			//clippedSize: dimensions of visible area of image in window
-			clippedSizeX = 0,
-			clippedSizeY = 0,
-			cx = 0, cy = 0, //top-left (TL) corner of win with image visible
-			oxi = 0, oyi = 0; //offsets in image coords system //<- need this to crop visible area from image
-		AdjustClip(clippedSizeX, nWinWidth, nImageWidth, ox, oxi, cx);
-		AdjustClip(clippedSizeY, nWinHeight, nImageHeight, oy, oyi, cy);
-		CPoint offsetsInImage(oxi, oyi);
-		CSize clippedSize(clippedSizeX, clippedSizeY);
-		m_offsets.x = ox; m_offsets.y = oy;
+		m_offsets.x = offsetsAdjusted.x; m_offsets.y = offsetsAdjusted.y;
 
 		void* pDIBData;
 		if (m_pUnsharpMaskPanelCtl->IsVisible()) {
@@ -730,7 +740,7 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		// Paint the DIB
 		if (pDIBData != NULL) {
 			BITMAPINFO bmInfo;
-			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, CPoint(cx, cy));
+			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, offsetsInWin);
 			// The DIB is also blitted into the memory DCs of the panels
 			memDCMgr.BlitImageToMemDC(pDIBData, &bmInfo, ptDIBStart, m_pNavPanelCtl->CurrentBlendingFactor());
 		}
@@ -803,21 +813,16 @@ void CMainDlg::PaintToDC(CDC& dc) {
 		pCurrentImage->VerifyRotation(CRotationParams(pCurrentImage->GetRotationParams(), GetRotation()));
 
 		// find out the new virtual image size and the size of the bitmap to request
-		double dZoom = m_dZoom;
-		CSize newSize = Helpers::GetVirtualImageSize(pCurrentImage->OrigSize(), m_clientRect.Size(), GetAutoZoomMode(), dZoom);
-		CPoint offsets = Helpers::LimitOffsets(GetOffsets(), m_clientRect.Size(), newSize);
-		m_dRealizedZoom = (double)newSize.cx / m_pCurrentImage->OrigSize().cx;
-
-		// Clip to client rectangle and request the DIB
-		CSize clippedSize(min(m_clientRect.Width(), newSize.cx), min(m_clientRect.Height(), newSize.cy));
-		CPoint offsetsInImage = pCurrentImage->ConvertOffset(newSize, clippedSize, offsets);
+		CPoint offsetsAdjusted, offsetsInWin, offsetsInImage;
+		CSize clippedSize,
+			newSize = ComputeAdjustments(offsetsAdjusted, offsetsInWin, offsetsInImage, clippedSize);
 
 		void* pDIBData = pCurrentImage->GetDIB(newSize, clippedSize, offsetsInImage, 
 				*GetImageProcessingParams(), 
 				CreateDefaultProcessingFlags());
 		if (pDIBData != NULL) {
 			BITMAPINFO bmInfo;
-			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, CPoint(0, 0));
+			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, offsetsInWin);
 		}
 
 		CRect imageProcessingArea = m_pImageProcPanelCtl->PanelRect();
