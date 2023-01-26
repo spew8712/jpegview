@@ -60,7 +60,8 @@ public:
 	// Supported text file encodings are ANSI, Unicode or UTF-8.
 	// nLevel is increased when recursively create lists for sub-folders
 	CFileList(const CString & sInitialFile, CDirectoryWatcher & directoryWatcher, 
-		Helpers::ESorting eInitialSorting, bool isSortedUpcounting, bool bWrapAroundFolder, int nLevel = 0, bool forceSorting = false);
+		Helpers::ESorting eInitialSorting, bool isSortedUpcounting, bool bWrapAroundFolder, int nLevel = 0, bool forceSorting = false,
+		int nMinFilesize = 1, bool bHideHidden = false);
 	~CFileList();
 
 	// Gets a list of all supported file endings, separated by semicolon
@@ -155,7 +156,8 @@ private:
 	bool m_bDeleteHistory;
 	bool m_bIsSlideShowList;
 	bool m_bWrapAroundFolder;
-	int m_nLevel;
+	int m_nLevel, m_nMinFilesize;
+	bool m_bHideHidden;
 	CString m_sInitialFile;
 	CString m_sDirectory;
 	// filelists for several folders are chained

@@ -202,6 +202,27 @@ CSettingsProvider::CSettingsProvider(void) {
 		m_dSlideShowCustomFps = 1 / (5*60); //5mins
 	}
 
+	m_nMinFilesize = 0;
+	CString sMinFilesize = GetString(_T("MinFilesize"), _T("")).Trim();
+	if (sMinFilesize.GetLength() > 0)
+	{
+		int nMultiplier = 1;
+		int nLastChIndex = sMinFilesize.GetLength() - 1;
+		wchar_t chUnits = sMinFilesize[nLastChIndex];
+		if (chUnits == 'K')
+		{
+			nMultiplier = 1024;
+			sMinFilesize = sMinFilesize.Left(nLastChIndex);
+		}
+		else if (chUnits == 'M')
+		{
+			nMultiplier = 1024 * 1024;
+			sMinFilesize = sMinFilesize.Left(nLastChIndex);
+		}
+		m_nMinFilesize = (int) (_wtof((LPCTSTR)sMinFilesize) * nMultiplier);
+	}
+	m_bHideHidden = GetBool(_T("HideHidden"), false);
+
 	m_bForceGDIPlus = GetBool(_T("ForceGDIPlus"), false);
 	m_bSingleInstance = GetBool(_T("SingleInstance"), false);
 	m_bSingleFullScreenInstance = GetBool(_T("SingleFullScreenInstance"), true);

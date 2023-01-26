@@ -330,7 +330,8 @@ private:
 	bool m_bUseLosslessWEBP;
 	bool m_isBeforeFileSelected;
 	double m_dLastImageDisplayTime;
-	bool m_bSelectMode, m_bSingleZoom;
+	bool m_bSelectMode, m_bSingleZoom,
+		m_bMinFilesize, m_bHideHidden;
 	bool m_bUseCheckerboard; //for transparent background
 	bool m_bWindowBorderless;
 	bool m_bAlwaysOnTop;

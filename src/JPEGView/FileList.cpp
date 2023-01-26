@@ -15,7 +15,7 @@ bool CFileDesc::sm_bSortUpcounting = true;
 Helpers::ENavigationMode CFileList::sm_eMode = Helpers::NM_LoopDirectory;
 
 // Helper to add the current file of filefind object to the list
-static void AddToFileList(std::list<CFileDesc> & fileList, CFindFile & fileFind, LPCTSTR expectedExtension) {
+static void AddToFileList(std::list<CFileDesc> & fileList, CFindFile & fileFind, LPCTSTR expectedExtension, int nMinFilesize = 1, bool bHideHidden = false) {
 	if (!fileFind.IsDirectory()) {
 		if (expectedExtension != NULL) {
 			// compare if the extension is the expected extension
@@ -29,8 +29,14 @@ static void AddToFileList(std::list<CFileDesc> & fileList, CFindFile & fileFind,
 		FILETIME lastWriteTime, creationTime;
 		fileFind.GetLastWriteTime(&lastWriteTime);
 		fileFind.GetCreationTime(&creationTime);
-		CFileDesc thisFile(fileFind.GetFilePath(), &lastWriteTime, &creationTime, fileFind.GetFileSize());
-		fileList.push_back(thisFile);
+		if (fileFind.GetFileSize() >= nMinFilesize)
+		{
+			if (!bHideHidden || !fileFind.IsHidden())
+			{
+				CFileDesc thisFile(fileFind.GetFilePath(), &lastWriteTime, &creationTime, fileFind.GetFileSize());
+				fileList.push_back(thisFile);
+			}
+		}
 	}
 }
 
@@ -187,8 +193,12 @@ static LPCTSTR* GetSupportedFileEndingList() {
 }
 
 CFileList::CFileList(const CString & sInitialFile, CDirectoryWatcher & directoryWatcher, 
-	Helpers::ESorting eInitialSorting, bool isSortedUpcounting, bool bWrapAroundFolder, int nLevel, bool forceSorting)
-	: m_directoryWatcher(directoryWatcher) {
+	Helpers::ESorting eInitialSorting, bool isSortedUpcounting, bool bWrapAroundFolder, int nLevel, bool forceSorting,
+	int nMinFilesize, bool bHideHidden)
+	: m_directoryWatcher(directoryWatcher),
+	m_nMinFilesize(nMinFilesize),
+	m_bHideHidden(bHideHidden)
+{
 
 	CFileDesc::SetSorting(eInitialSorting, isSortedUpcounting);
 	m_bDeleteHistory = true;
@@ -223,7 +233,7 @@ CFileList::CFileList(const CString & sInitialFile, CDirectoryWatcher & directory
 			// neither image file nor directory nor list of file names - try to read anyway but normally will fail
 			CFindFile fileFind;
 			if (fileFind.FindFile(sInitialFile)) {
-				AddToFileList(m_fileList, fileFind, NULL);
+				AddToFileList(m_fileList, fileFind, NULL, m_nMinFilesize, m_bHideHidden);
 			}
 			m_iter = m_iterStart = m_fileList.begin();
 		}
@@ -932,9 +942,9 @@ void CFileList::FindFiles() {
 		LPCTSTR* allFileEndings = GetSupportedFileEndingList();
 		for (int i = 0; i < nNumEndings; i++) {
 			if (fileFind.FindFile(m_sDirectory + _T("\\*.") + allFileEndings[i])) {
-				AddToFileList(m_fileList, fileFind, allFileEndings[i]);
+				AddToFileList(m_fileList, fileFind, allFileEndings[i], m_nMinFilesize, m_bHideHidden);
 				while (fileFind.FindNextFile()) {
-					AddToFileList(m_fileList, fileFind, allFileEndings[i]);
+					AddToFileList(m_fileList, fileFind, allFileEndings[i], m_nMinFilesize, m_bHideHidden);
 				}
 			}
 		}
@@ -1102,7 +1112,7 @@ bool CFileList::TryReadingSlideShowList(const CString & sSlideShowFile) {
 			CFindFile fileFind;
 			CString sPath = bRelativePath ? (m_sDirectory + _T('\\') + pStart) : pStart;
 			if (fileFind.FindFile(sPath)) {
-				AddToFileList(m_fileList, fileFind, NULL);
+				AddToFileList(m_fileList, fileFind, NULL, m_nMinFilesize, m_bHideHidden);
 			}
 		}
 	} while (nTotalChars < nRealFileSizeChars);

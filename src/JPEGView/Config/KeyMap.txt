@@ -50,6 +50,8 @@
 #define IDM_SLIDESHOW_RESUME    7399			// resume slide show (after stop)
 #define IDM_SLIDESHOW_1         7401        // start slide show @ 1fps
 #define IDM_SLIDESHOW_CUSTOM	7421        // start slide show @ custom fps, specified via INI SlildeShowCustomInterval
+#define IDM_TOGGLE_MIN_FILESIZE 7430        // toggle ignoring small images
+#define IDM_TOGGLE_HIDE_HIDDEN  7431        // toggle ignoring hidden images
 #define IDM_ROTATE_90		8000			// rotate image 90 deg
 #define IDM_ROTATE_270		9000			// rotate image 270 deg
 #define IDM_ROTATE          	9100			// show free rotation dialog
@@ -238,3 +240,5 @@ Alt+Left                IDM_PREV_100
 Ctrl+Alt+Right          IDM_NEXT_FOLDER
 Ctrl+Alt+Left           IDM_PREV_FOLDER
 Ctrl+Z                  IDM_ZOOM_MODE
+Alt+M                   IDM_TOGGLE_MIN_FILESIZE
+Alt+H                   IDM_TOGGLE_HIDE_HIDDEN
