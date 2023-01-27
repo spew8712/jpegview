@@ -698,15 +698,19 @@ std::list<CFileDesc>::iterator CFileList::FindFile(const CString& sName) {
 	return m_fileList.begin(); // in case the file was not found
 }
 
-void GetDirListRcursive(CString sPath, std::list<CString>& dirList)
+void CFileList::GetDirListRcursive(CString sPath, std::list<CString>& dirList, CString& sThisDirTitle)
 {
 	CFindFile fileFind;
 	if (fileFind.FindFile(sPath + "\\*")) {
-		if (fileFind.IsDirectory() && !fileFind.IsDots()) {
+		if (fileFind.IsDirectory() && !fileFind.IsDots()
+			&& ((sThisDirTitle.Compare(fileFind.GetFileName()) == 0) || (!m_bHideHidden || !fileFind.IsHidden())))
+		{
 			dirList.push_back(fileFind.GetFileName());
 		}
 		while (fileFind.FindNextFile()) {
-			if (fileFind.IsDirectory() && !fileFind.IsDots()) {
+			if (fileFind.IsDirectory() && !fileFind.IsDots()
+				&& ((sThisDirTitle.Compare(fileFind.GetFileName()) == 0) || (!m_bHideHidden || !fileFind.IsHidden())))
+			{
 				dirList.push_back(fileFind.GetFileName());
 			}
 		}
@@ -722,7 +726,7 @@ bool CFileList::GetDirList(std::list<CString>& dirList, CString &sNextDirRoot, C
 	sNextDirRoot = m_sDirectory.Left(nPos);
 	sThisDirTitle = m_sDirectory.Right(m_sDirectory.GetLength() - nPos - 1);
 	// collect all sibling folders
-	GetDirListRcursive(sNextDirRoot, dirList);
+	GetDirListRcursive(sNextDirRoot, dirList, sThisDirTitle);
 	if (dirList.size() == 0) {
 		return false; // no sibling folders
 	}
@@ -780,7 +784,7 @@ CFileList* CFileList::FindFileRecursively (const CString& sDirectory, const CStr
 	// create a list of all child directories
 	CFindFile fileFind;
 	std::list<CString> dirList;
-	GetDirListRcursive(sDirectory, dirList);
+	GetDirListRcursive(sDirectory, dirList, CString(""));
 
 	if (dirList.size() > 0) {
 		dirList.sort();
@@ -934,7 +938,7 @@ CFileList* CFileList::TryCreateFileList(const CString& directory, int nNewLevel,
 		pList = pList->m_next;
 	}
 
-	CFileList* pNewList = new CFileList(directory, m_directoryWatcher, CFileDesc::GetSorting(), CFileDesc::IsSortedUpcounting(), m_bWrapAroundFolder, nNewLevel);
+	CFileList* pNewList = new CFileList(directory, m_directoryWatcher, CFileDesc::GetSorting(), CFileDesc::IsSortedUpcounting(), m_bWrapAroundFolder, nNewLevel, m_bHideHidden);
 	if (pNewList->m_fileList.size() > 0) {
 		if (!bInverse)
 		{

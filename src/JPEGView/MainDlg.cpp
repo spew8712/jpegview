@@ -209,6 +209,7 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_nTransitionTime = sp.SlideShowEffectTimeMs();
 	m_dSlideShowCustomFps = sp.SlideShowCustomFps();
 	m_bMinFilesize = sp.MinFilesize() > 0;
+	m_bHideHidden = sp.HideHidden();
 
 	CHistogramCorr::SetContrastCorrectionStrength((float)sp.AutoContrastAmount());
 	CHistogramCorr::SetBrightnessCorrectionStrength((float)sp.AutoBrightnessAmount());
