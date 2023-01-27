@@ -386,4 +386,6 @@ private:
 	void AdjustAnimationFrameTime();
 	void StopAnimation();
 	CSize ComputeAdjustments(CPoint& offsetsAdjusted, CPoint& offsetsInWin, CPoint& offsetsInImage, CSize& clippedSize);
+	void CropToSelection(bool bLossless);
+	bool AdjustCropSelection(CRect& cropRect);
 };

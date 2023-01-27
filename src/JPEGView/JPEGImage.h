@@ -116,6 +116,7 @@ public:
 	// Crops the image. 
 	// Applies to original pixels!
 	bool Crop(CRect cropRect);
+	bool AbleToCrop(CRect cropRect);
 
 	// Rotate the image clockwise by 90, 180 or 270 degrees. All other angles are invalid.
 	// Applies to original pixels!

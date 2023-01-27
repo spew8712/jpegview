@@ -52,7 +52,7 @@ public:
 	void ResetStartCropOnNextClick() { m_bDontStartCropOnNextClick = false; }
 
 	// perform lossless cropping, using the current cropping rectangle
-	void CropLossless();
+	void CropLossless(CRect cropRect);
 
 	// Gets the handle hit at the given mouse position
 	Handle HitHandle(int nX, int nY);
@@ -62,6 +62,7 @@ public:
 	int ShowCropContextMenu();
 
 	void informImageAspectRatio(double dImageAspectRatio);
+	CPoint PreserveAspectRatio(CPoint cropStart, CPoint cropEnd, bool adjustWidth, bool bCalculateEnd);
 
 private:
 	CMainDlg* m_pMainDlg;
@@ -86,7 +87,6 @@ private:
 	void InvalidateSceenCropRect();
 	CRect GetScreenCropRect();
 	CPoint ScreenToImage(int nX, int nY);
-	CPoint PreserveAspectRatio(CPoint cropStart, CPoint cropEnd, bool adjustWidth, bool bCalculateEnd);
 	void NormalizeCroppingRect();
 	void SetMouseCursor(int nX, int nY);
 };

@@ -1523,6 +1523,73 @@ bool CMainDlg::IsCurrentImageFitToScreen(void* pContext) {
 // Private
 ///////////////////////////////////////////////////////////////////////////////////
 
+/*
+* Checks whether selection is valid, and asks uses whether to adjust it or not, or abort crop.
+* As CJPEGImage::Crop will reject silently if selection out of image bounds!
+* 
+* Return value: true = to crop; false = abort
+*/
+bool CMainDlg::AdjustCropSelection(CRect& cropRect)
+{
+	if (!m_pCurrentImage->AbleToCrop(cropRect))
+	{
+		int nChoice = IDYES; //default: just crop, ignoring any specified aspect ratio
+		if (m_pCropCtl->GetCropMode() != CCropCtl::CM_Free)
+		{
+			//let user choose whether to forcibly preserve specified aspect ratio
+			CString qn(CNLS::GetString(_T("Do you want to crop out of image bounds?")));
+			qn += "\n\nYes= crop as is\n\nNo= adjust aspect ratio, then crop\n\nCancel= abort";
+			nChoice = ::MessageBox(m_hWnd, qn, CNLS::GetString(_T("Confirm")), MB_YESNOCANCEL | MB_ICONQUESTION);
+			if (nChoice == IDCANCEL)
+			{
+				return false; //abort
+			}
+		}
+		//else no specified aspect ratio, so free to adjust and crop
+
+		//fix out of bounds corners of selection box
+		if (cropRect.left < 0)
+			cropRect.left = 0;
+		if (cropRect.top < 0)
+			cropRect.top = 0;
+		CSize imgSize = m_pCurrentImage->OrigSize();
+		if (cropRect.right > imgSize.cx)
+			cropRect.right = imgSize.cx;
+		if (cropRect.bottom > imgSize.cy)
+			cropRect.bottom = imgSize.cy;
+		if (nChoice == IDNO)
+		{
+			//Preserve current desired aspect ratio too, then crop
+			CPoint cropEnd = m_pCropCtl->PreserveAspectRatio(CPoint(cropRect.left, cropRect.top), CPoint(cropRect.right, cropRect.bottom), true, true);
+			cropRect.right = cropEnd.x;
+			cropRect.bottom = cropEnd.y;
+		}
+		//else IDYES: Disregarding current desired aspect ratio, and just crop
+	}
+	return true;
+}
+
+void CMainDlg::CropToSelection(bool bLossless) {
+	if (!m_pCurrentImage)
+		return;
+	CRect cropRect = m_pCropCtl->GetImageCropRect(bLossless);
+	if (cropRect.IsRectEmpty()) {
+		return;
+	}
+	if (AdjustCropSelection(cropRect))
+	{
+		if (bLossless)
+			m_pCropCtl->CropLossless(cropRect);
+		else
+		{
+			m_pCurrentImage->Crop(cropRect);
+			m_pImageProcPanelCtl->ShowHideSaveDBButtons();
+			this->Invalidate(FALSE);
+			AdjustWindowToImage(false);
+		}
+	}
+}
+
 void CMainDlg::InvalidateHelpDlg() {
 	if (m_pHelpDlg != NULL && !m_pHelpDlg->IsDestroyed()) {
 		m_pHelpDlg->Invalidate();
@@ -2194,15 +2261,10 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			ZoomToSelection();
 			break;
 		case IDM_CROP_SEL:
-			if (m_pCurrentImage != NULL) {
-				m_pCurrentImage->Crop(m_pCropCtl->GetImageCropRect(false));
-				m_pImageProcPanelCtl->ShowHideSaveDBButtons();
-				this->Invalidate(FALSE);
-				AdjustWindowToImage(false);
-			}
+			CropToSelection(false);
 			break;
 		case IDM_LOSSLESS_CROP_SEL:
-			m_pCropCtl->CropLossless();
+			CropToSelection(true);
 			break;
 		case IDM_COPY_SEL:
 			if (m_pCurrentImage != NULL) {

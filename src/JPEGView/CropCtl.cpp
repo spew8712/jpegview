@@ -485,8 +485,7 @@ CRect CCropCtl::GetImageCropRect(bool losslessCrop) {
 	}
 }
 
-void CCropCtl::CropLossless() {
-	CRect cropRect = GetImageCropRect(true);
+void CCropCtl::CropLossless(CRect cropRect) {
 	if (cropRect.IsRectEmpty()) {
 		return;
 	}

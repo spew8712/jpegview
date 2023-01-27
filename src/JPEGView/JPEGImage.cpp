@@ -719,6 +719,23 @@ bool CJPEGImage::Crop(CRect cropRect) {
 	return true;
 }
 
+//Checks if able to crop
+bool CJPEGImage::AbleToCrop(CRect cropRect)
+{
+	CSize targetSize = cropRect.Size(),
+		sourceSize(m_nOrigWidth, m_nOrigHeight);
+	CRect targetRect(0, 0, cropRect.Width(), cropRect.Height());
+	if (cropRect.Size() != targetRect.Size() ||
+		cropRect.left < 0 || cropRect.right > sourceSize.cx ||
+		cropRect.top < 0 || cropRect.bottom > sourceSize.cy ||
+		targetRect.left < 0 || targetRect.right > targetSize.cx ||
+		targetRect.top < 0 || targetRect.bottom > targetSize.cy)
+	{
+		return false;
+	}
+	return true;
+}
+
 void CJPEGImage::SetDimRects(const CDimRect* dimRects, int numberOfRects) {
 	bool bIdentical = false;
 	if (m_pDIBPixelsLUTProcessed) {
