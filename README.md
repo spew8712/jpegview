@@ -45,6 +45,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 * Read/write (most common) AVIF, include animated. Dev notes below.
 *  Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
+   * Option for selection box to match image aspect ratio.
 *  Toggle transparent image background between checkerboard pattern (default) and solid background colour, via hotkey: SHIFT+V.
 *  Navigation
    * **ALT+<Left/Right arrow>**: Jump back/forward 100 images.
@@ -123,6 +124,8 @@ The new default is **panning** mode.
     * Once area is selected (mouse released), zoom immediately occurs.
     * Resume in panning mode.
     Basically don't ever stay in the pesky selection mode that leave ugly selection boxes defiling the image.
+   * Option for selection box to match image aspect ratio.
+     * Maybe override number keys for easier selection of aspect ratio? Currently in crop selection context menu that's only available upon right clicking selection box.
 * Changed hotkeys
   * Reuse **'S'** for toggling Selection mode.
     * Dunno what 'save/delete param DB' are, but presuming they're infrequently used junk features, their hotkeys 'S' & 'D' are changed to ALT+S/D.
