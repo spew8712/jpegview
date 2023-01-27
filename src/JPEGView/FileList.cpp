@@ -455,7 +455,16 @@ CFileList* CFileList::Prev() {
 
 CFileList* CFileList::NextFolder() {
 	CFileList* pNextList = WrapToNextImage();
+	if (pNextList == NULL) {
+		// no next found, go to source of the prev->prev chain
+		pNextList = this;
+		while (pNextList->m_prev != NULL) pNextList = pNextList->m_prev;
+		if (pNextList != this) {
+			return m_bWrapAroundFolder ? GotoFirstShown() : this; // stop here, do not wrap around
+		}
+	}
 	if (pNextList != NULL) {
+		pNextList->First();
 		return pNextList;
 	}
 	if (m_fileList.size() > 0) {
@@ -467,6 +476,7 @@ CFileList* CFileList::NextFolder() {
 CFileList* CFileList::PrevFolder() {
 	CFileList* pNextList = WrapToPrevImage();
 	if ((pNextList != NULL) && (pNextList != this)) {
+		pNextList->Last();
 		return pNextList;
 	}
 	if (m_fileList.size() > 0) {
@@ -688,17 +698,10 @@ std::list<CFileDesc>::iterator CFileList::FindFile(const CString& sName) {
 	return m_fileList.begin(); // in case the file was not found
 }
 
-bool CFileList::GetDirList(std::list<CString>& dirList, CString &sNextDirRoot, CString& sThisDirTitle)
+void GetDirListRcursive(CString sPath, std::list<CString>& dirList)
 {
-	int nPos = m_sDirectory.ReverseFind(_T('\\'));
-	if (nPos <= 0) {
-		return false; // root dir - no siblings
-	}
-	sNextDirRoot = m_sDirectory.Left(nPos);
-	sThisDirTitle = m_sDirectory.Right(m_sDirectory.GetLength() - nPos - 1);
-	// collect all sibling folders
 	CFindFile fileFind;
-	if (fileFind.FindFile(sNextDirRoot + "\\*")) {
+	if (fileFind.FindFile(sPath + "\\*")) {
 		if (fileFind.IsDirectory() && !fileFind.IsDots()) {
 			dirList.push_back(fileFind.GetFileName());
 		}
@@ -708,6 +711,18 @@ bool CFileList::GetDirList(std::list<CString>& dirList, CString &sNextDirRoot, C
 			}
 		}
 	}
+}
+
+bool CFileList::GetDirList(std::list<CString>& dirList, CString &sNextDirRoot, CString& sThisDirTitle)
+{
+	int nPos = m_sDirectory.ReverseFind(_T('\\'));
+	if (nPos <= 0) {
+		return false; // root dir - no siblings
+	}
+	sNextDirRoot = m_sDirectory.Left(nPos);
+	sThisDirTitle = m_sDirectory.Right(m_sDirectory.GetLength() - nPos - 1);
+	// collect all sibling folders
+	GetDirListRcursive(sNextDirRoot, dirList);
 	if (dirList.size() == 0) {
 		return false; // no sibling folders
 	}
@@ -765,16 +780,7 @@ CFileList* CFileList::FindFileRecursively (const CString& sDirectory, const CStr
 	// create a list of all child directories
 	CFindFile fileFind;
 	std::list<CString> dirList;
-	if (fileFind.FindFile(sDirectory + "\\*")) {
-		if (fileFind.IsDirectory() && !fileFind.IsDots()) {
-			dirList.push_back(fileFind.GetFileName());
-		}
-		while (fileFind.FindNextFile()) {
-			if (fileFind.IsDirectory() && !fileFind.IsDots()) {
-				dirList.push_back(fileFind.GetFileName());
-			}
-		}
-	}
+	GetDirListRcursive(sDirectory, dirList);
 
 	if (dirList.size() > 0) {
 		dirList.sort();
@@ -807,6 +813,12 @@ CFileList* CFileList::FindFileRecursively (const CString& sDirectory, const CStr
 				}
 				if (iter->CompareNoCase(sFindAfter) == 0) {
 					bStart = true;
+				}
+			}
+			if (bStart) {
+				CFileList* pFileList = FindFileRecursively(sDirectory, _T(""), true, nLevel + 1, nRecursion + 1, true);
+				if (pFileList != NULL) {
+					return pFileList;
 				}
 			}
 		}
@@ -887,16 +899,22 @@ CFileList* CFileList::GotoFirstShown() {
 		return this;
 
 	LPCTSTR thisFile, prevFile;
-	LPCTSTR firstFile = Current();
-	CFileList* pThis = this;
+	//LPCTSTR firstFile = Current();
+	LPCTSTR firstFile = NULL;
+	std::list<CFileDesc>::iterator pIter = m_fileList.end();
+	if (--pIter != m_fileList.end()) {
+		firstFile = pIter->GetName();
+	}
+	CFileList *pThis = this, *pFound = this;
 	do {
 		thisFile = pThis->Current();
+		pFound = pThis;
 		CFileList* pPrev = pThis->Prev();
 		pThis = pPrev;
 		prevFile = pThis->Current();
 	} while (thisFile != NULL && prevFile != NULL && firstFile != NULL && _tcscmp(thisFile, prevFile) != 0 && _tcscmp(prevFile, firstFile) != 0);
 
-	return pThis;
+	return pFound;
 }
 
 CFileList* CFileList::TryCreateFileList(const CString& directory, int nNewLevel, bool bInverse) {
