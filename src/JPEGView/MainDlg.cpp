@@ -2810,14 +2810,12 @@ void CMainDlg::GotoImage(EImagePosition ePos) {
 
 void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	// Timer handling for slideshows
-	//Don't pause slideshow for every little thing! Let slideshow run!
-	//if (ePos == POS_Next || ePos == POS_NextSlideShow) {
-	if (ePos != POS_Current && ePos != POS_Clipboard && ePos != POS_AwayFromCurrent) {
+	if (ePos == POS_NextSlideShow) {
 		if (m_nCurrentTimeout > 0) {
 			StartSlideShowTimer(m_nCurrentTimeout);
 		}
 		StopAnimation();
-	} else if (ePos != POS_NextAnimation) {
+	} else if ((ePos != POS_NextAnimation) && !m_bMovieMode) {
 		StopMovieMode();
 		StopAnimation();
 	}
@@ -2840,7 +2838,7 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		case POS_Next:
 		case POS_NextAnimation:
 		{
-			bool bGotoNextImage = true;
+			bool bGotoNextImage;
 			nFrameIndex = Helpers::GetFrameIndex(m_pCurrentImage, true, ePos == POS_NextAnimation, bGotoNextImage);
 			if (bGotoNextImage) m_pFileList = m_pFileList->Next();
 			break;
