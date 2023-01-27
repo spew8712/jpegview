@@ -53,7 +53,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
    * Wrap backwards. Allowed for `LoopSameFolderLevel` & `LoopSubFolders` too, not just`LoopFolder`.
 * Filter
   * Hide small images below `MinFilesize`. **ALT+M** to toggle and reload.
-  * Hide hidden images. **ALT+H** to toggle and reload.
+  * `HideHidden` setting: hide hidden images and folders. **ALT+H** to toggle and reload.
 
 (Last sync'd up to original's ~23 Jan 2023 updates, with JXL support).
 
@@ -155,12 +155,11 @@ This is to avoid major rework of `CFileList` to either track these hidden images
 Configure in `JPEGView.ini`:
 * Minimum filesize: `MinFilesize`, default: 30K.
   * Specify in bytes, KB or MB like so: 30720, 30K or 1M 
-* Enable hide hidden images: `HideHidden`, default: true.
+* Enable hide hidden images and folders: `HideHidden`, default: true.
 
 ### Wishlist
 
 * A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
-* Slideshow should not be Stuck at animated images?
 * Filter images by date, like show newest images only?
 * Gestures?
   * Double finger drag pan while zoom.
