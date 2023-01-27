@@ -466,6 +466,7 @@ BEGIN
         POPUP "Crop Mode"
         BEGIN
             MENUITEM "Free",                        IDM_CROPMODE_FREE
+            MENUITEM "Same as Image",               IDM_CROPMODE_IMAGE
             MENUITEM "Fixed size...",               IDM_CROPMODE_FIXED_SIZE
             MENUITEM "5 : 4",                       IDM_CROPMODE_5_4
             MENUITEM "4 : 3",                       IDM_CROPMODE_4_3

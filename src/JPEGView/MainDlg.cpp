@@ -982,6 +982,8 @@ LRESULT CMainDlg::OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 				//Removed bCtrl and bDraggingRequired as since it's now a 'dedicated' selection mode
 				|| ((m_bSelectMode || bHandleByCropping) && !bTransformPanelShown))
 			{
+				CSize imgSize = m_pCurrentImage->OrigSize();
+				m_pCropCtl->informImageAspectRatio(imgSize.cx / (double)(imgSize.cy));
 				m_pCropCtl->StartCropping(pointClicked.x, pointClicked.y);
 			} else if (!bTransformPanelShown) {
 				StartDragging(pointClicked.x, pointClicked.y, false);
@@ -2241,6 +2243,9 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			m_pCropCtl->SetCropRectAR(userCrop.cx / (double)userCrop.cy);
 			break;
 		}
+		case IDM_CROPMODE_IMAGE:
+			m_pCropCtl->UseImageAR();
+			break;
 		case IDM_TOUCH_IMAGE:
 		case IDM_TOUCH_IMAGE_EXIF:
 			if (m_pCurrentImage != NULL) {

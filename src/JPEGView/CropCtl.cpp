@@ -22,7 +22,9 @@ static bool PointDifferenceSmall(const CPoint& p1, const CPoint& p2) {
 	return abs(p1.x - p2.x) < 2 && abs(p1.y - p2.y) < 2;
 }
 
-CCropCtl::CCropCtl(CMainDlg* pMainDlg) {
+CCropCtl::CCropCtl(CMainDlg* pMainDlg):
+	m_bUseImageAR(false)
+{
 	m_pMainDlg = pMainDlg;
 	m_bCropping = false;
 	m_bDoCropping = false;
@@ -40,6 +42,7 @@ CCropCtl::CCropCtl(CMainDlg* pMainDlg) {
 
 CCropCtl::CropMode CCropCtl::GetCropMode()
 {
+	if (m_bUseImageAR) return CM_FixedAspectRatio;
 	return (m_dCropRectAspectRatio > 0) ? CM_FixedAspectRatio : (m_dCropRectAspectRatio < 0) ? CM_FixedSize : CM_Free;
 }
 
@@ -224,6 +227,8 @@ int CCropCtl::ShowCropContextMenu() {
 		switch (GetCropMode())
 		{
 			case CM_FixedAspectRatio:
+				if (m_bUseImageAR)
+					::CheckMenuItem(hMenuCropMode, IDM_CROPMODE_IMAGE, MF_CHECKED);
 				if (abs(m_dCropRectAspectRatio - 1.25) < 0.001) {
 					::CheckMenuItem(hMenuCropMode,  IDM_CROPMODE_5_4, MF_CHECKED);
 				} else if (abs(m_dCropRectAspectRatio - 1.3333) < 0.001) {
@@ -277,6 +282,13 @@ int CCropCtl::ShowCropContextMenu() {
 	}
 
 	return nMenuCmd;
+}
+
+void CCropCtl::informImageAspectRatio(double dImageAspectRatio)
+{
+	m_dImageAspectRatio = dImageAspectRatio;
+	if (m_bUseImageAR)
+		m_dCropRectAspectRatio = m_dImageAspectRatio;
 }
 
 void CCropCtl::TrackCroppingRect(int nX, int nY, Handle eHandle) {

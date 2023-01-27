@@ -31,7 +31,8 @@ public:
 	
 	// Get and set aspect ratio of cropping rectangle, 0 for free cropping, -1 for fixed size cropping
 	double GetCropRectAR() { return m_dCropRectAspectRatio; }
-	void SetCropRectAR(double dRatio) {  m_dCropRectAspectRatio = dRatio; }
+	void SetCropRectAR(double dRatio) { m_bUseImageAR = false;  m_dCropRectAspectRatio = dRatio; }
+	void UseImageAR() { m_bUseImageAR = true; m_dCropRectAspectRatio = m_dImageAspectRatio; }
 
 	// Cropping rectangle in image coordinates (in original size image)
 	CRect GetImageCropRect(bool losslessCrop);
@@ -60,6 +61,8 @@ public:
 	// Returns the executed menu command ID, zero if none
 	int ShowCropContextMenu();
 
+	void informImageAspectRatio(double dImageAspectRatio);
+
 private:
 	CMainDlg* m_pMainDlg;
 	CPoint m_cropStart;
@@ -71,7 +74,8 @@ private:
 	bool m_bDontStartCropOnNextClick;
 	CPoint m_cropMouse;
 	CPoint m_startTrackMousePos;
-	double m_dCropRectAspectRatio;
+	double m_dCropRectAspectRatio, m_dImageAspectRatio;
+	bool m_bUseImageAR;
 	double m_dLastZoom;
 	int m_nHandleSize;
 	Handle m_eHitHandle;
