@@ -264,7 +264,11 @@ These are added in `JPEGView.vcxproj`'s configuration.
 Official releases will be made to [sylikc's GitHub Releases](https://github.com/sylikc/jpegview/releases) page.  Each release includes:
 * **Archive Zip/7z** - Portable
 * **Windows Installer MSI** - For Installs
-  *  For [JPEG XL](https://en.wikipedia.org/wiki/JPEG_XL) images, you will need to install [Microsoft Visual C++ Redistributable for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2022) as well.
+  *  For AVIF & [JPEG XL](https://en.wikipedia.org/wiki/JPEG_XL) images, you may need to install [Microsoft Visual C++ Redistributable for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2022) as well. Likely:
+     * vcruntime140.dll - needed by both to startup.
+     * vcruntime140_1.dll - needed by JPEG XL.
+     * msvcp140.dll - needed by JPEG XL.
+
 * **Source code** - Build it yourself
 
 ### Mod Releases

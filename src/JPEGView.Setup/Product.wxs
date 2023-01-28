@@ -173,12 +173,16 @@
 			</Feature>
 			<Feature Id="FeatureAVIF" Title="AVIF Support">
 				<ComponentRef Id="avifDLL"/>
+				<ComponentRef Id="vcruntime140DLL"/>
 			</Feature>
 			<Feature Id="FeatureJXL" Title="JXL Support">
 				<ComponentRef Id="brotlicommonDLL"/>
 				<ComponentRef Id="brotlidecDLL"/>
 				<ComponentRef Id="jxldecDLL"/>
 				<ComponentRef Id="jxlthreadsDLL"/>
+				<ComponentRef Id="vcruntime140DLL"/>
+				<ComponentRef Id="vcruntime1401DLL"/>
+				<ComponentRef Id="msvcp140DLL"/>
 			</Feature>
 			<Feature Id="ConfigFiles" Title="Config Files" Absent="disallow">
 				<ComponentRef Id="JPEGView.ini"/>
@@ -354,6 +358,9 @@
 					<Component Id="avifDLL" Guid="749cdb71-07e5-4271-8321-4371e8596f73">
 						<File Id="avif.dll" Name="avif.dll" Source="..\JPEGView\libavif\lib64\avif.dll"  KeyPath="yes" />
 					</Component>
+					<Component Id="vcruntime140DLL" Guid="1e0dc6da-91b9-455a-874f-d265af7bed11">
+						<File Id="vcruntime140.dll" Name="vcruntime140.dll" Source="..\JPEGView\vcredist\vcruntime140.dll"  KeyPath="yes" />
+					</Component>
 					<Component Id="brotlicommonDLL" Guid="71c80213-3cbf-40cc-a696-1a5506b10ab2">
 						<File Id="brotlicommon.dll" Name="brotlicommon.dll" Source="..\JPEGView\libjxl\bin64\brotlicommon.dll"  KeyPath="yes" />
 					</Component>
@@ -365,6 +372,12 @@
 					</Component>
 					<Component Id="jxlthreadsDLL" Guid="0fd5b119-b78a-43e8-aaf2-63cb75f8c3b0">
 						<File Id="jxl_threads.dll" Name="jxl_threads.dll" Source="..\JPEGView\libjxl\bin64\jxl_threads.dll"  KeyPath="yes" />
+					</Component>
+					<Component Id="vcruntime1401DLL" Guid="51199dcd-65bf-4a86-a224-bf26111c92cd">
+						<File Id="vcruntime140_1.dll" Name="vcruntime140_1.dll" Source="..\JPEGView\vcredist\vcruntime140_1.dll"  KeyPath="yes" />
+					</Component>
+					<Component Id="msvcp140DLL" Guid="1e0dc6da-91b9-455a-874f-d265af7bed11">
+						<File Id="msvcp140.dll" Name="msvcp140.dll" Source="..\JPEGView\vcredist\msvcp140.dll"  KeyPath="yes" />
 					</Component>
 
 
