@@ -174,16 +174,11 @@
 			<Feature Id="ConfigFiles" Title="Config Files" Absent="disallow">
 				<ComponentRef Id="JPEGView.ini"/>
 				<ComponentRef Id="JPEGView.ini.tpl"/>
-				<ComponentRef Id="JPEGView_ru.ini"/>
-				<ComponentRef Id="JPEGView_ru.ini.tpl"/>
 				<ComponentRef Id="KeyMap.txt"/>
-				<ComponentRef Id="KeyMap_ru.txt"/>
 			</Feature>
 			<Feature Id="Docs" Title="Documentation">
 				<ComponentRef Id="LICENSE.txt"/>
 				<ComponentRef Id="readme.html"/>
-				<ComponentRef Id="readme_ru.html"/>
-				<ComponentRef Id="readme_uk.html"/>
 			</Feature>
 			<Feature Id="Localization" Title="Localization Strings">
 				<ComponentRef Id="strings_bel.txt" />
@@ -201,7 +196,6 @@
 				<ComponentRef Id="strings_pt.txt" />
 				<ComponentRef Id="strings_ptbr.txt" />
 				<ComponentRef Id="strings_ro.txt" />
-				<ComponentRef Id="strings_ru.txt" />
 				<ComponentRef Id="strings_sv.txt" />
 				<ComponentRef Id="strings_uk.txt" />
 				<ComponentRef Id="strings_zh.txt" />
