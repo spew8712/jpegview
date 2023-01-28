@@ -4,8 +4,7 @@ This is a mod of [sylikc's official re-release of JPEGView](https://github.com/s
 
 ## Description
 
-JPEGView is a lean, fast and highly configurable viewer/editor with a minimal GUI.
-Basic on-the-fly image processing is provided - allowing adjusting typical parameters as sharpness, color balance, rotation, perspective, contrast and local under-/overexposure.
+JPEGView is a lean, fast and highly configurable image viewer/editor with a minimal GUI.
 
 ### Formats Supported
 

@@ -986,7 +986,7 @@ LRESULT CMainDlg::OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 				CSize imgSize = m_pCurrentImage->OrigSize();
 				m_pCropCtl->informImageAspectRatio(imgSize.cx / (double)(imgSize.cy));
 				m_pCropCtl->StartCropping(pointClicked.x, pointClicked.y);
-			} else if (!bTransformPanelShown) {
+			} else if (bDraggingRequired && !bTransformPanelShown) {
 				StartDragging(pointClicked.x, pointClicked.y, false);
 			} 
 		}
@@ -2158,26 +2158,34 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 				double dZoom = -1;
 				CRect windowRect = Helpers::GetWindowRectMatchingImageSize(m_hWnd, CSize(MIN_WND_WIDTH, MIN_WND_HEIGHT), HUGE_SIZE, dZoom, m_pCurrentImage, false, true, m_bWindowBorderless);
 
-				// this is the new top to move it to so that the experience seems seamless
-				int newTop;
-				int t = m_pCurrentImage->OrigHeight();
+				// don't try to adjust for an image that isn't loaded!
+				if (m_pCurrentImage != NULL)
+				{
+					// this is the new top to move it to so that the experience seems seamless
+					int newTop;
+					int t = m_pCurrentImage->OrigHeight();
 
-				// these are experimental values figured out through trial and error
-				// it appears if the caption size is odd, and just using /2,
-				// it causes the window to shift up one pixel at a time when going between borderless and not borderless repeatedly
-				// in other cases, it shifts downwards depending on rounding errors resizing the window and image... hard to hunt down but it's as good as it can get right now
-				if (windowCaptionHeight % 2 == 0) {
-					newTop = m_bWindowBorderless ? windowRect.top + (windowCaptionHeight / 2) : windowRect.top - (windowCaptionHeight / 2);
-				} else {
-					newTop = m_bWindowBorderless ? windowRect.top + (windowCaptionHeight / 2) : windowRect.top - (windowCaptionHeight / 2) + 1;
+					// these are experimental values figured out through trial and error
+					// it appears if the caption size is odd, and just using /2,
+					// it causes the window to shift up one pixel at a time when going between borderless and not borderless repeatedly
+					// in other cases, it shifts downwards depending on rounding errors resizing the window and image... hard to hunt down but it's as good as it can get right now
+					if (windowCaptionHeight % 2 == 0) {
+						newTop = m_bWindowBorderless ? windowRect.top + (windowCaptionHeight / 2) : windowRect.top - (windowCaptionHeight / 2);
+					} else {
+						newTop = m_bWindowBorderless ? windowRect.top + (windowCaptionHeight / 2) : windowRect.top - (windowCaptionHeight / 2) + 1;
+					}
+
+					// tell the window the Frame has changed, not sure if it makes a difference
+					this->SetWindowPos(HWND_TOP, windowRect.left, newTop, windowRect.Width(), windowRect.Height(), SWP_NOZORDER | SWP_NOCOPYBITS | SWP_FRAMECHANGED);
+
+					// don't auto adjust unless auto is selected in options
+					if (IsAdjustWindowToImage() && !(m_bAutoFitWndToImage && !IsImageExactlyFittingWindow())) {
+						AdjustWindowToImage(false);
+						this->Invalidate(FALSE);
+					}
+
+					StartLowQTimer(ZOOM_TIMEOUT);  // trigger a redraw as if zoom changed (might not be necessary)
 				}
-
-				// tell the window the Frame has changed, not sure if it makes a difference
-				this->SetWindowPos(HWND_TOP, windowRect.left, newTop, windowRect.Width(), windowRect.Height(), SWP_NOZORDER | SWP_NOCOPYBITS | SWP_FRAMECHANGED);
-
-				AdjustWindowToImage(false);
-
-				StartLowQTimer(ZOOM_TIMEOUT);  // trigger a redraw as if zoom changed (might not be necessary)
 			}
 
 			break;
@@ -3662,8 +3670,9 @@ bool CMainDlg::ImageToScreen(float & fX, float & fY) {
 /// <returns>Returns the filename either just the title or full filepath</returns>
 LPCTSTR CMainDlg::CurrentFileName(bool bFileTitle) {
 	if (m_pCurrentImage != NULL && m_pCurrentImage->IsClipboardImage()) {
-		return _T("Clipboard Image");
+		return CNLS::GetString(_T("Clipboard Image"));
 	}
+
 	if (m_pFileList != NULL) {
 		return bFileTitle ? m_pFileList->CurrentFileTitle() : m_pFileList->Current();
 	} else {

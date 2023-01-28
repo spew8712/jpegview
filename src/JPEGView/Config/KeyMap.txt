@@ -127,6 +127,9 @@
 #define IDC_SELECT_MODE     1016
 #define IDC_SINGLE_ZOOM     1017
 #define IDM_TOGGLE_TRANSPARENCY	    14202
+// popup dialogs
+#define IDM_CHANGESIZE		9120			// Open JPEGView dialog: Transform image > Change size...
+
 
 // This section contains the key map. A small number of keys is predefined and cannot be changed:
 // F1 for help, Alt+F4 for exit, 0..9 for slide show

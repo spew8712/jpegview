@@ -107,19 +107,18 @@ static EImageFormat GetImageFormat(LPCTSTR sFileName) {
 		memcmp(header, "\x00\x00\x00\x0cJXL\x20\x0d\x0a\x87\x0a", 12) == 0) {
 		return IF_JXL;
 
-		// Unfortunately, TIFF detection by header bytes is not reliable
-		// A few RAW image formats use TIFF as the container
-		// ex: CR2 - http://lclevy.free.fr/cr2/#key_info
-		// ex: DNG - https://www.adobe.com/creativecloud/file-types/image/raw/dng-file.html#dng
-		//
-		// JPEGView will fail to open these files if the following code is used
-		//
-		//} else if ((header[0] == 0x49 && header[1] == 0x49 && header[2] == 0x2a && header[3] == 0x00) ||
-		//	(header[0] == 0x4d && header[1] == 0x4d && header[2] == 0x00 && header[3] == 0x2a)) {
-		//	return IF_TIFF;
+	// Unfortunately, TIFF detection by header bytes is not reliable
+	// A few RAW image formats use TIFF as the container
+	// ex: CR2 - http://lclevy.free.fr/cr2/#key_info
+	// ex: DNG - https://www.adobe.com/creativecloud/file-types/image/raw/dng-file.html#dng
+	//
+	// JPEGView will fail to open these files if the following code is used
+	//
+	//} else if ((header[0] == 0x49 && header[1] == 0x49 && header[2] == 0x2a && header[3] == 0x00) ||
+	//	(header[0] == 0x4d && header[1] == 0x4d && header[2] == 0x00 && header[3] == 0x2a)) {
+	//	return IF_TIFF;
 
-	}
-	else {
+	} else {
 		return Helpers::GetImageFormat(sFileName);
 	}
 }
@@ -319,6 +318,8 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		}
 		if (rq.FileName == m_sLastAvifFileName) {
 			DeleteCachedAvifDecoder();
+		if (rq.FileName == m_sLastJxlFileName) {
+			DeleteCachedJxlDecoder();
 		}
 		return;
 	}
@@ -952,7 +953,6 @@ void CImageLoadThread::ProcessReadJXLRequest(CRequest* request) {
 					m_sLastJxlFileName = sFileName;
 				// Multiply alpha value into each AABBGGRR pixel
 				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
-
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, 4, 0, IF_JXL, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 			} else {
 				DeleteCachedJxlDecoder();
