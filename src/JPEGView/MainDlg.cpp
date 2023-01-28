@@ -986,7 +986,7 @@ LRESULT CMainDlg::OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 				CSize imgSize = m_pCurrentImage->OrigSize();
 				m_pCropCtl->informImageAspectRatio(imgSize.cx / (double)(imgSize.cy));
 				m_pCropCtl->StartCropping(pointClicked.x, pointClicked.y);
-			} else if (bDraggingRequired && !bTransformPanelShown) {
+			} else if (!bTransformPanelShown) {
 				StartDragging(pointClicked.x, pointClicked.y, false);
 			} 
 		}
@@ -3672,7 +3672,6 @@ LPCTSTR CMainDlg::CurrentFileName(bool bFileTitle) {
 	if (m_pCurrentImage != NULL && m_pCurrentImage->IsClipboardImage()) {
 		return CNLS::GetString(_T("Clipboard Image"));
 	}
-
 	if (m_pFileList != NULL) {
 		return bFileTitle ? m_pFileList->CurrentFileTitle() : m_pFileList->Current();
 	} else {

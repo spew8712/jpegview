@@ -318,6 +318,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		}
 		if (rq.FileName == m_sLastAvifFileName) {
 			DeleteCachedAvifDecoder();
+		}
 		if (rq.FileName == m_sLastJxlFileName) {
 			DeleteCachedJxlDecoder();
 		}
