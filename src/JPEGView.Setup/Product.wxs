@@ -376,7 +376,7 @@
 					<Component Id="vcruntime1401DLL" Guid="51199dcd-65bf-4a86-a224-bf26111c92cd">
 						<File Id="vcruntime140_1.dll" Name="vcruntime140_1.dll" Source="..\JPEGView\vcredist\vcruntime140_1.dll"  KeyPath="yes" />
 					</Component>
-					<Component Id="msvcp140DLL" Guid="1e0dc6da-91b9-455a-874f-d265af7bed11">
+					<Component Id="msvcp140DLL" Guid="4b47fa28-c3cf-42f4-a035-be08287bedb7">
 						<File Id="msvcp140.dll" Name="msvcp140.dll" Source="..\JPEGView\vcredist\msvcp140.dll"  KeyPath="yes" />
 					</Component>
 
