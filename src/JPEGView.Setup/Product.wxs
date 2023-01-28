@@ -171,10 +171,10 @@
 			<Feature Id="FeatureWIC" Title="WIC Support">
 				<ComponentRef Id="WICLoaderDLL"/>
 			</Feature>
-			<Feature Id="FeatureWIC" Title="AVIF Support">
+			<Feature Id="FeatureAVIF" Title="AVIF Support">
 				<ComponentRef Id="avifDLL"/>
 			</Feature>
-			<Feature Id="FeatureWIC" Title="JXL Support">
+			<Feature Id="FeatureJXL" Title="JXL Support">
 				<ComponentRef Id="brotlicommonDLL"/>
 				<ComponentRef Id="brotlidecDLL"/>
 				<ComponentRef Id="jxldecDLL"/>
