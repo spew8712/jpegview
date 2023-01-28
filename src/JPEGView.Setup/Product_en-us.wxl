@@ -7,12 +7,12 @@
 	<String Id="ManufacturerName">Kevin M</String>
 	<String Id="ManufacturerFullName">Kevin M (sylikc)</String>
 	<String Id="ProductDescription">Lightweight Image Viewer</String>
-	<String Id="Comments">Installs JPEGView</String>
+	<String Id="Comments">Installs JPEGView (Mod)</String>
 
 	<String Id="LicenseRtf" Overridable="yes">Eula-en.rtf</String>
 
 	<!--
-	<String Id="OS2Old">This product requires at least Windows Vista / Server 2008.</String>
+	<String Id="OS2Old">This product requires at least Windows 7 64-bit.</String>
 	-->
 	<String Id="NewerInstalled">The same or a newer version of this product is already installed.</String>
 	<String Id="x64VersionRequired">You should install the 64-bit version of this product on 64-bit Windows.</String>

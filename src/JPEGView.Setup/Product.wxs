@@ -171,6 +171,15 @@
 			<Feature Id="FeatureWIC" Title="WIC Support">
 				<ComponentRef Id="WICLoaderDLL"/>
 			</Feature>
+			<Feature Id="FeatureWIC" Title="AVIF Support">
+				<ComponentRef Id="avifDLL"/>
+			</Feature>
+			<Feature Id="FeatureWIC" Title="JXL Support">
+				<ComponentRef Id="brotlicommonDLL"/>
+				<ComponentRef Id="brotlidecDLL"/>
+				<ComponentRef Id="jxldecDLL"/>
+				<ComponentRef Id="jxlthreadsDLL"/>
+			</Feature>
 			<Feature Id="ConfigFiles" Title="Config Files" Absent="disallow">
 				<ComponentRef Id="JPEGView.ini"/>
 				<ComponentRef Id="JPEGView.ini.tpl"/>
@@ -356,17 +365,8 @@
 					<Component Id="JPEGView.ini.tpl" Guid="*">
 						<File Id="JPEGView.ini.tpl" Name="JPEGView.ini.tpl" Source="$(var.JPEGView.TargetDir)JPEGView.ini.tpl" />
 					</Component>
-					<Component Id="JPEGView_ru.ini" Guid="*">
-						<File Id="JPEGView_ru.ini" Name="JPEGView_ru.ini" Source="$(var.JPEGView.TargetDir)JPEGView_ru.ini" />
-					</Component>
-					<Component Id="JPEGView_ru.ini.tpl" Guid="*">
-						<File Id="JPEGView_ru.ini.tpl" Name="JPEGView_ru.ini.tpl" Source="$(var.JPEGView.TargetDir)JPEGView_ru.ini.tpl" />
-					</Component>
 					<Component Id="KeyMap.txt" Guid="*">
 						<File Id="KeyMap.txt" Name="KeyMap.txt" Source="$(var.JPEGView.TargetDir)KeyMap.txt" />
-					</Component>
-					<Component Id="KeyMap_ru.txt" Guid="*">
-						<File Id="KeyMap_ru.txt" Name="KeyMap_ru.txt" Source="$(var.JPEGView.TargetDir)KeyMap_ru.txt" />
 					</Component>
 
 					<Component Id="LICENSE.txt" Guid="*">
@@ -374,12 +374,6 @@
 					</Component>
 					<Component Id="readme.html" Guid="*">
 						<File Id="readme.html" Name="readme.html" Source="$(var.JPEGView.TargetDir)readme.html" />
-					</Component>
-					<Component Id="readme_ru.html" Guid="*">
-						<File Id="readme_ru.html" Name="readme_ru.html" Source="$(var.JPEGView.TargetDir)readme_ru.html" />
-					</Component>
-					<Component Id="readme_uk.html" Guid="*">
-						<File Id="readme_uk.html" Name="readme_uk.html" Source="$(var.JPEGView.TargetDir)readme_uk.html" />
 					</Component>
 
 
@@ -428,9 +422,6 @@
 					<Component Id="strings_ro.txt" Guid="*">
 						<File Id="strings_ro.txt" Name="strings_ro.txt" Source="$(var.JPEGView.TargetDir)strings_ro.txt" />
 					</Component>
-					<Component Id="strings_ru.txt" Guid="*">
-						<File Id="strings_ru.txt" Name="strings_ru.txt" Source="$(var.JPEGView.TargetDir)strings_ru.txt" />
-					</Component>
 					<Component Id="strings_sv.txt" Guid="*">
 						<File Id="strings_sv.txt" Name="strings_sv.txt" Source="$(var.JPEGView.TargetDir)strings_sv.txt" />
 					</Component>
@@ -477,6 +468,21 @@
 				</Component>
 				<Component Id="WICLoaderDll" Guid="742ca948-b7d3-4ca4-9aab-2592616416ed">
 					<File Id="WICLoader.dll" Name="WICLoader.dll" Source="$(var.WICLoader.TargetDir)WICLoader.dll" />
+				</Component>
+				<Component Id="avifDll" Guid="749cdb71-07e5-4271-8321-4371e8596f73">
+					<File Id="avif.dll" Name="avif.dll" Source="..\JPEGView\libavif\lib64\avif.dll"  KeyPath="yes" />
+				</Component>
+				<Component Id="brotlicommonDll" Guid="71c80213-3cbf-40cc-a696-1a5506b10ab2">
+					<File Id="brotlicommon.dll" Name="brotlicommon.dll" Source="..\JPEGView\libjxl\bin64\brotlicommon.dll"  KeyPath="yes" />
+				</Component>
+				<Component Id="brotlidecDll" Guid="2c1be2b4-4ed1-4324-90f2-5f9050948ab3">
+					<File Id="brotlidec.dll" Name="brotlidec.dll" Source="..\JPEGView\libjxl\bin64\brotlidec.dll"  KeyPath="yes" />
+				</Component>
+				<Component Id="jxldecDll" Guid="35fbb3b3-2c17-433e-b854-a7c7a2f26a2d">
+					<File Id="jxl_dec.dll" Name="jxl_dec.dll" Source="..\JPEGView\libjxl\bin64\jxl_dec.dll"  KeyPath="yes" />
+				</Component>
+				<Component Id="jxlthreadsDll" Guid="0fd5b119-b78a-43e8-aaf2-63cb75f8c3b0">
+					<File Id="jxl_threads.dll" Name="jxl_threads.dll" Source="..\JPEGView\libjxl\bin64\jxl_threads.dll"  KeyPath="yes" />
 				</Component>
 		</ComponentGroup>
 	</Fragment>
