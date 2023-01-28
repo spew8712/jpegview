@@ -471,36 +471,4 @@
 
 	use [-l "logfile.txt"] to debug any future errors https://stackoverflow.com/questions/18596548/how-to-log-an-installation-made-from-a-wix-bundle/18755775#18755775
 	-->
-
-	<!--
-	<Fragment>
-		<ComponentGroup Id="ProductComponents" Directory="APPLICATIONFOLDER">
-				<Component Id="JPEGViewExe" Guid="30be6f3f-71ea-4829-82bd-2b3ddb846079">
-					<File Id="JPEGView.exe" Name="JPEGView.exe" Source="$(var.JPEGView.TargetDir)JPEGView.exe" />
-				</Component>
-				<Component Id="webpDll" Guid="43e917db-b269-40bf-81ab-b2d1453b225f">
-					<File Id="webp.dll" Name="webp.dll" Source="$(var.WEBP.TargetDir)webp.dll" />
-				</Component>
-				<Component Id="WICLoaderDll" Guid="742ca948-b7d3-4ca4-9aab-2592616416ed">
-					<File Id="WICLoader.dll" Name="WICLoader.dll" Source="$(var.WICLoader.TargetDir)WICLoader.dll" />
-				</Component>
-				<Component Id="avifDll" Guid="749cdb71-07e5-4271-8321-4371e8596f73">
-					<File Id="avif.dll" Name="avif.dll" Source="..\JPEGView\libavif\lib64\avif.dll"  KeyPath="yes" />
-				</Component>
-				<Component Id="brotlicommonDll" Guid="71c80213-3cbf-40cc-a696-1a5506b10ab2">
-					<File Id="brotlicommon.dll" Name="brotlicommon.dll" Source="..\JPEGView\libjxl\bin64\brotlicommon.dll"  KeyPath="yes" />
-				</Component>
-				<Component Id="brotlidecDll" Guid="2c1be2b4-4ed1-4324-90f2-5f9050948ab3">
-					<File Id="brotlidec.dll" Name="brotlidec.dll" Source="..\JPEGView\libjxl\bin64\brotlidec.dll"  KeyPath="yes" />
-				</Component>
-				<Component Id="jxldecDll" Guid="35fbb3b3-2c17-433e-b854-a7c7a2f26a2d">
-					<File Id="jxl_dec.dll" Name="jxl_dec.dll" Source="..\JPEGView\libjxl\bin64\jxl_dec.dll"  KeyPath="yes" />
-				</Component>
-				<Component Id="jxlthreadsDll" Guid="0fd5b119-b78a-43e8-aaf2-63cb75f8c3b0">
-					<File Id="jxl_threads.dll" Name="jxl_threads.dll" Source="..\JPEGView\libjxl\bin64\jxl_threads.dll"  KeyPath="yes" />
-				</Component>
-		</ComponentGroup>
-	</Fragment>
-	-->
-
 </Wix>

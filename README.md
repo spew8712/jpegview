@@ -264,6 +264,7 @@ These are added in `JPEGView.vcxproj`'s configuration.
 Official releases will be made to [sylikc's GitHub Releases](https://github.com/sylikc/jpegview/releases) page.  Each release includes:
 * **Archive Zip/7z** - Portable
 * **Windows Installer MSI** - For Installs
+  *  For [JPEG XL](https://en.wikipedia.org/wiki/JPEG_XL) images, you will need to install [Microsoft Visual C++ Redistributable for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2022) as well.
 * **Source code** - Build it yourself
 
 ### Mod Releases
