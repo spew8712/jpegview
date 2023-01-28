@@ -431,6 +431,13 @@ void CCropCtl::InvalidateSceenCropRect() {
 	}
 }
 
+void CCropCtl::Refresh()
+{
+	InvalidateSceenCropRect();
+	m_cropEnd = PreserveAspectRatio(m_cropStart, m_cropEnd, true, true);
+	InvalidateSceenCropRect();
+}
+
 CRect CCropCtl::GetScreenCropRect() {
 	if (m_cropEnd != CPoint(INT_MIN, INT_MIN) && m_pMainDlg->GetCurrentImage() != NULL) {
 		CPoint cropStart(min(m_cropStart.x, m_cropEnd.x), min(m_cropStart.y, m_cropEnd.y));

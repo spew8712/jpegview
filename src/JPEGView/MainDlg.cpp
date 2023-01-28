@@ -1179,17 +1179,63 @@ LRESULT CMainDlg::OnKeyDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOO
 		m_pFileList->SetNavigationMode(Helpers::NM_LoopSubDirectories);
 		GotoImage(POS_Next);
 	} else if (wParam >= '1' && wParam <= '9' && (!bShift || bCtrl)) {
-		// Start the slideshow
-		bHandled = true;
-		int nValue = (int)wParam - '1' + 1;
-		if (bCtrl && bShift) {
-			nValue *= 10; // 1/100 seconds
-		} else if (bCtrl) {
-			nValue *= 100; // 1/10 seconds
-		} else {
-			nValue *= 1000; // seconds
+		if (!m_bSelectMode || bCtrl)
+		{
+			// Start the slideshow
+			bHandled = true;
+			int nValue = (int)wParam - '1' + 1;
+			if (bCtrl && bShift) {
+				nValue *= 10; // 1/100 seconds
+			}
+			else if (bCtrl) {
+				nValue *= 100; // 1/10 seconds
+			}
+			else {
+				nValue *= 1000; // seconds
+			}
+			StartMovieMode(1000.0 / nValue);
 		}
-		StartMovieMode(1000.0/nValue);
+		else
+		{
+			switch (wParam)
+			{
+				case '1': //IDM_CROPMODE_FREE
+					m_pCropCtl->SetCropRectAR(0);
+					break;
+				case '2': //IDM_CROPMODE_IMAGE
+					m_pCropCtl->UseImageAR();
+					break;
+				case '3': //IDM_CROPMODE_3_2
+					m_pCropCtl->SetCropRectAR(1.5);
+					break;
+				case '4': //IDM_CROPMODE_4_3
+					m_pCropCtl->SetCropRectAR(1.333333333333333333);
+					break;
+				case '5': //IDM_CROPMODE_5_4
+					m_pCropCtl->SetCropRectAR(1.25);
+					break;
+				case '6': //IDM_CROPMODE_16_9
+					m_pCropCtl->SetCropRectAR(1.777777777777777778);
+					break;
+				case '7': //IDM_CROPMODE_16_10
+					m_pCropCtl->SetCropRectAR(1.6);
+					break;
+				case '8': //IDM_CROPMODE_FIXED_SIZE
+				{
+					CCropSizeDlg dlgSetCropSize;
+					dlgSetCropSize.DoModal();
+				}
+				m_pCropCtl->SetCropRectAR(-1);
+				break;
+				case '9': //IDM_CROPMODE_USER
+				{
+					CSize userCrop = CSettingsProvider::This().UserCropAspectRatio();
+					m_pCropCtl->SetCropRectAR(userCrop.cx / (double)userCrop.cy);
+					break;
+				}
+			}
+			m_pCropCtl->Refresh();
+		}
 	} else if (wParam == VK_F1) {
 		bHandled = true;
 		ExecuteCommand(IDM_HELP);

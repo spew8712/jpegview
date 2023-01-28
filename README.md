@@ -63,7 +63,7 @@ JPEGView has a slideshow mode which can be activated in various ways:
 * **hotkey**:
   * **ALT+R**: 'resume'/start slideshow @ default of 1fps.
   * **ALT+SHF+R** (added in mod): start slideshow @ custom interval configured via `SlideShowCustomInterval` setting in `JPEGView.ini`.
-  * **one of number 1 to 9**: start slideshow with corresponding delay in seconds, i.e. 1s to 9s.
+  * **one of number 1 to 9**: start slideshow with corresponding delay in seconds, i.e. 1s to 9s, when not in selection mode.
     * May get rid of these excessive selections and repurpose these hotkeys for something else more useful in future.
   * **CTRL+(one of number 1 to 9)**: start slideshow with corresponding delay in tenth of a second (number x 0.1), i.e. 0.1s to 0.9s.
   * **CTRL+SHF+(one of number 1 to 9)**: start slideshow with corresponding delay in hundredth of a second (number x 0.01), i.e. 0.01s to 0.09s.
@@ -125,7 +125,16 @@ The new default is **panning** mode.
     * Resume in panning mode.
     Basically don't ever stay in the pesky selection mode that leave ugly selection boxes defiling the image.
    * Option for selection box to match image aspect ratio.
-     * Maybe override number keys for easier selection of aspect ratio? Currently in crop selection context menu that's only available upon right clicking selection box.
+     * **one of number 1 to 9**: when in selection mode, selects these aspect ratio:
+       1. Free
+       2. Same as image
+       3. 3:2
+       4. 4:3
+       5. 5:4
+       6. 16:9
+       7. 16:10
+       8. Fixed size
+       9. User predefined in settings
 * Changed hotkeys
   * Reuse **'S'** for toggling Selection mode.
     * Dunno what 'save/delete param DB' are, but presuming they're infrequently used junk features, their hotkeys 'S' & 'D' are changed to ALT+S/D.

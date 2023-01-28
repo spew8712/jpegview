@@ -63,6 +63,7 @@ public:
 
 	void informImageAspectRatio(double dImageAspectRatio);
 	CPoint PreserveAspectRatio(CPoint cropStart, CPoint cropEnd, bool adjustWidth, bool bCalculateEnd);
+	void Refresh();
 
 private:
 	CMainDlg* m_pMainDlg;
