@@ -11,7 +11,7 @@ JPEGView is a lean, fast and highly configurable image viewer/editor with a mini
 JPEGView has built-in support the following formats:
 
 * Popular: JPEG, GIF
-* Lossless: BMP, PNG, TIFF
+* Lossless: BMP, PNG, TIFF, ICO
 * Web: WEBP, JXL, AVIF (common subset)
 * Legacy: TGA, WDP, HDP, JXR
 * Camera RAW formats:
@@ -41,7 +41,9 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 
 **Mod features**
 * Slideshow stuff - see next section.
-* Read/write (most common) AVIF, include animated. Dev notes below.
+* Image formats
+  * Read/write (most common) **AVIF**, include animated. Dev notes below.
+  * View _largest_ icon in **ICO**
 *  Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
    * Option for selection box to match image aspect ratio.
@@ -264,10 +266,7 @@ These are added in `JPEGView.vcxproj`'s configuration.
 Official releases will be made to [sylikc's GitHub Releases](https://github.com/sylikc/jpegview/releases) page.  Each release includes:
 * **Archive Zip/7z** - Portable
 * **Windows Installer MSI** - For Installs
-  *  For AVIF & [JPEG XL](https://en.wikipedia.org/wiki/JPEG_XL) images, you may need to install [Microsoft Visual C++ Redistributable for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2022) as well. Likely:
-     * vcruntime140.dll - needed by both to startup.
-     * vcruntime140_1.dll - needed by JPEG XL.
-     * msvcp140.dll - needed by JPEG XL.
+  *  For AVIF & [JPEG XL](https://en.wikipedia.org/wiki/JPEG_XL) images, you will need to install [Microsoft Visual C++ Redistributable for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2022) as well if your PC does not already have that.
 
 * **Source code** - Build it yourself
 
@@ -278,9 +277,11 @@ Official releases will be made to [sylikc's GitHub Releases](https://github.com/
   * You will have to merge new config settings yourselves. E.g.: `SlideShowCustomInterval`.
 * `JPEGView.zip` - full package for unzip and run. Includes above Plus all config/translation/etc files.
 
-## Portable
+## "Portable"
 
 JPEGView _does not require installation_ to run.  Just **unzip, and run** either the 64-bit version, or the 32-bit version depending on which platform you're on.  It can save the settings to the extracted folder and run entirely portable.
+
+With the addition of support for AVIF and especially JPEG XL, _additional installation of VC redistributables_ is needed. This is owing to their dependency on [Microsoft Visual C++ Redistributable for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2022)'s trio of vcruntime140.dll, vcruntime140_1.dll, and msvcp140.dll - which in turn requires many other VC DLLs!
 
 ### Mod Update Portable Apps Version
 

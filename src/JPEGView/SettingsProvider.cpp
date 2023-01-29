@@ -230,7 +230,7 @@ CSettingsProvider::CSettingsProvider(void) {
 	m_nWEBPSaveQuality = GetInt(_T("WEBPSaveQuality"), 85, 0, 100);
 	m_sDefaultSaveFormat = GetString(_T("DefaultSaveFormat"), _T("jpg"));
 	m_sFilesProcessedByWIC = GetString(_T("FilesProcessedByWIC"), _T("*.wdp;*.mdp;*.hdp"));
-	m_sFileEndingsRAW = GetString(_T("FileEndingsRAW"), _T("*.pef;*.dng;*.crw;*.nef;*.cr2;*.mrw;*.rw2;*.orf;*.x3f;*.arw;*.kdc;*.nrw;*.dcr;*.sr2;*.raf"));
+	m_sFileEndingsRAW = GetString(_T("FileEndingsRAW"), _T("*.pef;*.dng;*.crw;*.nef;*.cr2;*.mrw;*.rw2;*.orf;*.x3f;*.arw;*.kdc;*.nrw;*.dcr;*.sr2;*.raf;*.ico"));
 	m_bCreateParamDBEntryOnSave = GetBool(_T("CreateParamDBEntryOnSave"), true);
 	m_bWrapAroundFolder = GetBool(_T("WrapAroundFolder"), true);
 	m_bSaveWithoutPrompt = GetBool(_T("OverrideOriginalFileWithoutSaveDialog"), false);
