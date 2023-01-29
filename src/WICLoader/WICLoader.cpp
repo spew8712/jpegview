@@ -49,7 +49,7 @@ __declspec(dllexport) byte* __stdcall LoadImageWithWIC(LPCWSTR fileName, Allocat
 
 	IWICImagingFactory *piImagingFactory = NULL;
 	IWICBitmapDecoder *piDecoder = NULL;
-	IWICBitmapFrameDecode *piBitmapFrame = NULL;
+	IWICBitmapFrameDecode *piBitmapFrame = NULL, *piLargestBitmapFrame = 0;
 	UINT frameCount = 0;
 	HRESULT hr = S_OK;
 
@@ -59,24 +59,51 @@ __declspec(dllexport) byte* __stdcall LoadImageWithWIC(LPCWSTR fileName, Allocat
 
 	byte* bitmapBuffer = NULL;
 
-	if (frameCount > 0) {
-		IFS(piDecoder->GetFrame(0, &piBitmapFrame));
-		if (SUCCEEDED(hr)) {
-			piBitmapFrame->GetSize(width, height);
-			if (*width <= MAX_IMAGE_DIMENSION && *height <= MAX_IMAGE_DIMENSION) {
-				if ((double)*width * *height <= MAX_IMAGE_PIXELS) {
-					bitmapBuffer = allocator(*width * *height * 4);
-					if (bitmapBuffer != NULL) {
-						hr = CopyWICBitmapToBuffer(piBitmapFrame, bitmapBuffer);
-						if (!SUCCEEDED(hr)) {
-							deallocator(bitmapBuffer);
-							bitmapBuffer = NULL;
-						}
+	unsigned int nLargestWidth = 0,
+		nLargestHeight = 0;
+	if (frameCount > 0)
+	{
+		for (int i = 0; i < frameCount; ++i) //cherry pick the largest frame! especially for ICO
+		{
+			IFS(piDecoder->GetFrame(i, &piBitmapFrame));
+			if (SUCCEEDED(hr))
+			{
+				piBitmapFrame->GetSize(width, height);
+				if ((*width <= MAX_IMAGE_DIMENSION && *height <= MAX_IMAGE_DIMENSION)
+					//assuming same aspect ratio, so compare width only, instead of area
+					&& (nLargestWidth < *width))
+				{
+					//keep new bigger one
+					nLargestWidth = *width;
+					nLargestHeight = *height;
+					if (piLargestBitmapFrame)
+					{
+						//release previous, smaller one
+						piLargestBitmapFrame->Release();
 					}
+					piLargestBitmapFrame = piBitmapFrame;
+				}
+				else
+				{
+					//release smaller one
+					piBitmapFrame->Release();
+					piBitmapFrame = NULL;
 				}
 			}
-			piBitmapFrame->Release();
-			piBitmapFrame = NULL;
+		}
+		if (piLargestBitmapFrame)
+		{
+			bitmapBuffer = allocator(nLargestWidth * nLargestHeight * 4);
+			if (bitmapBuffer != NULL) {
+				hr = CopyWICBitmapToBuffer(piLargestBitmapFrame, bitmapBuffer);
+				if (!SUCCEEDED(hr)) {
+					deallocator(bitmapBuffer);
+					bitmapBuffer = NULL;
+				}
+			}
+			piLargestBitmapFrame->Release();
+			*width = nLargestWidth;
+			*height = nLargestHeight;
 		}
 	}
 
