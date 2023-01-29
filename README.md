@@ -254,10 +254,16 @@ Roughly follow the steps in [aom's guide](https://aomedia.googlesource.com/aom) 
         * Many project may fail to build (like owing to bad jpeg libs, etc), but they probably don't matter / aren't needed.
         * Desired output: `libavif_build/avif.lib` and `avif.dll`, which are needed by JPEGView =)
 
-### JPEGView
+### Building JPEGView
 The above `avif.lib` then goes into `src\JPEGView\libavif\lib64`.
 `avif.dll` goes to `src\JPEGView\bin\x64\Release` and/or Debug folder.
 These are added in `JPEGView.vcxproj`'s configuration.
+
+Simply build using the VS solution file.
+
+## ICO Image Format
+ICO file can contain multiple icons of various sizes.
+WICLoader can read the 'frame' count, i.e. number of images. It has been modified to find the largest one amongst them and extract that image.
 
 # Installation
 
@@ -281,7 +287,15 @@ Official releases will be made to [sylikc's GitHub Releases](https://github.com/
 
 JPEGView _does not require installation_ to run.  Just **unzip, and run** either the 64-bit version, or the 32-bit version depending on which platform you're on.  It can save the settings to the extracted folder and run entirely portable.
 
-With the addition of support for AVIF and especially JPEG XL, _additional installation of VC redistributables_ is needed. This is owing to their dependency on [Microsoft Visual C++ Redistributable for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2022)'s trio of vcruntime140.dll, vcruntime140_1.dll, and msvcp140.dll - which in turn requires many other VC DLLs!
+### Mostly
+With the addition of support for AVIF and especially JPEG XL, _additional VC redistributable DLLs_ are needed. This is owing to their dependency on [Microsoft Visual C++ Redistributable for Visual Studio 2022](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2022)'s trio of vcruntime140.dll, vcruntime140_1.dll, and msvcp140.dll - which in turn requires many other VC DLLs!
+
+These DLLs are now packed in the mod's
+* `JPEGView.zip`'s `extras` folder in case you need them.
+  * Try running JPEGView without using them - you may already have the VCRedist installed for other apps.
+  * If fail, move the DLLs out from `extras` folder to the same folder as JPEGView.exe. It should then work.
+* `JPEGView.Setup.msi` installer - this will by default install the DLLs in JPEGView's folder.
+  * If you already have a proper VCRedist installation, you may skip this set's installation by going into Advanced options and deselect "VCRedist for AVIF and JXL".
 
 ### Mod Update Portable Apps Version
 
