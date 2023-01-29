@@ -184,6 +184,26 @@
 				<ComponentRef Id="vcruntime1401DLL"/>
 				<ComponentRef Id="msvcp140DLL"/>
 			</Feature>
+			<Feature Id="FeatureVC" Title="VCRedist for AVIF and JXL">
+				<ComponentRef Id="apimswincorefilel120DLL"/>
+				<ComponentRef Id="apimswincorefilel210DLL"/>
+				<ComponentRef Id="apimswincorelocalizationl120DLL"/>
+				<ComponentRef Id="apimswincoreprocessthreadsl111DLL"/>
+				<ComponentRef Id="apimswincoresynchl120DLL"/>
+				<ComponentRef Id="apimswincoretimezonel110DLL"/>
+				<ComponentRef Id="apimswincrtconvertl110DLL"/>
+				<ComponentRef Id="apimswincrtenvironmentl110DLL"/>
+				<ComponentRef Id="apimswincrtfilesysteml110DLL"/>
+				<ComponentRef Id="apimswincrtheapl110DLL"/>
+				<ComponentRef Id="apimswincrtlocalel110DLL"/>
+				<ComponentRef Id="apimswincrtmathl110DLL"/>
+				<ComponentRef Id="apimswincrtruntimel110DLL"/>
+				<ComponentRef Id="apimswincrtstdiol110DLL"/>
+				<ComponentRef Id="apimswincrtstringl110DLL"/>
+				<ComponentRef Id="apimswincrttimel110DLL"/>
+				<ComponentRef Id="apimswincrtutilityl110DLL"/>
+				<ComponentRef Id="ucrtbaseDLL"/>
+			</Feature>
 			<Feature Id="ConfigFiles" Title="Config Files" Absent="disallow">
 				<ComponentRef Id="JPEGView.ini"/>
 				<ComponentRef Id="JPEGView.ini.tpl"/>
@@ -379,7 +399,60 @@
 					<Component Id="msvcp140DLL" Guid="4b47fa28-c3cf-42f4-a035-be08287bedb7">
 						<File Id="msvcp140.dll" Name="msvcp140.dll" Source="..\JPEGView\vcredist\msvcp140.dll"  KeyPath="yes" />
 					</Component>
-
+				    <Component Id="apimswincorefilel120DLL" Guid="834081b5-0084-4948-979a-00015e7b5f87">
+					<File Id="api-ms-win-core-file-l1-2-0.dll" Name="api-ms-win-core-file-l1-2-0.dll" Source="..\JPEGView\vcredist\api-ms-win-core-file-l1-2-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincorefilel210DLL" Guid="56351fd7-d43a-4ef5-a2d9-34936ebe8ec9">
+					<File Id="api-ms-win-core-file-l2-1-0.dll" Name="api-ms-win-core-file-l2-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-core-file-l2-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincorelocalizationl120DLL" Guid="ea7d5461-2a26-47f1-adb1-22aae7a5a368">
+					<File Id="api-ms-win-core-localization-l1-2-0.dll" Name="api-ms-win-core-localization-l1-2-0.dll" Source="..\JPEGView\vcredist\api-ms-win-core-localization-l1-2-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincoreprocessthreadsl111DLL" Guid="71cac57b-b264-4b65-b7b5-16c0984d5b20">
+					<File Id="api-ms-win-core-processthreads-l1-1-1.dll" Name="api-ms-win-core-processthreads-l1-1-1.dll" Source="..\JPEGView\vcredist\api-ms-win-core-processthreads-l1-1-1.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincoresynchl120DLL" Guid="50f24e1d-35cc-4cc9-a84d-7e9480a68de8">
+					<File Id="api-ms-win-core-synch-l1-2-0.dll" Name="api-ms-win-core-synch-l1-2-0.dll" Source="..\JPEGView\vcredist\api-ms-win-core-synch-l1-2-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincoretimezonel110DLL" Guid="92c1ec33-2e97-431e-b98b-c660c8e866c3">
+					<File Id="api-ms-win-core-timezone-l1-1-0.dll" Name="api-ms-win-core-timezone-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-core-timezone-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtconvertl110DLL" Guid="4ecddf08-58a0-4a9f-9e71-aad6ff5a0238">
+					<File Id="api-ms-win-crt-convert-l1-1-0.dll" Name="api-ms-win-crt-convert-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-convert-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtenvironmentl110DLL" Guid="7adca07d-30f2-4e87-8915-4227c2b20c2e">
+					<File Id="api-ms-win-crt-environment-l1-1-0.dll" Name="api-ms-win-crt-environment-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-environment-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtfilesysteml110DLL" Guid="af02da3c-fbba-45cf-a362-5d6862668385">
+					<File Id="api-ms-win-crt-filesystem-l1-1-0.dll" Name="api-ms-win-crt-filesystem-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-filesystem-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtheapl110DLL" Guid="3463bebd-ee78-4887-bb2d-aca9c7588d9a">
+					<File Id="api-ms-win-crt-heap-l1-1-0.dll" Name="api-ms-win-crt-heap-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-heap-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtlocalel110DLL" Guid="2f2afb41-53f8-4c76-b7cf-a25895867702">
+					<File Id="api-ms-win-crt-locale-l1-1-0.dll" Name="api-ms-win-crt-locale-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-locale-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtmathl110DLL" Guid="e2a13e23-93eb-45a2-9bdc-fee2dd9e1c0f">
+					<File Id="api-ms-win-crt-math-l1-1-0.dll" Name="api-ms-win-crt-math-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-math-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtruntimel110DLL" Guid="a84f5472-3f9d-4469-8d03-608a66e75e8b">
+					<File Id="api-ms-win-crt-runtime-l1-1-0.dll" Name="api-ms-win-crt-runtime-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-runtime-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtstdiol110DLL" Guid="4c5971d0-187c-4e35-8236-06bb0e910587">
+					<File Id="api-ms-win-crt-stdio-l1-1-0.dll" Name="api-ms-win-crt-stdio-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-stdio-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtstringl110DLL" Guid="f05337b6-0d86-44dc-8901-49a6a19cc92c">
+					<File Id="api-ms-win-crt-string-l1-1-0.dll" Name="api-ms-win-crt-string-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-string-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrttimel110DLL" Guid="bf60dc0b-d517-475f-bd59-3a5f435efa6e">
+					<File Id="api-ms-win-crt-time-l1-1-0.dll" Name="api-ms-win-crt-time-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-time-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="apimswincrtutilityl110DLL" Guid="cee54f29-d5aa-4168-b5fc-410e8bf77d0b">
+					<File Id="api-ms-win-crt-utility-l1-1-0.dll" Name="api-ms-win-crt-utility-l1-1-0.dll" Source="..\JPEGView\vcredist\api-ms-win-crt-utility-l1-1-0.dll"  KeyPath="yes" />
+				    </Component>
+				    <Component Id="ucrtbaseDLL" Guid="20a9daa4-be01-4bdc-b6ca-dfd30a9a9604">
+					<File Id="ucrtbase.dll" Name="ucrtbase.dll" Source="..\JPEGView\vcredist\ucrtbase.dll"  KeyPath="yes" />
+				    </Component>
 
 					<!-- autogenerated with a batch file -->
 
