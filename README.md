@@ -204,7 +204,7 @@ Support for viewing of AVIF images is via [AOMediaCodec/libavif](https://github.
      *  Though the original way letting libavif handle file read seems a tad more stable. There's less chance of animated AVIF image frame load error when switching image rapidly.
 * aom's `aom.lib` seems statically linked into libavif to produce `avif.lib`, so its aom.dll is not needed by JPEGView.
 * Tested on AVIF sample images from [https://github.com/link-u/avif-sample-images/](link-u/avif-sample-images)
-    * Afternote: incorporated [qnbu](https://github.com/qbnu)'s portion using alternate HEIC/dav1d decoder, most if not all flavours AVIFs can now be decoded.
+    * Afternote: incorporated [qbnu](https://github.com/qbnu)'s portion using alternate HEIC/dav1d decoder, most if not all flavours AVIFs can now be decoded.
       * libavif+aom will still be used for reading/writing animated AVIF, and writing to AVIF.
     * `CJPEGImage` class only handles 8bpp images? So higher bpp images are 'downgraded' to 8bpp.
 * Added code for EXIF data extraction using `Helpers::FindEXIFBlock(pBuffer, nFileSize)`, but Not yet tested.
