@@ -16,10 +16,13 @@ public:
 	CJPEGImage* Image;
 	// True if the request failed due to memory
 	bool IsRequestFailedOutOfMemory;
+	// True if the request failed due to an unhandled exception
+	bool IsRequestFailedException;
 
-	CImageData(CJPEGImage* pImage, bool isRequestFailedOutOfMemory) {
+	CImageData(CJPEGImage* pImage, bool isRequestFailedOutOfMemory, bool isRequestFailedException) {
 		Image = pImage;
 		IsRequestFailedOutOfMemory = isRequestFailedOutOfMemory;
+		IsRequestFailedException = isRequestFailedException;
 	}
 };
 
@@ -62,6 +65,7 @@ private:
 			RequestHandle = ::InterlockedIncrement((LONG*)&m_curHandle);
 			Image = NULL;
 			OutOfMemory = false;
+			ExceptionError = false;
 		}
 
 		CString FileName;
@@ -70,7 +74,8 @@ private:
 		int RequestHandle;
 		CJPEGImage* Image;
 		CProcessParams ProcessParams;
-		bool OutOfMemory;
+		bool OutOfMemory;  // load caused an out of memory condition
+		bool ExceptionError;  // an unhandled exception caused the load to fail
 	};
 
 	// Request to release image file
@@ -90,8 +95,8 @@ private:
 
 	Gdiplus::Bitmap* m_pLastBitmap; // Last read GDI+ bitmap, cached to speed up GIF animations
 	CString m_sLastFileName; // Only for GDI+ files
-	CString m_sLastWebpFileName; // Only for WebP files
-	CString m_sLastPngFileName; // Only for Png files
+	CString m_sLastWebpFileName; // Only for animated WebP files
+	CString m_sLastPngFileName; // Only for animated PNG files
 	CString m_sLastJxlFileName; // Only for animated JPEG XL files
 	CString m_sLastAvifFileName; // Only for AVIF files
 	avifDecoder *m_avifDecoder;
@@ -112,6 +117,7 @@ private:
 	void ProcessReadTGARequest(CRequest * request);
 	void ProcessReadWEBPRequest(CRequest * request);
 	void ProcessReadJXLRequest(CRequest* request);
+	void ProcessReadHEIFRequest(CRequest * request);
 	void ProcessReadRAWRequest(CRequest * request);
 	void ProcessReadGDIPlusRequest(CRequest * request);
 	void ProcessReadWICRequest(CRequest* request);

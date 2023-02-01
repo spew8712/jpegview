@@ -42,7 +42,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 **Mod features**
 * Slideshow stuff - see next section.
 * Image formats
-  * Read/write (most common) **AVIF**, include animated. Dev notes below.
+  * Read/write **AVIF**, include animated. Dev notes below.
   * View _largest_ icon in **ICO**
 *  Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
@@ -56,7 +56,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
   * Hide small images below `MinFilesize`. **ALT+M** to toggle and reload.
   * `HideHidden` setting: hide hidden images and folders. **ALT+H** to toggle and reload.
 
-(Last sync'd up to original's ~23 Jan 2023 updates, with JXL support).
+(Last selectively sync'd up to original's ~31 Jan 2023 updates, excluding (WIP?) workflow changes).
 
 ### Slideshow
 
@@ -176,7 +176,6 @@ Configure in `JPEGView.ini`:
   * Swipe gestures to skip images at varying amounts depending on swiping speed. Generally, add control via gestures.
 * Proper support for transparent images.
   * At least preserve transparency for non-edit saves to a different image format?
-* Support uncommon 'crop' type AVIF?
 * Quality options for 'Save image'. At least save as equivalent quality.
 * Save animated WEBP?
 
@@ -205,7 +204,8 @@ Support for viewing of AVIF images is via [AOMediaCodec/libavif](https://github.
      *  Though the original way letting libavif handle file read seems a tad more stable. There's less chance of animated AVIF image frame load error when switching image rapidly.
 * aom's `aom.lib` seems statically linked into libavif to produce `avif.lib`, so its aom.dll is not needed by JPEGView.
 * Tested on AVIF sample images from [https://github.com/link-u/avif-sample-images/](link-u/avif-sample-images)
-    * Known issue: unable to view 'crop'ped samples - something to do with libavif internal  error: `AVIF_RESULT_BMFF_PARSE_FAILED`. There are many checks which can throw this error!
+    * Afternote: incorporated [qnbu](https://github.com/qbnu)'s portion using alternate HEIC/dav1d decoder, most if not all flavours AVIFs can now be decoded.
+      * libavif+aom will still be used for reading/writing animated AVIF, and writing to AVIF.
     * `CJPEGImage` class only handles 8bpp images? So higher bpp images are 'downgraded' to 8bpp.
 * Added code for EXIF data extraction using `Helpers::FindEXIFBlock(pBuffer, nFileSize)`, but Not yet tested.
 

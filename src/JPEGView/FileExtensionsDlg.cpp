@@ -284,6 +284,8 @@ void CFileExtensionsDlg::FillFileExtensionsList() {
 	InsertExtension(_T("*.avif"), FormatHint(CNLS::GetString(_T("%s images")), _T("AVIF")));
 	InsertExtension(_T("*.bmp"), FormatHint(CNLS::GetString(_T("%s images")), _T("Windows bitmap")));
 	InsertExtension(_T("*.gif"), FormatHint(CNLS::GetString(_T("%s images")), _T("GIF")));
+	InsertExtension(_T("*.heif"), FormatHint(CNLS::GetString(_T("%s images")), _T("High Efficiency Image File")));
+	InsertExtension(_T("*.heic"), FormatHint(CNLS::GetString(_T("%s images")), _T("High Efficiency Image Container")));
 	InsertExtension(_T("*.jxl"), FormatHint(CNLS::GetString(_T("%s images")), _T("JPEG XL")));
 	InsertExtension(_T("*.tga"), FormatHint(CNLS::GetString(_T("%s images")), _T("TGA")));
 	InsertExtension(_T("*.tif;*.tiff"), FormatHint(CNLS::GetString(_T("%s images")), _T("TIFF")));

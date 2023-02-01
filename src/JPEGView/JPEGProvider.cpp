@@ -32,9 +32,11 @@ CJPEGProvider::~CJPEGProvider(void) {
 }
 
 CJPEGImage* CJPEGProvider::RequestImage(CFileList* pFileList, EReadAheadDirection eDirection,
-									   LPCTSTR strFileName, int nFrameIndex, const CProcessParams & processParams, bool& bOutOfMemory) {
+                                        LPCTSTR strFileName, int nFrameIndex, const CProcessParams & processParams,
+                                        bool& bOutOfMemory, bool& bExceptionError) {
 	if (strFileName == NULL) {
 		bOutOfMemory = false;
+		bExceptionError = false;
 		return NULL;
 	}
 
@@ -97,6 +99,7 @@ CJPEGImage* CJPEGProvider::RequestImage(CFileList* pFileList, EReadAheadDirectio
 	}
 
 	bOutOfMemory = pRequest->OutOfMemory;
+	bExceptionError = pRequest->ExceptionError;
 	return pRequest->Image;
 }
 
@@ -226,7 +229,7 @@ void CJPEGProvider::StartNewRequestBundle(CFileList* pFileList, EReadAheadDirect
 }
 
 CJPEGProvider::CImageRequest* CJPEGProvider::StartNewRequest(LPCTSTR sFileName, int nFrameIndex, const CProcessParams & processParams) {
-	::OutputDebugString(_T("Start new request: ")); ::OutputDebugString(sFileName); ::OutputDebugString(_T("\n"));
+	//::OutputDebugString(_T("Start new request: ")); ::OutputDebugString(sFileName); ::OutputDebugString(_T("\n"));
 	CImageRequest* pRequest = new CImageRequest(sFileName, nFrameIndex);
 	m_requestList.push_back(pRequest);
 	pRequest->HandlingThread = SearchThreadForNewRequest();
@@ -237,10 +240,11 @@ CJPEGProvider::CImageRequest* CJPEGProvider::StartNewRequest(LPCTSTR sFileName, 
 
 void CJPEGProvider::GetLoadedImageFromWorkThread(CImageRequest* pRequest) {
 	if (pRequest->HandlingThread != NULL) {
-		::OutputDebugString(_T("Finished request: ")); ::OutputDebugString(pRequest->FileName); ::OutputDebugString(_T("\n"));
+		//::OutputDebugString(_T("Finished request: ")); ::OutputDebugString(pRequest->FileName); ::OutputDebugString(_T("\n"));
 		CImageData imageData = pRequest->HandlingThread->GetLoadedImage(pRequest->Handle);
 		pRequest->Image = imageData.Image;
 		pRequest->OutOfMemory = imageData.IsRequestFailedOutOfMemory;
+		pRequest->ExceptionError = imageData.IsRequestFailedException;
 		pRequest->Ready = true;
 		pRequest->HandlingThread = NULL;
 	}

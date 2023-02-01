@@ -171,8 +171,11 @@
 			<Feature Id="FeatureWIC" Title="WIC Support">
 				<ComponentRef Id="WICLoaderDLL"/>
 			</Feature>
-			<Feature Id="FeatureAVIF" Title="AVIF Support">
+			<Feature Id="FeatureAVIF" Title="AVIF and HEIC Support">
 				<ComponentRef Id="avifDLL"/>
+				<ComponentRef Id="dav1dDLL"/>
+				<ComponentRef Id="heifDLL"/>
+				<ComponentRef Id="libde265DLL"/>
 				<ComponentRef Id="vcruntime140DLL"/>
 			</Feature>
 			<Feature Id="FeatureJXL" Title="JXL Support">
@@ -377,6 +380,15 @@
 					</Component>
 					<Component Id="avifDLL" Guid="749cdb71-07e5-4271-8321-4371e8596f73">
 						<File Id="avif.dll" Name="avif.dll" Source="..\JPEGView\libavif\lib64\avif.dll"  KeyPath="yes" />
+					</Component>
+					<Component Id="dav1dDLL" Guid="b14897a6-5ab6-4c3c-ac16-0f7e7c9345c8">
+						<File Id="dav1d.dll" Name="dav1d.dll" Source="..\JPEGView\libheif\bin64\dav1d.dll"  KeyPath="yes" />
+					</Component>
+					<Component Id="heifDLL" Guid="8a5808aa-1e51-4d71-94f9-da4ed77bd39d">
+						<File Id="heif.dll" Name="heif.dll" Source="..\JPEGView\libheif\bin64\heif.dll"  KeyPath="yes" />
+					</Component>
+					<Component Id="libde265DLL" Guid="9eebce08-aa90-4f8f-83d3-ad36e8d578bb">
+						<File Id="libde265.dll" Name="libde265.dll" Source="..\JPEGView\libheif\bin64\libde265.dll"  KeyPath="yes" />
 					</Component>
 					<Component Id="vcruntime140DLL" Guid="1e0dc6da-91b9-455a-874f-d265af7bed11">
 						<File Id="vcruntime140.dll" Name="vcruntime140.dll" Source="..\JPEGView\vcredist\vcruntime140.dll"  KeyPath="yes" />

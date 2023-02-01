@@ -124,6 +124,10 @@ DefaultFixedCropSize=320 200
 ; User defined crop aspect ratio (x y), meaning (x : y)
 UserCropAspectRatio=1 1
 
+; By default, Left-click and drag enables selection mode whenever pan is not available.  CTRL+Left-click and drag enables selection mode when zoomed in.
+; Set this to false to only use selection mode when CTRL is pressed
+DefaultSelectionMode=true
+
 ; Set to true to initially display the file name of each image in the upper, left corner of the screen
 ShowFileName=false
 
@@ -142,6 +146,9 @@ FileNameFont=Default
 
 ; Set to true to initially display the file info box (EXIF info if available)
 ShowFileInfo=false
+
+; Show full file path and name in the window title (shows only file name by default)
+ShowFilePathInTitle=false
 
 ; Show the acquisition date from EXIF data in the window title
 ShowEXIFDateInTitle=true
@@ -203,7 +210,7 @@ DownSamplingFilter=BestQuality
 ; Can be LastModDate, CreationDate, FileName, FileSize or Random
 FileDisplayOrder=LastModDate
 
-; Sort files upcounting or downcounting
+; Sort files upcounting (ascending) or downcounting (descending)
 IsSortedUpcounting=true
 
 ; Navigation within or between folders
@@ -269,7 +276,7 @@ SingleFullScreenInstance=true
 SkipFileOpenDialogOnStartup=false
 
 ; Force using GDI+ for reading JPEGS. Only use when you have problems reading your JPEGs with the default Turbo JPEG library.
-; Note that using GDI+ is slower than the Turbo JPEG JPEG library!
+; Note that using GDI+ is slower than the Turbo JPEG library!
 ForceGDIPlus=false
 
 ; Quality when saving JPEG files (in 0..100 where 100 is the highest quality)
@@ -337,7 +344,8 @@ AutoContrastCorrectionAmount=0.5
 
 ; Amount of color correction in the color channels reg, green, blue, cyan, magenta and yellow
 ; The numbers must be between 0.0 (no correction) and 1.0 (total correction towards the gray world model)
-ColorCorrection = "R: 0.2 G: 0.1 B: 0.35 C: 0.1 M: 0.3 Y: 0.15"
+; Set all values to 0 to disable color correction
+ColorCorrection = R: 0.2 G: 0.1 B: 0.35 C: 0.1 M: 0.3 Y: 0.15
 
 ; Amount of automatic brightness correction
 ; 0 means no brightness correction, 1 means full correction to middle gray. Must be in (0 .. 1)
@@ -390,7 +398,7 @@ GPSMapProvider=https://opentopomap.org/#marker=15/{lat}/{lng}
 ; User commands
 ; User command must be named UserCmd# where # stands for a number. The numbers 0 to 2 are already used by the global INI file.
 ; User command must have the following form:
-; UserCmd#="KeyCode: %Key% Cmd: '%Cmd%' [Confirm: '%confirm%'] [HelpText: '%help%'] [Flags: '%flags%']"
+; UserCmd#="KeyCode: %Key% Cmd: '%Cmd%' [Menuitem: '%menu%'] [Confirm: '%confirm%'] [HelpText: '%help%'] [Flags: '%flags%']"
 ; %Key% :   Key that invokes the command. Do not define keys already used by JPEGView.
 ;           The following keys are known: Alt, Ctrl, Shift, Esc, Return, Space, End, Home, Back, Tab, PgDn, PgUp,
 ;           Left, Right, Up, Down, Insert, Del, Plus, Minus, Mul, Div, Comma, Period, A .. Z  F1 .. F12
@@ -406,6 +414,7 @@ GPSMapProvider=https://opentopomap.org/#marker=15/{lat}/{lng}
 ;           %exepath%    : Path to EXE folder where JPEGView is running
 ;           %exedrive%   : Drive letter of the EXE path, e.g. "c:"
 ;           The resulting names are enclosed with double quotes automatically by JPEGView when no backslash is before or after the placeholder.
+; %menu% :  The menu item text in the 'User Commands' sub-menu shown in the JPEGView context menu. If missing the command is not contained in the menu.
 ; %confirm% : Message text that is shown and must be confirmed before the command is executed. 
 ;           This is an optional argument, if not used, no confirmation is needed for the command.
 ; %help% :  Help string that is displayed in JPEG view when F1 is pressed.
