@@ -623,14 +623,15 @@ void CImageLoadThread::ProcessReadJPEGRequest(CRequest* request) {
 
 void CImageLoadThread::BlendAlpha(uint32* pImage32, int nWidth, int nHeight, bool bUseCheckerboard)
 {
+	COLORREF nTranparency = CSettingsProvider::This().ColorTransparency();
 	if (!bUseCheckerboard)
 	{
-		for (int i = 0; i < nWidth * nHeight; i++)
-			*pImage32++ = WebpAlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+		for (int i = 0; i < nWidth * nHeight; ++i)
+			*pImage32++ = WebpAlphaBlendBackground(*pImage32, nTranparency);
 	} else {
 		for (int y = 0; y < nHeight; ++y)
 			for (int x = 0; x < nWidth; ++x)
-				*pImage32++ = WebpAlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency(), true, x, y);
+				*pImage32++ = WebpAlphaBlendBackground(*pImage32, nTranparency, true, x, y);
 	}
 }
 
