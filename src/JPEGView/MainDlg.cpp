@@ -3343,10 +3343,15 @@ void CMainDlg::StartMovieMode(double dFPS) {
 	StartSlideShowTimer(Helpers::RoundToInt(1000.0/dFPS));
 	AfterNewImageLoaded(false, false, false);
 	Invalidate(FALSE);
+	// 'Force' display to stay on, i.e. 'block' screensaver activation. Consider adding ES_AWAYMODE_REQUIRED to prevent sleep?
+	SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED);
 }
 
 void CMainDlg::StopMovieMode() {
 	if (m_bMovieMode) {
+		// Reset EXECUTION_STATE flags to sleep/screensaver
+		SetThreadExecutionState(ES_CONTINUOUS);
+
 		// undo changes done on processing parameters due to movie mode
 		if (!GetProcessingFlag(m_eProcFlagsBeforeMovie, PFLAG_KeepParams)) {
 			if (m_bKeepParams) {
