@@ -338,7 +338,12 @@ private:
 	bool m_bUseCheckerboard; //for transparent background
 	bool m_bWindowBorderless;
 	bool m_bAlwaysOnTop;
+	//Toast stuff
+	HFONT m_hToastFont;
+	CString m_strToast;
 
+	void SetToast(CString& a_strToast, DWORD a_nDurationMs = 3000);
+	void SetToastIfEmpty(CString& a_strToast, DWORD a_nDurationMs = 3000);
 	void ExploreFile();
 	bool OpenFileWithDialog(bool bFullScreen, bool bAfterStartup);
 	void OpenFile(LPCTSTR sFileName, bool bAfterStartup);

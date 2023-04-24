@@ -174,7 +174,9 @@ static EProcessingFlags _SetLandscapeModeFlags(EProcessingFlags eFlags) {
 CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_bSelectMode(false),
 	m_bSingleZoom(false),
-	m_bUseCheckerboard(true)
+	m_bUseCheckerboard(true),
+	m_hToastFont(0),
+	m_strToast("")
 {
 	CSettingsProvider& sp = CSettingsProvider::This();
 
@@ -299,6 +301,21 @@ CMainDlg::~CMainDlg() {
 	delete m_pCropCtl;
 	delete m_pPanelMgr; // this will delete all panel controllers and all panels
 	delete m_pKeyMap;
+}
+
+void CMainDlg::SetToast(CString& a_strToast, DWORD a_nDurationMs)
+{
+	::SetTimer(this->m_hWnd, TOAST_EXPIRY_TIMER_EVENT_ID, a_nDurationMs, NULL);
+	m_strToast = a_strToast;
+}
+
+/*
+* Set toast only if empty, so as not to override existing toast!
+*/
+void CMainDlg::SetToastIfEmpty(CString& a_strToast, DWORD a_nDurationMs)
+{
+	if (m_strToast.IsEmpty())
+		SetToast(a_strToast, a_nDurationMs);
 }
 
 void CMainDlg::SetStartupInfo(LPCTSTR sStartupFile, int nAutostartSlideShow, Helpers::ESorting eSorting, Helpers::ETransitionEffect eEffect, 
@@ -789,6 +806,32 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		dc.SetTextColor(CSettingsProvider::This().ColorGUI());
 		HelpersGUI::SelectDefaultFileNameFont(dc);
 		HelpersGUI::DrawTextBordered(dc, buff, GetZoomTextRect(imageProcessingArea), DT_RIGHT);
+	}
+
+	if (!m_strToast.IsEmpty())
+	{
+		//always base font size on screensize, as we're creating font once, regardless of changing window size
+		CSize sixeScr = CMultiMonitorSupport::GetMonitorRect(m_hWnd).Size();
+		int nFontSize = (int)(sixeScr.cy * 0.05);
+		if (!m_hToastFont)
+		{
+			CString fontName("Arial");
+			m_hToastFont = ::CreateFont(nFontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+				CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, VARIABLE_PITCH, fontName.GetString());
+		}
+		int nMidX = m_clientRect.left + (m_clientRect.Width() / 2),
+			nBtmY = m_clientRect.bottom,
+			nBtmGap = 2 * nFontSize;
+		if (nBtmY > nBtmGap) nBtmY -= nBtmGap;
+		//Centering text, so don't need a 'fitting' rect; just the point of placement
+		CRect rectToast(nMidX, nBtmY, nMidX, nBtmY), //left,top,right,btm
+			rectShadow(nMidX + 5, nBtmY + 5, nMidX + 5, nBtmY + 5);
+		::SelectObject(dc, m_hToastFont);
+		//Draw shadow, followed by text
+		dc.SetTextColor(RGB(0, 0, 0));
+		::DrawText(dc, m_strToast.GetString(), m_strToast.GetLength(), &rectShadow, DT_CENTER | DT_VCENTER | DT_NOCLIP | DT_NOPREFIX);
+		dc.SetTextColor(RGB(255, 255, 255));
+		::DrawText(dc, m_strToast.GetString(), m_strToast.GetLength(), &rectToast, DT_CENTER | DT_VCENTER | DT_NOCLIP | DT_NOPREFIX);
 	}
 
 	// let crop controller and panels paint its stuff
@@ -1371,6 +1414,10 @@ LRESULT CMainDlg::OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 		m_pZoomNavigatorCtl->InvalidateZoomNavigatorRect();
 		CRect imageProcArea = m_pImageProcPanelCtl->PanelRect();
 		this->InvalidateRect(GetZoomTextRect(imageProcArea), FALSE);
+	} else if (wParam == TOAST_EXPIRY_TIMER_EVENT_ID) {
+		m_strToast = "";
+		this->Invalidate(FALSE);
+	} else if (wParam == ZOOM_TEXT_TIMER_EVENT_ID) {
 	} else {
 		if (!m_pCropCtl->OnTimer((int)wParam)) {
 			m_pPanelMgr->OnTimer((int)wParam);
@@ -3342,6 +3389,7 @@ void CMainDlg::StartMovieMode(double dFPS) {
 	m_bMovieModeOperative = true;
 	StartSlideShowTimer(Helpers::RoundToInt(1000.0/dFPS));
 	AfterNewImageLoaded(false, false, false);
+	SetToastIfEmpty(CString("Play"));
 	Invalidate(FALSE);
 	// 'Force' display to stay on, i.e. 'block' screensaver activation. Consider adding ES_AWAYMODE_REQUIRED to prevent sleep?
 	SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED);
@@ -3376,6 +3424,7 @@ void CMainDlg::StopMovieMode() {
 		m_bProcFlagsTouched = false;
 		StopSlideShowTimer();
 		AfterNewImageLoaded(false, false, false);
+		SetToastIfEmpty(CString("Pause"));
 		this->Invalidate(FALSE);
 	}
 }
@@ -3430,10 +3479,15 @@ void CMainDlg::AdjustMovieSpeed(double dIncrement)
 			dFPS = 0.143;
 		else //dFPS <= 0.05
 			dFPS = 0.1;
+		CString text;
+		text.Format(_T("^ %.1f fps"), dFPS);
+		SetToast(text);
 	}
 	else
 	{
 		//slow down
+		if (dFPS < 0.1)
+			return;
 		if (dFPS > 50.0)
 			dFPS = 50.0;
 		else if (dFPS >= 50.0)
@@ -3458,9 +3512,11 @@ void CMainDlg::AdjustMovieSpeed(double dIncrement)
 			dFPS = 0.143;
 		else if (dFPS >= 0.142)
 			dFPS = 0.1;
-		else if (dFPS >= 0.1)
+		else //if (dFPS >= 0.1)
 			dFPS = 0.05;
-		else return;
+		CString text;
+		text.Format(_T("v %.1f fps"), dFPS);
+		SetToast(text);
 	}
 	//quick hack: instead of adjusting interval to next pic, just stop + restart slideshow
 	StopMovieMode();
