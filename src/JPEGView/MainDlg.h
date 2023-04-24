@@ -342,8 +342,8 @@ private:
 	HFONT m_hToastFont;
 	CString m_strToast;
 
-	void SetToast(CString& a_strToast, DWORD a_nDurationMs = 3000);
-	void SetToastIfEmpty(CString& a_strToast, DWORD a_nDurationMs = 3000);
+	void SetToast(LPCTSTR a_strToast, DWORD a_nDurationMs = 3000);
+	void SetToastIfEmpty(LPCTSTR a_strToast, DWORD a_nDurationMs = 3000);
 	void ExploreFile();
 	bool OpenFileWithDialog(bool bFullScreen, bool bAfterStartup);
 	void OpenFile(LPCTSTR sFileName, bool bAfterStartup);

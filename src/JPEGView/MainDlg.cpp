@@ -303,20 +303,23 @@ CMainDlg::~CMainDlg() {
 	delete m_pKeyMap;
 }
 
-void CMainDlg::SetToast(CString& a_strToast, DWORD a_nDurationMs)
+void CMainDlg::SetToast(LPCTSTR a_strToast, DWORD a_nDurationMs)
 {
+	::KillTimer(this->m_hWnd, TOAST_EXPIRY_TIMER_EVENT_ID);
 	::SetTimer(this->m_hWnd, TOAST_EXPIRY_TIMER_EVENT_ID, a_nDurationMs, NULL);
 	m_strToast = a_strToast;
+	this->Invalidate(FALSE);
 }
 
 /*
 * Set toast only if empty, so as not to override existing toast!
 */
-void CMainDlg::SetToastIfEmpty(CString& a_strToast, DWORD a_nDurationMs)
+void CMainDlg::SetToastIfEmpty(LPCTSTR a_strToast, DWORD a_nDurationMs)
 {
 	if (m_strToast.IsEmpty())
 		SetToast(a_strToast, a_nDurationMs);
 }
+
 
 void CMainDlg::SetStartupInfo(LPCTSTR sStartupFile, int nAutostartSlideShow, Helpers::ESorting eSorting, Helpers::ETransitionEffect eEffect, 
 	int nTransitionTime, bool bAutoExit, int nDisplayMonitor) { 
@@ -784,6 +787,11 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 
 	// Display errors and warnings
 	DisplayErrors(m_pCurrentImage, m_clientRect, dc);
+	if (!m_pCurrentImage)
+	{
+		GotoImage(POS_Current);
+		return 0;
+	}
 
 	// Now blit the memory DCs of the panels to the screen
 	memDCMgr.PaintMemDCToScreen();
@@ -1238,6 +1246,7 @@ LRESULT CMainDlg::OnKeyDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOO
 			else {
 				nValue *= 1000; // seconds
 			}
+			SetToast(_T("Play"));
 			StartMovieMode(1000.0 / nValue);
 		}
 		else
@@ -1840,9 +1849,11 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			GotoImage(POS_Previous_100);
 			break;
 		case IDM_NEXT_FOLDER:
+			//SetToast(_T("Jump: Next Folder"));
 			GotoImage(POS_Next_Folder);
 			break;
 		case IDM_PREV_FOLDER:
+			//SetToast(_T("Jump: Previous Folder"));
 			GotoImage(POS_Previous_Folder);
 			break;
 		case IDM_FIRST:
@@ -1858,6 +1869,9 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 				(nCommand == IDM_LOOP_FOLDER) ? Helpers::NM_LoopDirectory :
 				(nCommand == IDM_LOOP_RECURSIVELY) ? Helpers::NM_LoopSubDirectories : 
 				Helpers::NM_LoopSameDirectoryLevel);
+			if (nCommand == IDM_LOOP_FOLDER) SetToast(_T("Nav: Loop Folder"));
+			else if (nCommand == IDM_LOOP_RECURSIVELY) SetToast(_T("Nav: Recursive"));
+			else SetToast(_T("Nav: Same Folder Level"));
 			break;
 		case IDM_SORT_MOD_DATE:
 		case IDM_SORT_CREATION_DATE:
@@ -1881,9 +1895,11 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			}
 			break;
 		case IDM_STOP_MOVIE:
+			SetToast(_T("Pause"));
 			StopMovieMode();
 			break;
 		case IDM_SLIDESHOW_RESUME:
+			SetToast(_T("Play"));
 			StartMovieMode(m_dMovieFPS);
 			break;
 		case IDM_SLIDESHOW_1:
@@ -1894,21 +1910,33 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_SLIDESHOW_7:
 		case IDM_SLIDESHOW_10:
 		case IDM_SLIDESHOW_20:
+			SetToast(_T("Play"));
 			StartMovieMode(1.0/(nCommand - IDM_SLIDESHOW_START));
 			break;
 		case IDM_SLIDESHOW_CUSTOM:
+			SetToast(_T("Play"));
 			StartMovieMode(m_dSlideShowCustomFps);
 			break;
 		case IDM_TOGGLE_MIN_FILESIZE:
+		{
+			bool bWasInMovieMode = m_bMovieMode;
 			m_bMinFilesize = !m_bMinFilesize;
+			SetToast(m_bMinFilesize? _T("Hide small files") : _T("Show any size"));
 			//for simplicity, just reload in entirety and 'restart'
 			// o.w. CFileList will need major changes to track when not to show or not show which images
 			OpenFile(m_sStartupFile, false);
+			if (bWasInMovieMode) StartMovieMode(m_dMovieFPS);
 			break;
+		}
 		case IDM_TOGGLE_HIDE_HIDDEN:
+		{
+			bool bWasInMovieMode = m_bMovieMode;
 			m_bHideHidden = !m_bHideHidden;
+			SetToast(m_bHideHidden ? _T("Hide hidden files") : _T("Show hidden files too"));
 			OpenFile(m_sStartupFile, false);
+			if (bWasInMovieMode) StartMovieMode(m_dMovieFPS);
 			break;
+		}
 		case IDM_EFFECT_NONE:
 		case IDM_EFFECT_BLEND:
 		case IDM_EFFECT_SLIDE_RL:
@@ -1938,6 +1966,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_MOVIE_30_FPS:
 		case IDM_MOVIE_50_FPS:
 		case IDM_MOVIE_100_FPS:
+			SetToast(_T("Play"));
 			StartMovieMode(nCommand - IDM_MOVIE_START_FPS);
 			break;
 		case IDM_SAVE_PARAM_DB:
@@ -2136,9 +2165,15 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			else //switch 'Space' key to start/pause slideshow
 			{
 				if (m_bMovieMode)
+				{
+					SetToast(_T("Pause"));
 					StopMovieMode();
+				}
 				else
+				{
+					SetToast(_T("Resume"));
 					StartMovieMode(m_dMovieFPS);
+				}
 			}
 			break;
 		case IDM_SPAN_SCREENS:
@@ -2349,6 +2384,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 					CleanupAndTerminate();
 				else
 				{
+					SetToast(_T("Pause"));
 					StopMovieMode(); // stop any running movie/slideshow
 					m_bMovieModeOperative = false;
 				}
@@ -2470,6 +2506,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_TOGGLE_TRANSPARENCY:
 			m_bUseCheckerboard = !m_bUseCheckerboard;
 			ReloadImage(true);
+			SetToast(m_bUseCheckerboard ? _T("Transparency: Checkerboard") : _T("Transparency: Blend"));
 			break;
 		case IDM_GAMMA_INC:
 		case IDM_GAMMA_DEC:
@@ -3389,7 +3426,6 @@ void CMainDlg::StartMovieMode(double dFPS) {
 	m_bMovieModeOperative = true;
 	StartSlideShowTimer(Helpers::RoundToInt(1000.0/dFPS));
 	AfterNewImageLoaded(false, false, false);
-	SetToastIfEmpty(CString("Play"));
 	Invalidate(FALSE);
 	// 'Force' display to stay on, i.e. 'block' screensaver activation. Consider adding ES_AWAYMODE_REQUIRED to prevent sleep?
 	SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED);
@@ -3424,7 +3460,6 @@ void CMainDlg::StopMovieMode() {
 		m_bProcFlagsTouched = false;
 		StopSlideShowTimer();
 		AfterNewImageLoaded(false, false, false);
-		SetToastIfEmpty(CString("Pause"));
 		this->Invalidate(FALSE);
 	}
 }

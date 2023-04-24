@@ -384,7 +384,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
-		//DeleteCachedAvifDecoder(); //somehow this tends to cause failure of loading subsquent AVIF animation frames
+		DeleteCachedAvifDecoder();
 		ProcessReadJPEGRequest(&rq);
 		break;
 	case IF_WindowsBMP:
@@ -392,6 +392,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
 		ProcessReadBMPRequest(&rq);
 		break;
 	case IF_TGA:
@@ -399,12 +400,14 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
 		ProcessReadTGARequest(&rq);
 		break;
 	case IF_WEBP:
 		DeleteCachedGDIBitmap();
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
 		ProcessReadWEBPRequest(&rq);
 		break;
 	case IF_JXL:
@@ -412,12 +415,14 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		ProcessReadJXLRequest(&rq);
+		DeleteCachedAvifDecoder();
 		break;
 	case IF_HEIF:
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
 		ProcessReadHEIFRequest(&rq);
 		break;
 	case IF_CameraRAW:
@@ -425,6 +430,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
 		ProcessReadRAWRequest(&rq);
 		break;
 	case IF_WIC:
@@ -432,12 +438,14 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
 		ProcessReadWICRequest(&rq);
 		break;
 	case IF_PNG:
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
 		ProcessReadPNGRequest(&rq);
 		break;
 	case IF_AVIF:
@@ -451,6 +459,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
 		ProcessReadGDIPlusRequest(&rq);
 		break;
 	}
@@ -714,14 +723,17 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 	bool bUseCachedDecoder = false,
 		bHasAnimation = false;
 	const wchar_t* sFileName;
-	sFileName = (const wchar_t*)request->FileName;
-	if (sFileName != m_sLastAvifFileName) {
-		DeleteCachedAvifDecoder();
-	}
-	else {
+		sFileName = (const wchar_t*)request->FileName;
+	if ((sFileName == m_sLastAvifFileName) && m_avifDecoder) {
 		bUseCachedDecoder = true;
 		m_avifDecoder->imageIndex = request->FrameIndex - 1;
+		if (m_avifDecoder->imageIndex >= m_avifDecoder->imageCount)
+			m_avifDecoder->imageIndex = m_avifDecoder->imageCount - 1;
+		if (m_avifDecoder->imageIndex < 0)
+			m_avifDecoder->imageIndex = 0;
 		bHasAnimation = m_avifDecoder->imageCount > 1;
+	} else {
+		DeleteCachedAvifDecoder();
 	}
 
 	HANDLE hFile = 0;
@@ -834,6 +846,7 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 					}
 					BlendAlpha((uint32*)(rgb.pixels), m_avifDecoder->image->width, m_avifDecoder->image->height, request->ProcessParams.UseCheckerboard);
 					request->Image = new CJPEGImage(m_avifDecoder->image->width, m_avifDecoder->image->height, rgb.pixels, 0, 4, 0, IF_AVIF, bHasAnimation, request->FrameIndex, m_avifDecoder->imageCount, nFrameTimeMs);
+					if (!bHasAnimation) DeleteCachedAvifDecoder();
 					bSuccess = true;
 				}
 				else
@@ -857,12 +870,27 @@ cleanup:
 	if (!bSuccess)
 	{
 		DeleteCachedAvifDecoder();
-		//failed, so try HEIF/dav1d decoder instead
-		ProcessReadHEIFRequest(request);
-		if (!request->Image)
-			ProcessReadGDIPlusRequest(request);
-		if (request->Image)
-			request->ExceptionError = false; //either HEIF or GDIPlus succeeded, so clear ExceptionError
+		if (!bHasAnimation)
+		{
+			//failed, so try HEIF/dav1d decoder instead
+			try {
+				ProcessReadHEIFRequest(request);
+			}
+			catch (...) {
+				request->Image = 0;
+			}
+			if (!request->Image)
+			{
+				try {
+					ProcessReadGDIPlusRequest(request);
+				}
+				catch (...) {
+					request->Image = 0;
+				}
+			}
+			if (request->Image)
+				request->ExceptionError = false; //either HEIF or GDIPlus succeeded, so clear ExceptionError
+		}
 	}
 }
 

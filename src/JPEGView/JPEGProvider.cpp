@@ -71,7 +71,7 @@ CJPEGImage* CJPEGProvider::RequestImage(CFileList* pFileList, EReadAheadDirectio
 				processParams.RotationParams.Rotation, processParams.Zoom, processParams.Offsets, 
 				CSize(processParams.TargetWidth, processParams.TargetHeight), processParams.MonitorSize);
 		}
-		::OutputDebugString(_T("Found in cache: ")); ::OutputDebugString(pRequest->FileName); ::OutputDebugString(_T("\n"));
+		//::OutputDebugString(_T("Found in cache: ")); ::OutputDebugString(pRequest->FileName); ::OutputDebugString(_T("\n"));
 	}
 
 	// set before removing unused images!
@@ -291,7 +291,7 @@ void CJPEGProvider::RemoveUnusedImages(bool bRemoveAlsoActiveRequests) {
 				// remove the readahead images - if we get here with read ahead, the strategy was wrong and
 				// the read ahead image is not used.
 				if ((*iter)->AccessTimeStamp == nTimeStampToRemove || IsDestructivelyProcessed((*iter)->Image)) {
-					::OutputDebugString(_T("Delete request: ")); ::OutputDebugString((*iter)->FileName); ::OutputDebugString(_T("\n"));
+					//::OutputDebugString(_T("Delete request: ")); ::OutputDebugString((*iter)->FileName); ::OutputDebugString(_T("\n"));
 					DeleteElementAt(iter);
 					bRemoved = true;
 					break;
