@@ -54,9 +54,11 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
    * Wrap backwards. Allowed for `LoopSameFolderLevel` & `LoopSubFolders` too, not just`LoopFolder`.
 * Filter
   * Hide small images below `MinFilesize`. **ALT+M** to toggle and reload.
+    * Enabled by default if MinFilesize > 0, but auto-disabled if 1st image opened is small (< MinFilesize).
   * `HideHidden` setting: hide hidden images and folders. **ALT+H** to toggle and reload.
 
-(Last selectively sync'd up to original's ~31 Jan 2023 updates, excluding (WIP?) workflow changes).
+(Last selectively sync'd up to original's ~31 Jan 2023 updates, excluding (WIP?) workflow changes.
+Note: original has moved ahead with adding uncommon image formats; won't be adding these soon as they're rarely used).
 
 ### Slideshow
 
@@ -86,6 +88,8 @@ JPEGView has a slideshow mode which can be activated in various ways:
     (**modified in mod**) starts JPEGView in image selection mode, and then starts slideshow with image switching at 2s intervals. (Previously when an image/path is not specified, `/slideshow` is ignored)
 * Slideshow no longer paused when jumping into an image from a different folder.
 * Default to `FolderNavigation` to `LoopSubFolders` (loop into sub-folders as well), instead of `LoopFolder` (stay in same folder).
+* A little Android-like `toast` to inform of new slideshow fps or interval. Also used for other general notifications of interest.
+  * PS: there's an existing toast-like display of zoom factor when zooming - just in a smaller font.
 
 This mod makes it easier to manipulate the slideshow, specifically to pause/resume it, and (shift) up/down its speed.
 
@@ -169,7 +173,6 @@ Configure in `JPEGView.ini`:
 
 ### Wishlist
 
-* A little Android-like `toast` to inform of new slideshow fps or interval. Or other notifications.
 * Filter images by date, like show newest images only?
 * Gestures?
   * Double finger drag pan while zoom.

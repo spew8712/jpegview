@@ -320,10 +320,31 @@ void CMainDlg::SetToastIfEmpty(LPCTSTR a_strToast, DWORD a_nDurationMs)
 		SetToast(a_strToast, a_nDurationMs);
 }
 
+/*
+Determine whether to set in hide small files mode.
+If 1st file is small, disable it, so it won't 'disappear' despite being explicitly selected.
+*/
+void CMainDlg::DetermineInitMinFilesizeMode()
+{
+	CFindFile fileFind;
+	if (fileFind.FindFile(m_sStartupFile))
+	{
+		int nMinFilesize = CSettingsProvider::This().MinFilesize();
+		if (fileFind.GetFileSize() < nMinFilesize)
+		{
+			m_bMinFilesize = false;
+		}
+		else
+		{
+			m_bMinFilesize = nMinFilesize > 0;
+		}
+	}
+}
 
 void CMainDlg::SetStartupInfo(LPCTSTR sStartupFile, int nAutostartSlideShow, Helpers::ESorting eSorting, Helpers::ETransitionEffect eEffect, 
 	int nTransitionTime, bool bAutoExit, int nDisplayMonitor) { 
 	m_sStartupFile = sStartupFile; m_nAutoStartSlideShow = nAutostartSlideShow; m_eForcedSorting = eSorting;
+	DetermineInitMinFilesizeMode();
 	m_bAutoExit = bAutoExit;
 	if ((int)eEffect >= 0) m_eTransitionEffect = eEffect;
 	if (nTransitionTime > 0) m_nTransitionTime = nTransitionTime;
@@ -999,6 +1020,7 @@ LRESULT CMainDlg::OnLoadFileAsynch(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 			OpenFile(false, false);
 		} else {
 			OpenFile(m_sStartupFile, false);
+			DetermineInitMinFilesizeMode();
 		}
 	}
 	return 0;
@@ -2605,6 +2627,8 @@ bool CMainDlg::OpenFileWithDialog(bool bFullScreen, bool bAfterStartup) {
 	CFileOpenDialog dlgOpen(this->m_hWnd, m_pFileList->Current(), CFileList::GetSupportedFileEndings(), bFullScreen);
 	if (IDOK == dlgOpen.DoModal(this->m_hWnd)) {
 		m_isBeforeFileSelected = false;
+		m_sStartupFile = dlgOpen.m_szFileName;
+		DetermineInitMinFilesizeMode();
 		OpenFile(dlgOpen.m_szFileName, bAfterStartup);
 		return true;
 	}
