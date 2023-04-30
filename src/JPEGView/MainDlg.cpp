@@ -321,6 +321,23 @@ void CMainDlg::SetToastIfEmpty(LPCTSTR a_strToast, DWORD a_nDurationMs)
 }
 
 /*
+* Show toast for current files sorting mode (and up counting mode).
+*/
+void CMainDlg::ToastSortingMode(Helpers::ESorting nSortMode, bool bUpCounting)
+{
+	const wchar_t* sSortModes[] = {
+		_T("Modification Time"),
+		_T("Creation Time"),
+		_T("Filename"),
+		_T("(Random)"),
+		_T("Filesize")
+	};
+	CString sSortMode = sSortModes[(int)nSortMode];
+	sSortMode += (bUpCounting ? _T(" ^") : _T(" v"));
+	SetToast(sSortMode);
+}
+
+/*
 Determine whether to set in hide small files mode.
 If 1st file is small, disable it, so it won't 'disappear' despite being explicitly selected.
 */
@@ -1865,23 +1882,27 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			GotoImage(POS_Previous);
 			break;
 		case IDM_NEXT_100:
+			SetToast(_T("Jump: +100"));
 			GotoImage(POS_Next_100);
 			break;
 		case IDM_PREV_100:
+			SetToast(_T("Jump: -100"));
 			GotoImage(POS_Previous_100);
 			break;
 		case IDM_NEXT_FOLDER:
-			//SetToast(_T("Jump: Next Folder"));
+			SetToast(_T("Jump: Next Folder"));
 			GotoImage(POS_Next_Folder);
 			break;
 		case IDM_PREV_FOLDER:
-			//SetToast(_T("Jump: Previous Folder"));
+			SetToast(_T("Jump: Previous Folder"));
 			GotoImage(POS_Previous_Folder);
 			break;
 		case IDM_FIRST:
+			SetToast(_T("Jump: 1st image"));
 			GotoImage(POS_First);
 			break;
 		case IDM_LAST:
+			SetToast(_T("Jump: last image"));
 			GotoImage(POS_Last);
 			break;
 		case IDM_LOOP_FOLDER:
@@ -1900,22 +1921,37 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_SORT_NAME:
 		case IDM_SORT_RANDOM:
 		case IDM_SORT_SIZE:
-			m_pFileList->SetSorting(
-				(nCommand == IDM_SORT_CREATION_DATE) ? Helpers::FS_CreationTime : 
-				(nCommand == IDM_SORT_MOD_DATE) ? Helpers::FS_LastModTime : 
-				(nCommand == IDM_SORT_RANDOM) ? Helpers::FS_Random : 
-				(nCommand == IDM_SORT_SIZE) ? Helpers::FS_FileSize : Helpers::FS_FileName, m_pFileList->IsSortedUpcounting());
+		{
+			Helpers::ESorting nSortMode = (nCommand == IDM_SORT_CREATION_DATE) ? Helpers::FS_CreationTime :
+				(nCommand == IDM_SORT_MOD_DATE) ? Helpers::FS_LastModTime :
+				(nCommand == IDM_SORT_RANDOM) ? Helpers::FS_Random :
+				(nCommand == IDM_SORT_SIZE) ? Helpers::FS_FileSize : Helpers::FS_FileName;
+			bool bUpCounting = m_pFileList->IsSortedUpcounting();
+			if (m_pFileList->GetSorting() == nSortMode)
+			{
+				//toggle up counting mode instead, when no change in sort mode
+				bUpCounting = !bUpCounting;
+			}
+			ToastSortingMode(nSortMode, bUpCounting);
+			m_pFileList->SetSorting(nSortMode, bUpCounting);
+
 			if (m_pEXIFDisplayCtl->IsActive() || m_bShowFileName) {
 				this->Invalidate(FALSE);
 			}
 			break;
+		}
 		case IDM_SORT_UPCOUNTING:
 		case IDM_SORT_DOWNCOUNTING:
-			m_pFileList->SetSorting(m_pFileList->GetSorting(), nCommand == IDM_SORT_UPCOUNTING);
+		{
+			Helpers::ESorting nSortMode = m_pFileList->GetSorting();
+			bool bUpCounting = nCommand == IDM_SORT_UPCOUNTING;
+			ToastSortingMode(nSortMode, bUpCounting);
+			m_pFileList->SetSorting(nSortMode, bUpCounting);
 			if (m_pEXIFDisplayCtl->IsActive() || m_bShowFileName) {
 				this->Invalidate(FALSE);
 			}
 			break;
+		}
 		case IDM_STOP_MOVIE:
 			SetToast(_T("Pause"));
 			StopMovieMode();
@@ -2120,19 +2156,23 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_AUTO_CORRECTION:
 			m_bAutoContrastSection = false;
 			m_bAutoContrast = !m_bAutoContrast;
+			SetToast(m_bAutoContrast? _T("Auto Contrast: ON") : _T("Auto Contrast: OFF"));
 			this->Invalidate(FALSE);
 			break;
 		case IDM_AUTO_CORRECTION_SECTION:
 			m_bAutoContrast = true;
 			m_bAutoContrastSection = !m_bAutoContrastSection;
+			SetToast(m_bAutoContrastSection? _T("Auto Contrast (Section): ON") : _T("Auto Contrast (Section): OFF"));
 			this->Invalidate(FALSE);
 			break;
 		case IDM_LDC:
 			m_bLDC = !m_bLDC;
+			SetToast(m_bLDC? _T("Local Density Correction: ON") : _T("Local Density Correction: OFF"));
 			this->Invalidate(FALSE);
 			break;
 		case IDM_LANDSCAPE_MODE:
 			m_bLandscapeMode = !m_bLandscapeMode;
+			SetToast(m_bLandscapeMode? _T("Landscape Enhancement: ON") : _T("Landscape Enhancement: OFF"));
 			m_pNavPanelCtl->GetNavPanel()->GetBtnLandscapeMode()->SetActive(m_bLandscapeMode);
 			if (m_bLandscapeMode) {
 				*m_pImageProcParams = _SetLandscapeModeParams(true, *m_pImageProcParams);

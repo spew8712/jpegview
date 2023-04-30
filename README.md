@@ -56,6 +56,12 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
   * Hide small images below `MinFilesize`. **ALT+M** to toggle and reload.
     * Enabled by default if MinFilesize > 0, but auto-disabled if 1st image opened is small (< MinFilesize).
   * `HideHidden` setting: hide hidden images and folders. **ALT+H** to toggle and reload.
+* Simplified KeyMap.txt format with direct hotkey to command ID mapping.
+  * Old format still supported.
+  * Use ConvertKeyMap tool to make one-off conversion if desired.
+* Others
+  * Toast notifications. 
+  * Toggle ascending/descending sorting by pressing the same hotkey for sorting mode.
 
 (Last selectively sync'd up to original's ~31 Jan 2023 updates, excluding (WIP?) workflow changes.
 Note: original has moved ahead with adding uncommon image formats; won't be adding these soon as they're rarely used).

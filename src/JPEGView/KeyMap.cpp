@@ -186,7 +186,13 @@ CKeyMap::CKeyMap(LPCTSTR sKeyMapFile) {
 			LPTSTR sCommandId = _Parse(sLine);
 			if (*sCommandId == 0) continue;
 			int nCommandId = _FindCommandId(m_symbolMap, sCommandId);
-			if (nCommandId < 0) continue;
+			if (nCommandId < 0) {
+				//when old style double mapping is not available, read direct hotkey to command ID mapping instead
+				nCommandId = _wtoi(sCommandId);
+				if (nCommandId <= 0) {
+					continue;
+				}
+			}
 			int nKeyCode = _ParseKeys(sLine);
 			if (nKeyCode == 0) continue;
 			m_keyMap[nKeyCode] = nCommandId;
