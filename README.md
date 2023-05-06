@@ -11,8 +11,8 @@ JPEGView is a lean, fast and highly configurable image viewer/editor with a mini
 JPEGView has built-in support the following formats:
 
 * Popular: JPEG, GIF
-* Lossless: BMP, PNG, TIFF, ICO
-* Web: WEBP, JXL, AVIF (common subset)
+* Lossless: BMP, PNG, TIFF, QOI, ICO
+* Web: WEBP, JXL, HEIF/HEIC, AVIF (common subset)
 * Legacy: TGA, WDP, HDP, JXR
 * Camera RAW formats:
   * Adobe (DNG), Canon (CRW, CR2), Nikon (NEF, NRW), Sony (ARW, SR2)
@@ -30,11 +30,11 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 * rotation
 * perspective
 * contrast
-* local under-/over-exposure
+* local under/over-exposure
 
 ### Other Features:
 
-* Small and fast, uses SSE2 and up to 4 CPU cores
+* Small and fast, uses AVX2/SSE2 and up to 4 CPU cores
 * High quality resampling filter, preserving sharpness of images
 * Basic image processing tools can be applied realtime during viewing
 * Movie/Slideshow mode - to play folder of JPEGs as movie
@@ -63,8 +63,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
   * Toast notifications. 
   * Toggle ascending/descending sorting by pressing the same hotkey for sorting mode.
 
-(Last selectively sync'd up to original's ~31 Jan 2023 updates, excluding (WIP?) workflow changes.
-Note: original has moved ahead with adding uncommon image formats; won't be adding these soon as they're rarely used).
+(Last selectively sync'd up to original's ~31 Jan 2023 updates, with occasional cherry picks going ahead).
 
 ### Slideshow
 
@@ -314,7 +313,9 @@ To use this mod, simply replace the JPEGView.exe, *.DLL, JPEGView.ini and KeyMap
 
 ## MSI Installer
 
-For those who prefer to have JPEGView installed for All Users, a 32-bit/64-bit installer will be available to download starting with v1.0.40.  I don't own a code signing certificate yet, so the MSI release is not signed.
+For those who prefer to have JPEGView installed for All Users, a 32-bit/64-bit installer is available to download starting with v1.0.40.
+
+(Unfortunately, I don't own a code signing certificate yet, so the MSI release is not signed.  Please verify checksums!)
 
 ### WinGet
 
@@ -326,16 +327,16 @@ C:\> `winget search jpegview`
 ```
 Name     Id              Version  Source
 -----------------------------------------
-JPEGView sylikc.JPEGView 1.0.39.1 winget
+JPEGView sylikc.JPEGView 1.1.43  winget
 ```
 
 C:\> `winget install jpegview`
 ```
-Found JPEGView [sylikc.JPEGView] Version 1.0.39.1
+Found JPEGView [sylikc.JPEGView] Version 1.1.43
 This application is licensed to you by its owner.
 Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
-Downloading https://github.com/sylikc/jpegview/releases/download/v1.0.39.1-wix/JPEGView64_en-us_1.0.39.1.msi
-  ==============================  2.13 MB / 2.13 MB
+Downloading https://github.com/sylikc/jpegview/releases/download/v1.1.43/JPEGView64_en-us_1.1.43.msi
+  ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦  4.23 MB / 4.23 MB
 Successfully verified installer hash
 Starting package install...
 Successfully installed
@@ -347,9 +348,7 @@ Another option is to use the official [JPEGView on PortableApps](https://portabl
 
 ## System Requirements
 
-32-bit version: Windows XP SP2 or later
-
-64-bit version: Windows 7/8/10/11 64-bit or later
+* 64-bit version: Windows 7/8/10/11 64-bit or later
 Mod only tested for >= Win 7 64 bit.
 
 ## What's New
@@ -368,10 +367,6 @@ I'm hoping with this project, some devs might help me keep the project alive!  I
 
 ## Special Thanks
 
-Thanks to [sylikc](https://github.com/sylikc) et al for maintaining JPEGView =D
-Special thanks to [qbnu](https://github.com/qbnu) for adding additional codec support!
-* Animated WebP
-* Animated PNG
-* JPEG XL with animation support
+Thanks to [sylikc](https://github.com/sylikc), [qbnu](https://github.com/qbnu) et al for maintaining JPEGView =D
 
 Thanks to Alliance for Open Media for [libavif](https://github.com/AOMediaCodec/libavif/) + [aom](https://aomedia.googlesource.com/aom) for AVIF image read/write.

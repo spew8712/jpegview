@@ -15,6 +15,7 @@
 #include "PNGWrapper.h"
 #include "JXLWrapper.h"
 #include "HEIFWrapper.h"
+#include "QOIWrapper.h"
 #include "MaxImageDef.h"
 
 using namespace Gdiplus;
@@ -314,6 +315,7 @@ CImageLoadThread::~CImageLoadThread(void) {
 	DeleteCachedWebpDecoder();
 	DeleteCachedPngDecoder();
 	DeleteCachedJxlDecoder();
+	DeleteCachedAvifDecoder();
 }
 
 int CImageLoadThread::AsyncLoad(LPCTSTR strFileName, int nFrameIndex, const CProcessParams& processParams, HWND targetWnd, HANDLE eventFinished) {
@@ -424,6 +426,14 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
 		ProcessReadHEIFRequest(&rq);
+		break;
+	case IF_QOI:
+		DeleteCachedGDIBitmap();
+		DeleteCachedWebpDecoder();
+		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
+		ProcessReadQOIRequest(&rq);
 		break;
 	case IF_CameraRAW:
 		DeleteCachedGDIBitmap();
@@ -1122,6 +1132,52 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 		request->ExceptionError = true;
 	}
 	SetErrorMode(nPrevErrorMode);
+	::CloseHandle(hFile);
+	delete[] pBuffer;
+}
+
+void CImageLoadThread::ProcessReadQOIRequest(CRequest* request) {
+	HANDLE hFile;
+	hFile = ::CreateFile(request->FileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile == INVALID_HANDLE_VALUE) {
+		return;
+	}
+	char* pBuffer = NULL;
+	try {
+		unsigned int nFileSize = 0;
+		unsigned int nNumBytesRead;
+		// Don't read too huge files
+		nFileSize = ::GetFileSize(hFile, NULL);
+		if (nFileSize > MAX_PNG_FILE_SIZE) {
+			request->OutOfMemory = true;
+			::CloseHandle(hFile);
+			return;
+		}
+
+		pBuffer = new(std::nothrow) char[nFileSize];
+		if (pBuffer == NULL) {
+			request->OutOfMemory = true;
+			::CloseHandle(hFile);
+			return;
+		}
+		if (::ReadFile(hFile, pBuffer, nFileSize, (LPDWORD)&nNumBytesRead, NULL) && nNumBytesRead == nFileSize) {
+			int nWidth, nHeight, nBPP;
+			void* pPixelData = QoiReaderWriter::ReadImage(nWidth, nHeight, nBPP, request->OutOfMemory, pBuffer, nFileSize);
+			if (pPixelData != NULL) {
+				if (nBPP == 4) {
+					// Multiply alpha value into each AABBGGRR pixel
+					uint32* pImage32 = (uint32*)pPixelData;
+					for (int i = 0; i < nWidth * nHeight; i++)
+						*pImage32++ = WebpAlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+				}
+				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, nBPP, 0, IF_QOI, false, 0, 1, 0);
+			}
+		}
+	} catch (...) {
+		delete request->Image;
+		request->Image = NULL;
+		request->ExceptionError = true;
+	}
 	::CloseHandle(hFile);
 	delete[] pBuffer;
 }

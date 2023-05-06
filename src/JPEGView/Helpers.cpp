@@ -753,6 +753,8 @@ EImageFormat GetImageFormat(LPCTSTR sFileName) {
 			return IF_TGA;
 		} else if (_tcsicmp(sEnding, _T("AVIF")) == 0) {
 			return IF_AVIF;
+		} else if (_tcsicmp(sEnding, _T("QOI")) == 0) {
+			return IF_QOI;
 		} else if (IsInFileEndingList(CSettingsProvider::This().FilesProcessedByWIC(), sEnding)) {
 			return IF_WIC;
 		} else if (IsInFileEndingList(CSettingsProvider::This().FileEndingsRAW(), sEnding)) {
@@ -861,7 +863,9 @@ int GetFrameIndex(CJPEGImage* pImage, bool bNext, bool bPlayAnimation, bool & sw
 		}
 	}
 	if (bPlayAnimation && pImage == NULL) {
-		switchImage = false; // never switch image when error during animation playing
+		//switchImage = false; // never switch image when error during animation playing
+		//Changed switchImage=true so don't get stuck here!! but MainDlg is still stuck!
+		switchImage = true;
 	}
 
 	return nFrameIndex;
@@ -918,7 +922,7 @@ CString GetFileInfoString(LPCTSTR sFormat, CJPEGImage* pImage, CFileList* pFilel
 	if (_tcsstr(sFormat, _T("<l>")) != NULL) {
 		__int64 fileSize = isClipboardImage ? 0 : GetFileSize(pFilelist->Current());
 		CString sFileSize;
-		if (fileSize >= 1024 * 1024 * 100) {
+		if (fileSize >= 1024 * 1024) {
 			sFileSize.Format(_T("%d MB"), (int)(fileSize >> 20));
 		} else if (fileSize >= 1024) {
 			sFileSize.Format(_T("%d KB"), (int)(fileSize >> 10));

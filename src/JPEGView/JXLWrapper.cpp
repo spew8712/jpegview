@@ -6,6 +6,7 @@
 #include "jxl/resizable_parallel_runner.h"
 #include "jxl/resizable_parallel_runner_cxx.h"
 #include "MaxImageDef.h"
+#include "ICCProfileTransform.h"
 
 struct JxlReader::jxl_cache {
 	JxlDecoderPtr decoder;
@@ -16,6 +17,7 @@ struct JxlReader::jxl_cache {
 	int prev_frame_timestamp;
 	int width;
 	int height;
+	void* transform;
 };
 
 JxlReader::jxl_cache JxlReader::cache = { 0 };

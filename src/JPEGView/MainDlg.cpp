@@ -176,7 +176,8 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_bSingleZoom(false),
 	m_bUseCheckerboard(true),
 	m_hToastFont(0),
-	m_strToast("")
+	m_strToast(""),
+	m_nImageRetryCnt(0)
 {
 	CSettingsProvider& sp = CSettingsProvider::This();
 
@@ -825,11 +826,6 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 
 	// Display errors and warnings
 	DisplayErrors(m_pCurrentImage, m_clientRect, dc);
-	if (!m_pCurrentImage)
-	{
-		GotoImage(POS_Current);
-		return 0;
-	}
 
 	// Now blit the memory DCs of the panels to the screen
 	memDCMgr.PaintMemDCToScreen();
@@ -2730,7 +2726,7 @@ bool CMainDlg::SaveImage(bool bFullSize) {
 	}
 	CFileDialog fileDlg(FALSE, sExtension, sCurrentFile, 
 			OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT,
-			Helpers::CReplacePipe(CString(_T("JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP (*.bmp)|*.bmp|PNG (*.png)|*.png|TIFF (*.tiff;*.tif)|*.tiff;*.tif|WEBP (*.webp)|*.webp|WEBP lossless (*.webp)|*.webp|AVIF (*.avif)|*.avif|AVIF lossless (*.avif)|*.avif|")) +
+			Helpers::CReplacePipe(CString(_T("JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP (*.bmp)|*.bmp|PNG (*.png)|*.png|TIFF (*.tiff;*.tif)|*.tiff;*.tif|WEBP (*.webp)|*.webp|WEBP lossless (*.webp)|*.webp|AVIF (*.avif)|*.avif|AVIF lossless (*.avif)|*.avif|QOI (*.qoi)|*.qoi|")) +
 			CNLS::GetString(_T("All Files")) + _T("|*.*|")), m_hWnd);
 	if (sExtension.CompareNoCase(_T("bmp")) == 0) {
 		fileDlg.m_ofn.nFilterIndex = 2;
@@ -2743,6 +2739,8 @@ bool CMainDlg::SaveImage(bool bFullSize) {
 	} else if (sExtension.CompareNoCase(_T("avif")) == 0) {
 		//reuse m_bUseLosslessWEBP to indicate lossless AVIF as well
 		fileDlg.m_ofn.nFilterIndex = m_bUseLosslessWEBP ? 8 : 7;
+	} else if (sExtension.CompareNoCase(_T("qoi")) == 0) {
+		fileDlg.m_ofn.nFilterIndex = 9;
 	}
 	if (!bFullSize) {
 		fileDlg.m_ofn.lpstrTitle = CNLS::GetString(_T("Save as (in screen size/resolution)"));
@@ -3112,10 +3110,8 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	} else {
 		InitParametersForNewImage();
 	}
-	m_pJPEGProvider->NotifyNotUsed(m_pCurrentImage);
-	if (ePos == POS_Current || ePos == POS_AwayFromCurrent) {
-		m_pJPEGProvider->ClearRequest(m_pCurrentImage, ePos == POS_AwayFromCurrent);
-	}
+	CJPEGImage *pPrevImage = m_pCurrentImage;
+	LPCTSTR strPrevImage = m_pFileList->Current(); //delay NotifyNotUsed(m_pCurrentImage), until new image loaded!
 	m_pCurrentImage = NULL;
 
 	// do not perform a new image request if flagged
@@ -3135,6 +3131,7 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		} else {
 			m_nLastLoadError = HelpersGUI::FileLoad_PasteFromClipboardFailed;
 		}
+		m_nImageRetryCnt = 0;
 	} else {
 		m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, (ePos == POS_AwayFromCurrent) ? CJPEGProvider::NONE : eDirection,  
 			m_pFileList->Current(), nFrameIndex, procParams,
@@ -3143,14 +3140,23 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	}
 	double minimalDisplayTime = CSettingsProvider::This().MinimalDisplayTime();
 	bool bSynchronize = (nFlags & KEEP_PARAMETERS) == 0;
-	AfterNewImageLoaded(bSynchronize, false, minimalDisplayTime > 0);
+	if (m_pCurrentImage)
+	{
+		m_nImageRetryCnt = 0;
+		AfterNewImageLoaded(bSynchronize, false, minimalDisplayTime > 0);
+		m_pJPEGProvider->NotifyNotUsed(pPrevImage);
+		if (ePos == POS_Current || ePos == POS_AwayFromCurrent) {
+			m_pJPEGProvider->ClearRequest(pPrevImage, ePos == POS_AwayFromCurrent);
+		}
 
-	// if it is an animation (currently only animated GIF) start movie automatically
-	if (m_pCurrentImage != NULL && m_pCurrentImage->IsAnimation()) {
-		if (m_bIsAnimationPlaying) {
-			AdjustAnimationFrameTime();
-		} else {
-			StartAnimation();
+		// if it is an animation (currently only animated GIF) start movie automatically
+		if (m_pCurrentImage->IsAnimation()) {
+			if (m_bIsAnimationPlaying) {
+				AdjustAnimationFrameTime();
+			}
+			else {
+				StartAnimation();
+			}
 		}
 	}
 
@@ -3163,7 +3169,7 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	m_dLastImageDisplayTime = Helpers::GetExactTickCount();
 
 	// Do that now when using a minimal display time, as it has been skipped in AfterNewImageLoaded() to avoid wrong display during the ::Sleep()
-	if (minimalDisplayTime > 0 && bSynchronize && !m_bIsAnimationPlaying) {
+	if (m_pCurrentImage && minimalDisplayTime > 0 && bSynchronize && !m_bIsAnimationPlaying) {
 		AdjustWindowToImage(false);
 	}
 
@@ -3177,6 +3183,15 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	if (!(nFlags & NO_REMOVE_KEY_MSG)) {
 		MSG msg;
 		while (::PeekMessage(&msg, this->m_hWnd, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE));
+	}
+
+	if (!m_pCurrentImage && (_tcscmp(strPrevImage, m_pFileList->Current()) == 0))
+	{
+		if (++m_nImageRetryCnt < 2)
+		{
+			//retry; somehow animated AVIF benefits from retrying
+			GotoImage(POS_Current, nFlags);
+		}
 	}
 }
 
@@ -3633,6 +3648,7 @@ void CMainDlg::MouseOff() {
 		if (m_nMouseY < m_clientRect.bottom - m_pImageProcPanelCtl->PanelRect().Height() && 
 			!m_bInTrackPopupMenu && !m_pNavPanelCtl->PanelRect().PtInRect(CPoint(m_nMouseX, m_nMouseY))) {
 			if (m_bFullScreenMode) {
+				// cursor only hides when in full screen mode
 				while (::ShowCursor(FALSE) >= 0);
 			}
 			m_startMouse.x = m_startMouse.y = -1;

@@ -341,6 +341,7 @@ private:
 	//Toast stuff
 	HFONT m_hToastFont;
 	CString m_strToast;
+	int m_nImageRetryCnt;
 
 	void SetToast(LPCTSTR a_strToast, DWORD a_nDurationMs = 3000);
 	void SetToastIfEmpty(LPCTSTR a_strToast, DWORD a_nDurationMs = 3000);

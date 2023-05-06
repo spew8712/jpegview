@@ -301,7 +301,7 @@ uint8 CParameterDBEntry::Convert(float value, float lowerLimit, float upperLimit
 float CParameterDBEntry::Convert(uint8 value, float lowerLimit, float upperLimit, bool isLog10) const {
 	float fValue = value*(upperLimit - lowerLimit)/255.0f + lowerLimit;
 	if (isLog10) {
-		fValue = pow(fValue, 10);
+		fValue = powf(fValue, 10);
 	}
 	return fValue;
 }
@@ -618,7 +618,7 @@ bool CParameterDB::SaveToFile(int nIndex, const CParameterDBEntry & dbEntry) {
 		return false;
 	}
 
-	// Check header, do not override unknown files or versions
+	// Check header, do not overwrite unknown files or versions
 	__int64 nFileSize;
 	::GetFileSizeEx(hFile, (PLARGE_INTEGER)&nFileSize);
 	if (nFileSize >= sizeof(ParameterDBHeader)) {

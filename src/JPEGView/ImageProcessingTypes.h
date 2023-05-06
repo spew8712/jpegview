@@ -38,12 +38,13 @@ enum EImageFormat {
 	IF_WEBP,
 	IF_JXL,
 	IF_HEIF,
+	IF_AVIF,
+	IF_QOI,
 	IF_WIC,
 	IF_CLIPBOARD,
 	IF_CameraRAW,
 	IF_JPEG_Embedded, // JPEG embedded in another file, e.g. camera raw
 	IF_TGA,
-	IF_AVIF,
 	IF_Unknown
 };
 

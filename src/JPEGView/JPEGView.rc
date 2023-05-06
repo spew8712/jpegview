@@ -324,8 +324,8 @@ BEGIN
             MENUITEM "File size",                   IDM_SORT_SIZE
             MENUITEM "Random",                      IDM_SORT_RANDOM
             MENUITEM SEPARATOR
-            MENUITEM "Upcounting",                  IDM_SORT_UPCOUNTING
-            MENUITEM "Downcounting",                IDM_SORT_DOWNCOUNTING
+            MENUITEM "Ascending",                  IDM_SORT_UPCOUNTING
+            MENUITEM "Descending",                IDM_SORT_DOWNCOUNTING
         END
         POPUP "Play folder as slideshow/movie"
         BEGIN
@@ -369,13 +369,13 @@ BEGIN
                 MENUITEM "Very slow",                   IDM_EFFECTTIME_VERY_SLOW
             END
             MENUITEM SEPARATOR
-            MENUITEM "Movie",                       IDM_MOVIE_START_FPS
-            MENUITEM "5 fps",                       IDM_MOVIE_5_FPS
-            MENUITEM "10 fps",                      IDM_MOVIE_10_FPS
-            MENUITEM "25 fps",                      IDM_MOVIE_25_FPS
-            MENUITEM "30 fps",                      IDM_MOVIE_30_FPS
-            MENUITEM "50 fps",                      IDM_MOVIE_50_FPS
-            MENUITEM "100 fps",                     IDM_MOVIE_100_FPS
+            MENUITEM "Movie",                           IDM_MOVIE_START_FPS
+            MENUITEM "Playback speed\t5 fps",           IDM_MOVIE_5_FPS
+            MENUITEM "Playback speed\t10 fps",          IDM_MOVIE_10_FPS
+            MENUITEM "Playback speed\t25 fps",          IDM_MOVIE_25_FPS
+            MENUITEM "Playback speed\t30 fps",          IDM_MOVIE_30_FPS
+            MENUITEM "Playback speed\t50 fps",          IDM_MOVIE_50_FPS
+            MENUITEM "Playback speed\t100 fps",         IDM_MOVIE_100_FPS
         END
         MENUITEM SEPARATOR
         POPUP "Transform image"
@@ -495,8 +495,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,42,2
- PRODUCTVERSION 1,1,42,2
+ FILEVERSION 1,2,45,0
+ PRODUCTVERSION 1,2,45,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -513,12 +513,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Kevin M (sylikc)"
             VALUE "FileDescription", "JPEGView"
-            VALUE "FileVersion", "1.1.42.2"
+            VALUE "FileVersion", "1.2.45.0"
             VALUE "InternalName", "JPEGView"
             VALUE "LegalCopyright", "Copyright 2020-2023 Kevin M (sylikc), 2006-2018 David Kleiner"
             VALUE "OriginalFilename", "JPEGView.exe"
             VALUE "ProductName", "JPEGView Application (Mod)"
-            VALUE "ProductVersion", "1.1.42.2"
+            VALUE "ProductVersion", "1.2.45.0"
         END
     END
     BLOCK "VarFileInfo"

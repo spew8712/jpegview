@@ -98,7 +98,7 @@ private:
 	CString m_sLastWebpFileName; // Only for animated WebP files
 	CString m_sLastPngFileName; // Only for animated PNG files
 	CString m_sLastJxlFileName; // Only for animated JPEG XL files
-	CString m_sLastAvifFileName; // Only for AVIF files
+	CString m_sLastAvifFileName; // Only for animated AVIF files
 	avifDecoder *m_avifDecoder;
 
 	virtual void ProcessRequest(CRequestBase& request);
@@ -118,6 +118,7 @@ private:
 	void ProcessReadWEBPRequest(CRequest * request);
 	void ProcessReadJXLRequest(CRequest* request);
 	void ProcessReadHEIFRequest(CRequest * request);
+	void ProcessReadQOIRequest(CRequest * request);
 	void ProcessReadRAWRequest(CRequest * request);
 	void ProcessReadGDIPlusRequest(CRequest * request);
 	void ProcessReadWICRequest(CRequest* request);
