@@ -501,7 +501,7 @@
 					</Component>
 					<!-- DLLs required for ICC Profile support (WebP, JXL, HEIF/HEIC/AVIF) -->
 					<Component Id="lcmsDLL" Guid="2a7a5f9a-4100-4eee-8706-a6b9a2a8cf5c">
-						<File Id="lcms2.dll" Name="lcms2.dll" Source="$(var.LcmsDllFolder)\lcms2.dll" />
+						<File Id="lcms2.dll" Name="lcms2.dll" Source="..\JPEGView\lcms2\bin64\lcms2.dll" />
 					</Component>
 					<Component Id="vcruntime1401DLL" Guid="51199dcd-65bf-4a86-a224-bf26111c92cd">
 						<File Id="vcruntime140_1.dll" Name="vcruntime140_1.dll" Source="..\JPEGView\vcredist\vcruntime140_1.dll"  KeyPath="yes" />
