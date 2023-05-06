@@ -1166,9 +1166,7 @@ void CImageLoadThread::ProcessReadQOIRequest(CRequest* request) {
 			if (pPixelData != NULL) {
 				if (nBPP == 4) {
 					// Multiply alpha value into each AABBGGRR pixel
-					uint32* pImage32 = (uint32*)pPixelData;
-					for (int i = 0; i < nWidth * nHeight; i++)
-						*pImage32++ = WebpAlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+					BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
 				}
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, nBPP, 0, IF_QOI, false, 0, 1, 0);
 			}

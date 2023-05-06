@@ -3110,8 +3110,11 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	} else {
 		InitParametersForNewImage();
 	}
-	CJPEGImage *pPrevImage = m_pCurrentImage;
-	LPCTSTR strPrevImage = m_pFileList->Current(); //delay NotifyNotUsed(m_pCurrentImage), until new image loaded!
+	LPCTSTR strPrevImage = m_pFileList->Current();
+	m_pJPEGProvider->NotifyNotUsed(m_pCurrentImage); //this is needed to force refresh for rotation, transparency change, etc.!
+	if (ePos == POS_Current || ePos == POS_AwayFromCurrent) {
+		m_pJPEGProvider->ClearRequest(m_pCurrentImage, ePos == POS_AwayFromCurrent);
+	}
 	m_pCurrentImage = NULL;
 
 	// do not perform a new image request if flagged
@@ -3140,14 +3143,11 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	}
 	double minimalDisplayTime = CSettingsProvider::This().MinimalDisplayTime();
 	bool bSynchronize = (nFlags & KEEP_PARAMETERS) == 0;
+
 	if (m_pCurrentImage)
 	{
 		m_nImageRetryCnt = 0;
 		AfterNewImageLoaded(bSynchronize, false, minimalDisplayTime > 0);
-		m_pJPEGProvider->NotifyNotUsed(pPrevImage);
-		if (ePos == POS_Current || ePos == POS_AwayFromCurrent) {
-			m_pJPEGProvider->ClearRequest(pPrevImage, ePos == POS_AwayFromCurrent);
-		}
 
 		// if it is an animation (currently only animated GIF) start movie automatically
 		if (m_pCurrentImage->IsAnimation()) {
