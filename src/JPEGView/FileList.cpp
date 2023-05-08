@@ -737,6 +737,11 @@ bool CFileList::GetDirList(std::list<CString>& dirList, CString &sNextDirRoot, C
 CFileList* CFileList::WrapToNextImage() {
 	if (m_next != NULL) {
 		assert(sm_eMode != Helpers::NM_LoopDirectory);
+		if (sm_eMode == Helpers::NM_LoopSameDirectoryLevel)
+		{
+			//must reset (current pointer) to 1st image! otherwise will be stuck repeating last images of folders
+			m_next->m_iter = m_next->m_iterStart;
+		}
 		return m_next;
 	}
 
