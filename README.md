@@ -62,6 +62,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 * Others
   * Toast notifications. 
   * Toggle ascending/descending sorting by pressing the same hotkey for sorting mode.
+  * Added "Auto" folder navigation mode to auto-choose LoopSubFolders (if initial folder has subfolder) or LoopSameFolderLevel (otherwise).
 
 (Last selectively sync'd up to original's ~31 Jan 2023 updates, with occasional cherry picks going ahead).
 

@@ -2680,8 +2680,10 @@ void CMainDlg::OpenFile(LPCTSTR sFileName, bool bAfterStartup) {
 	bool oOldUpcounting = m_pFileList->IsSortedUpcounting();
 	delete m_pFileList;
 	m_sStartupFile = sFileName;
+	CSettingsProvider& sp = CSettingsProvider::This();
 	m_pFileList = new CFileList(m_sStartupFile, *m_pDirectoryWatcher, eOldSorting, oOldUpcounting, CSettingsProvider::This().WrapAroundFolder(),
-		0, false, m_bMinFilesize? CSettingsProvider::This().MinFilesize(): 0, m_bHideHidden);
+		0, false, m_bMinFilesize? sp.MinFilesize(): 0, m_bHideHidden);
+	m_pFileList->SetNavigationMode(sp.Navigation());
 	// free current image and all read ahead images
 	InitParametersForNewImage();
 	m_pJPEGProvider->NotifyNotUsed(m_pCurrentImage);

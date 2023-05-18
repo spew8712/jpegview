@@ -184,6 +184,7 @@ private:
 	CFileList* WrapToNextImage();
 	CFileList* WrapToPrevImage();
 	bool GetDirList(std::list<CString> &dirList, CString &sNextDirRoot, CString &sThisDirTitle);
+	bool HasSubDir();
 	void GetDirListRcursive(CString sPath, std::list<CString> &dirList, CString &sThisDirTitle);
 	CFileList* AnyAvailableLast();
 	void FindFiles();

@@ -602,6 +602,12 @@ void CFileList::SetNavigationMode(Helpers::ENavigationMode eMode) {
 	DeleteHistory();
 	m_nLevel = 0;
 	m_iterStart = m_fileList.begin();
+
+	if (eMode == Helpers::NM_Auto)
+	{
+		sm_eMode = HasSubDir()? Helpers::NM_LoopSubDirectories:
+			Helpers::NM_LoopSameDirectoryLevel;
+	}
 }
 
 void CFileList::MarkCurrentFile() {
@@ -732,6 +738,32 @@ bool CFileList::GetDirList(std::list<CString>& dirList, CString &sNextDirRoot, C
 	}
 	dirList.sort(); // sort is alphabetically
 	return true;
+}
+
+
+bool CFileList::HasSubDir()
+{
+	int nPos = m_sDirectory.ReverseFind(_T('\\'));
+	if (nPos <= 0) {
+		return false; // root dir - no siblings
+	}
+	CString sThisDirTitle = m_sDirectory.Right(m_sDirectory.GetLength() - nPos - 1);
+	CFindFile fileFind;
+	if (fileFind.FindFile(m_sDirectory + "\\*")) {
+		if (fileFind.IsDirectory() && !fileFind.IsDots()
+			&& ((sThisDirTitle.Compare(fileFind.GetFileName()) == 0) || (!m_bHideHidden || !fileFind.IsHidden())))
+		{
+			return true;
+		}
+	}
+	while (fileFind.FindNextFile()) {
+		if (fileFind.IsDirectory() && !fileFind.IsDots()
+			&& ((sThisDirTitle.Compare(fileFind.GetFileName()) == 0) || (!m_bHideHidden || !fileFind.IsHidden())))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 CFileList* CFileList::WrapToNextImage() {

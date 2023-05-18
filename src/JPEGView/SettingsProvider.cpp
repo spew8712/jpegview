@@ -463,6 +463,9 @@ void CSettingsProvider::ReadWriteableINISettings() {
 	else if (sNavigation.CompareNoCase(_T("LoopSubFolders")) == 0) {
 		m_eNavigation = Helpers::NM_LoopSubDirectories;
 	}
+	else if (sNavigation.CompareNoCase(_T("Auto")) == 0) {
+		m_eNavigation = Helpers::NM_Auto;
+	}
 	else {
 		m_eNavigation = Helpers::NM_LoopDirectory;
 	}
@@ -524,6 +527,9 @@ void CSettingsProvider::SaveSettings(const CImageProcessingParams& procParams,
 	}
 	else if (eNavigationMode == Helpers::NM_LoopSubDirectories) {
 		sNavigation = _T("LoopSubFolders");
+	}
+	else if (eNavigationMode == Helpers::NM_Auto) {
+		sNavigation = _T("Auto");
 	}
 	WriteString(_T("FolderNavigation"), sNavigation);
 

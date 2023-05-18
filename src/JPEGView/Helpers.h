@@ -32,7 +32,8 @@ namespace Helpers {
 		NM_Undefined = -1,
 		NM_LoopDirectory,
 		NM_LoopSubDirectories,
-		NM_LoopSameDirectoryLevel
+		NM_LoopSameDirectoryLevel,
+		NM_Auto //auto-choose NM_LoopSubDirectories or NM_LoopSameDirectoryLevel
 	};
 
 	// Auto zoom modes
