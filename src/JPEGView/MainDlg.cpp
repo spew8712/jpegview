@@ -1904,13 +1904,34 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_LOOP_FOLDER:
 		case IDM_LOOP_RECURSIVELY:
 		case IDM_LOOP_SIBLINGS:
-			m_pFileList->SetNavigationMode(
-				(nCommand == IDM_LOOP_FOLDER) ? Helpers::NM_LoopDirectory :
-				(nCommand == IDM_LOOP_RECURSIVELY) ? Helpers::NM_LoopSubDirectories : 
-				Helpers::NM_LoopSameDirectoryLevel);
-			if (nCommand == IDM_LOOP_FOLDER) SetToast(_T("Nav: Loop Folder"));
-			else if (nCommand == IDM_LOOP_RECURSIVELY) SetToast(_T("Nav: Recursive"));
-			else SetToast(_T("Nav: Same Folder Level"));
+			if (nCommand == IDM_LOOP_FOLDER)
+			{
+				if (sp.Navigation() == Helpers::NM_LoopDirectory)
+				{
+					//already NM_LoopDirectory, so toggle to NM_Auto instead
+					sp.SetNavigation(Helpers::NM_Auto);
+					SetToast(_T("Nav: Auto"));
+				}
+				else
+				{
+					sp.SetNavigation(Helpers::NM_LoopDirectory);
+					SetToast(_T("Nav: Loop Folder"));
+				}
+			}
+			else
+			{
+				if (nCommand == IDM_LOOP_RECURSIVELY)
+				{
+					sp.SetNavigation(Helpers::NM_LoopSubDirectories);
+					SetToast(_T("Nav: Recursive"));
+				}
+				else
+				{
+					sp.SetNavigation(Helpers::NM_LoopSameDirectoryLevel);
+					SetToast(_T("Nav: Same Folder Level"));
+				}
+			}
+			m_pFileList->SetNavigationMode(sp.Navigation());
 			break;
 		case IDM_SORT_MOD_DATE:
 		case IDM_SORT_CREATION_DATE:

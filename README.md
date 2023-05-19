@@ -62,7 +62,8 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 * Others
   * Toast notifications. 
   * Toggle ascending/descending sorting by pressing the same hotkey for sorting mode.
-  * Added "Auto" folder navigation mode to auto-choose LoopSubFolders (if initial folder has subfolder) or LoopSameFolderLevel (otherwise).
+  * Added `Auto` folder navigation mode to auto-choose `LoopSubFolders` (if initial folder has subfolder) or `LoopSameFolderLevel` (otherwise).
+    * Command# 6000 (LOOP_FOLDER, hotkey: F7) now toggles between `LoopFolder` and `Auto`.
 
 (Last selectively sync'd up to original's ~31 Jan 2023 updates, with occasional cherry picks going ahead).
 
@@ -93,7 +94,7 @@ JPEGView has a slideshow mode which can be activated in various ways:
     * E.g.: `JPEGView.exe /slideshow 2`
     (**modified in mod**) starts JPEGView in image selection mode, and then starts slideshow with image switching at 2s intervals. (Previously when an image/path is not specified, `/slideshow` is ignored)
 * Slideshow no longer paused when jumping into an image from a different folder.
-* Default to `FolderNavigation` to `LoopSubFolders` (loop into sub-folders as well), instead of `LoopFolder` (stay in same folder).
+* `FolderNavigation` setting defaults to `Auto`.
 * A little Android-like `toast` to inform of new slideshow fps or interval. Also used for other general notifications of interest.
   * PS: there's an existing toast-like display of zoom factor when zooming - just in a smaller font.
 

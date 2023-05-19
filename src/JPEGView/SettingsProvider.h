@@ -51,6 +51,7 @@ public:
 	Helpers::ESorting Sorting() { return m_eSorting; }
 	bool IsSortedUpcounting() { return m_bIsSortedUpcounting; }
 	Helpers::ENavigationMode Navigation() { return m_eNavigation; }
+	void SetNavigation(Helpers::ENavigationMode a_eNav) { m_eNavigation = a_eNav; }
 	bool NavigateWithMouseWheel() { return m_bNavigateMouseWheel; }
 	double MouseWheelZoomSpeed() { return m_dMouseWheelZoomSpeed; }
 	Helpers::EAutoZoomMode AutoZoomMode() { return m_eAutoZoomMode; }

@@ -65,7 +65,7 @@ Alt+Left	5001	//PREV_100: skip back 100 images
 Ctrl+Alt+Left	5002	//PREV_FOLDER: go to previous folder
 Home		5100	//FIRST: go to first image
 End		5200	//LAST: go to last image
-F7		6000	//LOOP_FOLDER: set navigation mode loop through folder
+F7		6000	//LOOP_FOLDER: toggle navigation mode between (a) loop through folder, and (b) auto (which is auto-select LOOP_RECURSIVELY or LOOP_SIBLINGS)
 F8		6010	//LOOP_RECURSIVELY: set navigation mode loop through folder and subfolders
 F9		6020	//LOOP_SIBLINGS: set navigation mode loop through folders on same level
 M		7000	//SORT_MOD_DATE: sorting order by modification date
