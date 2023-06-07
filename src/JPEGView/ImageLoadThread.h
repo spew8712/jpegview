@@ -109,7 +109,7 @@ private:
 	void DeleteCachedJxlDecoder();
 	void DeleteCachedAvifDecoder();
 
-	void BlendAlpha(uint32* pImage32, int nWidth, int nHeight, bool bUseCheckerboard);
+	void BlendAlpha(uint32* pImage32, int nWidth, int nHeight, Helpers::ETransparencyMode TransparencyMode);
 	void ProcessReadJPEGRequest(CRequest * request);
 	void ProcessReadPNGRequest(CRequest* request);
 	void ProcessReadAVIFRequest(CRequest* request);

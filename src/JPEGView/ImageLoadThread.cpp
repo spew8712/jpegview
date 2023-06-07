@@ -197,7 +197,7 @@ static EImageFormat GetBitmapFormat(Gdiplus::Bitmap* pBitmap) {
 }
 
 static CJPEGImage* ConvertGDIPlusBitmapToJPEGImage(Gdiplus::Bitmap* pBitmap, int nFrameIndex, void* pEXIFData,
-	__int64 nJPEGHash, bool& isOutOfMemory, bool& isAnimatedGIF, bool bUseCheckerboard = false) {
+	__int64 nJPEGHash, bool& isOutOfMemory, bool& isAnimatedGIF, Helpers::ETransparencyMode nTransparencyMode = Helpers::TP_BLEND) {
 
 	isOutOfMemory = false;
 	isAnimatedGIF = false;
@@ -254,14 +254,19 @@ static CJPEGImage* ConvertGDIPlusBitmapToJPEGImage(Gdiplus::Bitmap* pBitmap, int
 		pBmTarget = new Gdiplus::Bitmap(pBitmap->GetWidth(), pBitmap->GetHeight(), PixelFormat32bppRGB);
 		pBmGraphics = new Gdiplus::Graphics(pBmTarget);
 		COLORREF bkColor = CSettingsProvider::This().ColorTransparency();
-		if (!bUseCheckerboard)
+		if (nTransparencyMode == Helpers::TP_BLEND)
 		{
 			//Somehow unlike WebpAlphaBlendBackground, needs to reverse the colour bytes!
 			//Gdiplus::SolidBrush bkBrush(Gdiplus::Color(GetRValue(bkColor), GetGValue(bkColor), GetBValue(bkColor)));
 			Gdiplus::SolidBrush bkBrush(Gdiplus::Color(GetBValue(bkColor), GetGValue(bkColor), GetRValue(bkColor)));
 			pBmGraphics->FillRectangle(&bkBrush, 0, 0, pBmTarget->GetWidth(), pBmTarget->GetHeight());
 		}
-		else
+		else if (nTransparencyMode == Helpers::TP_BLEND_INVERSE)
+		{
+			Gdiplus::SolidBrush bkBrush(Gdiplus::Color(~GetBValue(bkColor), ~GetGValue(bkColor), ~GetRValue(bkColor)));
+			pBmGraphics->FillRectangle(&bkBrush, 0, 0, pBmTarget->GetWidth(), pBmTarget->GetHeight());
+		}
+		else //if (nTransparencyMode == Helpers::TP_CHECKERBOARD)
 		{
 			Gdiplus::HatchBrush bkBrush(HatchStyleLargeCheckerBoard, Gdiplus::Color(0xffc0c0c0), Gdiplus::Color(0xffffffff));
 			pBmGraphics->FillRectangle(&bkBrush, 0, 0, pBmTarget->GetWidth(), pBmTarget->GetHeight());
@@ -585,7 +590,7 @@ void CImageLoadThread::ProcessReadJPEGRequest(CRequest* request) {
 					Gdiplus::Bitmap* pBitmap = Gdiplus::Bitmap::FromStream(pStream, CSettingsProvider::This().UseEmbeddedColorProfiles());
 					bool isOutOfMemory, isAnimatedGIF;
 					request->Image = ConvertGDIPlusBitmapToJPEGImage(pBitmap, 0, Helpers::FindEXIFBlock(pBuffer, nFileSize),
-						Helpers::CalculateJPEGFileHash(pBuffer, nFileSize), isOutOfMemory, isAnimatedGIF, request->ProcessParams.UseCheckerboard);
+						Helpers::CalculateJPEGFileHash(pBuffer, nFileSize), isOutOfMemory, isAnimatedGIF, request->ProcessParams.TransparencyMode);
 					request->OutOfMemory = request->Image == NULL && isOutOfMemory;
 					if (request->Image != NULL) {
 						request->Image->SetJPEGComment(Helpers::GetJPEGComment(pBuffer, nFileSize));
@@ -640,11 +645,15 @@ void CImageLoadThread::ProcessReadJPEGRequest(CRequest* request) {
 	if (hFileBuffer) ::GlobalFree(hFileBuffer);
 }
 
-void CImageLoadThread::BlendAlpha(uint32* pImage32, int nWidth, int nHeight, bool bUseCheckerboard)
+void CImageLoadThread::BlendAlpha(uint32* pImage32, int nWidth, int nHeight, Helpers::ETransparencyMode nTransparencyMode)
 {
 	COLORREF nTranparency = CSettingsProvider::This().ColorTransparency();
-	if (!bUseCheckerboard)
+	if (nTransparencyMode != Helpers::TP_CHECKERBOARD)
 	{
+		if (nTransparencyMode == Helpers::TP_BLEND_INVERSE)
+		{
+			nTranparency = ~(nTranparency & 0xffffff);
+		}
 		for (int i = 0; i < nWidth * nHeight; ++i)
 			*pImage32++ = WebpAlphaBlendBackground(*pImage32, nTranparency);
 	} else {
@@ -702,7 +711,7 @@ void CImageLoadThread::ProcessReadPNGRequest(CRequest* request) {
 				if (bHasAnimation)
 					m_sLastPngFileName = sFileName;
 				// Multiply alpha value into each AABBGGRR pixel
-				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
+				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, 4, 0, IF_PNG, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 			}
 			else {
@@ -854,7 +863,7 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 					if (bHasAnimation) {
 						m_sLastAvifFileName = sFileName;
 					}
-					BlendAlpha((uint32*)(rgb.pixels), m_avifDecoder->image->width, m_avifDecoder->image->height, request->ProcessParams.UseCheckerboard);
+					BlendAlpha((uint32*)(rgb.pixels), m_avifDecoder->image->width, m_avifDecoder->image->height, request->ProcessParams.TransparencyMode);
 					request->Image = new CJPEGImage(m_avifDecoder->image->width, m_avifDecoder->image->height, rgb.pixels, 0, 4, 0, IF_AVIF, bHasAnimation, request->FrameIndex, m_avifDecoder->imageCount, nFrameTimeMs);
 					if (!bHasAnimation) DeleteCachedAvifDecoder();
 					bSuccess = true;
@@ -917,7 +926,7 @@ void CImageLoadThread::ProcessReadBMPRequest(CRequest* request) {
 
 void CImageLoadThread::ProcessReadTGARequest(CRequest* request) {
 	bool bOutOfMemory;
-	request->Image = CReaderTGA::ReadTgaImage(request->FileName, CSettingsProvider::This().ColorTransparency(), bOutOfMemory, request->ProcessParams.UseCheckerboard);
+	request->Image = CReaderTGA::ReadTgaImage(request->FileName, CSettingsProvider::This().ColorTransparency(), bOutOfMemory, request->ProcessParams.TransparencyMode);
 	if (bOutOfMemory) {
 		request->OutOfMemory = true;
 	}
@@ -990,7 +999,7 @@ void CImageLoadThread::ProcessReadWEBPRequest(CRequest* request) {
 							if ((bHasAnimation && Webp_Dll_AnimDecodeBGRAInto((uint8*)pBuffer, nFileSize, pPixelData, nStride * nHeight, nFrameCount, nFrameTimeMs)) ||
 								(!bHasAnimation && Webp_Dll_DecodeBGRAInto((uint8*)pBuffer, nFileSize, pPixelData, nStride * nHeight, nStride))) {
 								// Multiply alpha value into each AABBGGRR pixel
-								BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
+								BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
 								request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, 4, 0, IF_WEBP, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 							}
 							else {
@@ -1066,7 +1075,7 @@ void CImageLoadThread::ProcessReadJXLRequest(CRequest* request) {
 				if (bHasAnimation)
 					m_sLastJxlFileName = sFileName;
 				// Multiply alpha value into each AABBGGRR pixel
-				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
+				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, 4, 0, IF_JXL, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 			} else {
 				DeleteCachedJxlDecoder();
@@ -1117,7 +1126,7 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 			uint8* pPixelData = (uint8*)HeifReader::ReadImage(nWidth, nHeight, nBPP, nFrameCount, request->OutOfMemory, request->FrameIndex, pBuffer, nFileSize);
 			if (pPixelData != NULL) {
 				// Multiply alpha value into each AABBGGRR pixel
-				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
+				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
 
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, nBPP, 0, IF_HEIF, false, request->FrameIndex, nFrameCount, nFrameTimeMs);
 			}
@@ -1166,7 +1175,7 @@ void CImageLoadThread::ProcessReadQOIRequest(CRequest* request) {
 			if (pPixelData != NULL) {
 				if (nBPP == 4) {
 					// Multiply alpha value into each AABBGGRR pixel
-					BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.UseCheckerboard);
+					BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
 				}
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, nBPP, 0, IF_QOI, false, 0, 1, 0);
 			}
@@ -1208,7 +1217,7 @@ void CImageLoadThread::ProcessReadGDIPlusRequest(CRequest* request) {
 		m_sLastFileName = sFileName;
 	}
 	bool isOutOfMemory, isAnimatedGIF;
-	request->Image = ConvertGDIPlusBitmapToJPEGImage(pBitmap, request->FrameIndex, NULL, 0, isOutOfMemory, isAnimatedGIF, request->ProcessParams.UseCheckerboard);
+	request->Image = ConvertGDIPlusBitmapToJPEGImage(pBitmap, request->FrameIndex, NULL, 0, isOutOfMemory, isAnimatedGIF, request->ProcessParams.TransparencyMode);
 	request->OutOfMemory = request->Image == NULL && isOutOfMemory;
 	if (!isAnimatedGIF) {
 		DeleteCachedGDIBitmap();
@@ -1237,7 +1246,7 @@ void CImageLoadThread::ProcessReadWICRequest(CRequest* request) {
 		uint32 nWidth, nHeight;
 		unsigned char* pDIB = LoadImageWithWIC(sFileName, &alloc, &dealloc, &nWidth, &nHeight);
 		if (pDIB != NULL) {
-			BlendAlpha((uint32*)(pDIB), nWidth, nHeight, request->ProcessParams.UseCheckerboard);
+			BlendAlpha((uint32*)(pDIB), nWidth, nHeight, request->ProcessParams.TransparencyMode);
 			request->Image = new CJPEGImage(nWidth, nHeight, pDIB, NULL, 4, 0, IF_WIC, false, 0, 1, 0);
 		}
 	}

@@ -44,6 +44,13 @@ namespace Helpers {
 		ZM_FillScreen
 	};
 
+	// Transparency modes
+	enum ETransparencyMode {
+		TP_BLEND = 0,
+		TP_CHECKERBOARD,
+		TP_BLEND_INVERSE
+	};
+
 	// Transition effects for full screen slideshow
 	enum ETransitionEffect {
 		TE_None,
