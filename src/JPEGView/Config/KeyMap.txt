@@ -148,8 +148,10 @@ Ctrl+Minus	14401	//CONTRAST_DEC: decrease contrast
 Ctrl+Dash	14401
 Shift+Plus	14500	//GAMMA_INC: increase gamma (brightness)
 Shift+Equals	14500
+Alt+Plus	14500
 Shift+Minus	14501	//GAMMA_DEC: decrease gamma (brightness)
 Shift+Dash	14501
+Alt+Minus	14501
 Ctrl+F6		14600	//LDC_SHADOWS_INC: increase lighting shadows
 Alt+F6		14601	//LDC_SHADOWS_DEC: decrease lighting shadows
 Ctrl+Shift+F6	14700	//LDC_HIGHLIGHTS_INC: increase darken highlights
