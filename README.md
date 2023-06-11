@@ -11,7 +11,7 @@ JPEGView is a lean, fast and highly configurable image viewer/editor with a mini
 JPEGView has built-in support the following formats:
 
 * Popular: JPEG, GIF
-* Lossless: BMP, PNG, TIFF, QOI, ICO
+* Lossless: BMP, PNG, TIFF, QOI, ICO (mod only)
 * Web: WEBP, JXL, HEIF/HEIC, AVIF (common subset)
 * Legacy: TGA, WDP, HDP, JXR
 * Camera RAW formats:
@@ -47,7 +47,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 *  Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
    * Option for selection box to match image aspect ratio.
-*  Toggle transparent image background between checkerboard pattern (default) and solid background colour, via hotkey: SHIFT+V.
+*  Toggle 3 transparency modes: TransparencyColor (default), checkerboard pattern or inverse TransparencyColor, via hotkey: SHIFT+V.
 *  Navigation
    * **ALT+<Left/Right arrow>**: Jump back/forward 100 images.
    * **CTRL+ALT+<Left/Right arrow>**: Jump to previous/next folder.
@@ -60,10 +60,14 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
   * Old format still supported.
   * Use ConvertKeyMap tool to make one-off conversion if desired.
 * Others
+  * Release includes all necessary DLLs.
   * Toast notifications. 
   * Toggle ascending/descending sorting by pressing the same hotkey for sorting mode.
-  * Added `Auto` folder navigation mode to auto-choose `LoopSubFolders` (if initial folder has subfolder) or `LoopSameFolderLevel` (otherwise).
-    * Command# 6000 (LOOP_FOLDER, hotkey: F7) now toggles between `LoopFolder` and `Auto`.
+  * New settings and/or options:
+    * Added `Auto` folder navigation mode to auto-choose `LoopSubFolders` (if initial folder has subfolder) or `LoopSameFolderLevel` (otherwise).
+      * Command# 6000 (LOOP_FOLDER, hotkey: F7) now toggles between `LoopFolder` and `Auto`.
+    * Set `MinFilesize > 0` to Hide of small images. It auto-disables temporarily if 1st image opened is small (< MinFilesize), so as to view that image as intended.
+  * [Experimental]: include a mod of [mez0ru's PR for quick image show despite large folder](https://github.com/sylikc/jpegview/pull/172)
 
 (Last selectively sync'd up to original's ~31 Jan 2023 updates, with occasional cherry picks going ahead).
 
@@ -94,7 +98,8 @@ JPEGView has a slideshow mode which can be activated in various ways:
     * E.g.: `JPEGView.exe /slideshow 2`
     (**modified in mod**) starts JPEGView in image selection mode, and then starts slideshow with image switching at 2s intervals. (Previously when an image/path is not specified, `/slideshow` is ignored)
 * Slideshow no longer paused when jumping into an image from a different folder.
-* `FolderNavigation` setting defaults to `Auto`.
+* New `Auto` option for `FolderNavigation` setting.
+* During slideshow, block screensaver.
 * A little Android-like `toast` to inform of new slideshow fps or interval. Also used for other general notifications of interest.
   * PS: there's an existing toast-like display of zoom factor when zooming - just in a smaller font.
 
@@ -177,6 +182,21 @@ Configure in `JPEGView.ini`:
 * Minimum filesize: `MinFilesize`, default: 30K.
   * Specify in bytes, KB or MB like so: 30720, 30K or 1M 
 * Enable hide hidden images and folders: `HideHidden`, default: true.
+
+### [Experimental] Asynchronous FileList
+
+mez0ru has a [PR](https://github.com/sylikc/jpegview/pull/172) for [Issue: Slow startup when opening a file in a highly populated folder](https://github.com/sylikc/jpegview/issues/194).
+
+I've tried it out a _mod_ of it on a folder with 25k small images. Differences:
+* If app is launched with an image specified (instead of a folder), it will show that image (by adding it to the file list) first. Asynchronous loading of files in that image's folder, is started thereafter. This ensures that initial image is quickly displayed.
+* Limit code changes to FileList.cpp/h files only.
+* NextFolder() does NOT play well with async load, as underlying FindFileRecursively() & TryCreateFileList() will mistakenly discard all folders thinking they are empty, and stay in original folder. So we've to force a full load, and lose the benefit of async-load of child/parallel folders.
+This needs more work!
+  * Perhaps rework FindFiles() into 2 parts: (1) return 1st file found (to let FindFileRecursively() succeed in retaining non-empty folders) and (2) return rest of files.
+
+From timing printouts, it does help 'significantly'.
+However 'by feel', perhaps owing to my defragmented drive, opening an image in a folder with 25k is still _very fast_ (< 1s)! Thus, I can't really test other situations like jumping 100 images, etc. As such, I'll leave this patch as is, for now.
+
 
 ### Wishlist
 
