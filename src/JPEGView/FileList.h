@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Helpers.h"
+#include <future>
 
 class CDirectoryWatcher;
 
@@ -173,6 +174,8 @@ private:
 	int m_nMarkedIndexShow;
 
 	CDirectoryWatcher & m_directoryWatcher;
+	std::future<void> m_taskFindFiles;
+	bool m_bFindingFiles, m_bForceExitFindFiles;
 
 	void MoveIterToLast();
 	void NextInFolder();
@@ -187,8 +190,12 @@ private:
 	bool HasSubDir();
 	void GetDirListRcursive(CString sPath, std::list<CString> &dirList, CString &sThisDirTitle);
 	CFileList* AnyAvailableLast();
-	void FindFiles();
+	void FindFiles(bool bPurge1st = true);
 	void VerifyFiles();
 	bool IsImageFile(const CString & sEnding);
 	bool TryReadingSlideShowList(const CString & sSlideShowFile);
+	inline void CFileList::WaitIfNotReady() {
+		if (m_bFindingFiles)
+			m_taskFindFiles.wait();
+	}
 };
