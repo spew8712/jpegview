@@ -197,9 +197,7 @@ CFileList::CFileList(const CString & sInitialFile, CDirectoryWatcher & directory
 	int nMinFilesize, bool bHideHidden)
 	: m_directoryWatcher(directoryWatcher),
 	m_nMinFilesize(nMinFilesize),
-	m_bHideHidden(bHideHidden),
-	m_bFindingFiles(false),
-	m_bForceExitFindFiles(false)
+	m_bHideHidden(bHideHidden)
 {
 
 	CFileDesc::SetSorting(eInitialSorting, isSortedUpcounting);
@@ -228,28 +226,9 @@ CFileList::CFileList(const CString & sInitialFile, CDirectoryWatcher & directory
 
 	if (!m_bIsSlideShowList) {
 		if (bImageFile || bIsDirectory) {
-			m_iterStart = m_iter = m_fileList.begin();
-			if (bImageFile)
-			{	//at least show 1st selected image 1st
-				CFindFile fileFind;
-				if (fileFind.FindFile(sInitialFile)) {
-					AddToFileList(m_fileList, fileFind, sExtensionInitialFile, m_nMinFilesize, m_bHideHidden);
-					m_iterStart = m_iter = m_fileList.begin();
-				}
-			}
-			//move potentially heavy search to separate thread
-			m_bFindingFiles = true;
-			m_taskFindFiles = std::async(std::launch::async, [this, &sInitialFile, &bWrapAroundFolder]() {
-				FindFiles(false);
-				if (m_bForceExitFindFiles) {
-					m_bForceExitFindFiles = false;
-					return;
-				}
-				m_iter = FindFile(sInitialFile);
-				m_iterStart = m_fileList.begin();
-				m_bFindingFiles = false;
-				m_bForceExitFindFiles = false;
-			});
+			FindFiles();
+			m_iter = FindFile(sInitialFile);
+			m_iterStart = m_fileList.begin();
 		} else {
 			// neither image file nor directory nor list of file names - try to read anyway but normally will fail
 			CFindFile fileFind;
@@ -286,11 +265,6 @@ CString CFileList::GetSupportedFileEndings() {
 void CFileList::Reload(LPCTSTR sFileName, bool clearForwardHistory) {
 	LPCTSTR sCurrent = sFileName;
 	if (sCurrent == NULL) {
-		// If async is still processing, quickly terminate it.
-		m_bForceExitFindFiles = true;
-		WaitIfNotReady();
-		m_bForceExitFindFiles = false;
-
 		sCurrent = Current();
 		if (sCurrent == NULL) {
 			m_fileList.clear();
@@ -373,7 +347,7 @@ void CFileList::FileHasRenamed(LPCTSTR sOldFileName, LPCTSTR sNewFileName) {
 		m_sInitialFile = sNewFileName;
 	}
 	std::list<CFileDesc>::iterator iter;
-	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++ ) {
+	for (iter = m_fileList.begin( ); iter != m_fileList.end( ); iter++ ) {
 		if (_tcsicmp(sOldFileName, iter->GetName()) == 0) {
 			iter->SetName(sNewFileName);
 		}
@@ -523,8 +497,6 @@ void CFileList::Last() {
 }
 
 CFileList* CFileList::AwayFromCurrent() {
-	WaitIfNotReady(); // If async is still processing, then wait.
-
 	LPCTSTR sCurrentFile = Current();
 	LPCTSTR sNextFile = PeekNextPrev(1, true, false);
 	if (sCurrentFile == NULL || sNextFile == NULL || _tcscmp(sCurrentFile, sNextFile) == 0) {
@@ -540,8 +512,6 @@ CFileList* CFileList::AwayFromCurrent() {
 }
 
 LPCTSTR CFileList::Current() const {
-	if ((m_fileList.size() == 0) && m_bFindingFiles)
-		m_taskFindFiles.wait();
 	if (m_iter != m_fileList.end()) {
 		return m_iter->GetName();
 	} else {
@@ -571,7 +541,7 @@ LPCTSTR CFileList::CurrentDirectory() const {
 int CFileList::CurrentIndex() const {
 	int i = 0;
 	std::list<CFileDesc>::const_iterator iter;
-	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++) {
+	for (iter = m_fileList.begin( ); iter != m_fileList.end( ); iter++ ) {
 		if (iter == m_iter) {
 			return i;
 		}
@@ -726,7 +696,7 @@ std::list<CFileDesc>::iterator CFileList::FindFile(const CString& sName) {
 		return m_fileList.begin();
 	}
 	std::list<CFileDesc>::iterator iter;
-	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++ ) {
+	for (iter = m_fileList.begin( ); iter != m_fileList.end( ); iter++ ) {
 		if (_tcsicmp((LPCTSTR)sName + nStart, iter->GetTitle()) == 0) {
 			return iter;
 		}
@@ -822,7 +792,7 @@ CFileList* CFileList::WrapToNextImage() {
 		std::list<CString>::iterator iter;
 		bool bFound = false;
 		for (int nStep = 0; nStep < 2; nStep++) {
-			for (iter = dirList.begin(); iter != dirList.end(); iter++ ) {
+			for (iter = dirList.begin( ); iter != dirList.end( ); iter++ ) {
 				if (iter->CompareNoCase(sThisDirTitle) == 0) {
 					bFound = true;
 				} else if (bFound) {
@@ -1024,17 +994,15 @@ CFileList* CFileList::TryCreateFileList(const CString& directory, int nNewLevel,
 	}
 }
 
-void CFileList::FindFiles(bool bPurge1st) {
-	if (bPurge1st) m_fileList.clear();
+void CFileList::FindFiles() {
+	m_fileList.clear();
 	if (!m_sDirectory.IsEmpty()) {
 		CFindFile fileFind;
 		LPCTSTR* allFileEndings = GetSupportedFileEndingList();
 		for (int i = 0; i < nNumEndings; i++) {
-			if (m_bForceExitFindFiles) return;
 			if (fileFind.FindFile(m_sDirectory + _T("\\*.") + allFileEndings[i])) {
 				AddToFileList(m_fileList, fileFind, allFileEndings[i], m_nMinFilesize, m_bHideHidden);
 				while (fileFind.FindNextFile()) {
-					if (m_bForceExitFindFiles) return;
 					AddToFileList(m_fileList, fileFind, allFileEndings[i], m_nMinFilesize, m_bHideHidden);
 				}
 			}
@@ -1046,7 +1014,7 @@ void CFileList::FindFiles(bool bPurge1st) {
 
 void CFileList::VerifyFiles() {
 	std::list<CFileDesc>::iterator iter;
-	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++ ) {
+	for (iter = m_fileList.begin( ); iter != m_fileList.end( ); iter++ ) {
 		if (::GetFileAttributes(iter->GetName()) == INVALID_FILE_ATTRIBUTES) {
 			iter = m_fileList.erase(iter);
 			if (iter == m_fileList.end()) {
