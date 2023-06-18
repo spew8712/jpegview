@@ -164,7 +164,7 @@ private:
 	// filelists for several folders are chained
 	CFileList* m_next;
 	CFileList* m_prev;
-	std::list<CFileDesc> m_fileList;
+	std::list<CFileDesc> m_fileList, m_fileList2;
 	std::list<CFileDesc>::iterator m_iter; // current position in m_fileList
 	std::list<CFileDesc>::iterator m_iterStart; // start of iteration in m_fileList
 	std::list<CFileDesc>::iterator m_iterCheckPoint;
@@ -190,11 +190,11 @@ private:
 	bool HasSubDir();
 	void GetDirListRcursive(CString sPath, std::list<CString> &dirList, CString &sThisDirTitle);
 	CFileList* AnyAvailableLast();
-	void FindFiles(bool bPurge1st = true);
+	void FindFiles(std::list<CFileDesc> &fileList);
 	void VerifyFiles();
 	bool IsImageFile(const CString & sEnding);
 	bool TryReadingSlideShowList(const CString & sSlideShowFile);
-	inline void CFileList::WaitIfNotReady() {
+	inline void WaitIfNotReady() const {
 		if (m_bFindingFiles)
 			m_taskFindFiles.wait();
 	}
