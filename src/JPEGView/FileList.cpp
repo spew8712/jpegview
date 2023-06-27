@@ -241,16 +241,16 @@ CFileList::CFileList(const CString & sInitialFile, CDirectoryWatcher & directory
 			}
 			//move potentially heavy search to separate thread
 			m_bFindingFiles = true;
-			m_taskFindFiles = std::async(std::launch::async, [this, &sInitialFile, &bWrapAroundFolder]() {
+			m_taskFindFiles = std::async(std::launch::async, [this, &sInitialFile, &bWrapAroundFolder, &bImageFile]() {
 				FindFiles(m_fileList2);
 				if (!m_bForceExitFindFiles) {
-					m_fileList.clear();
-					m_fileList.splice(m_fileList.begin(), m_fileList2);
-					m_iterStart = bWrapAroundFolder ? m_iter : m_fileList.begin();
-					m_iter = FindFile(sInitialFile);
-					m_bFindingFiles = false;
 					if (sm_eMode == Helpers::NM_Auto)
 						SetNavigationMode(sm_eMode);
+					m_fileList.clear();
+					m_fileList.splice(m_fileList.begin(), m_fileList2);
+					m_fileList.sort();
+					m_iter = FindFile(sInitialFile);
+					m_iterStart = bWrapAroundFolder ? m_iter : m_fileList.begin();
 				}
 				m_bFindingFiles = false;
 				m_bForceExitFindFiles = false;
