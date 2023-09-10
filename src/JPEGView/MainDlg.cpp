@@ -2035,6 +2035,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_EFFECTTIME_VERY_SLOW:
 			m_nTransitionTime = 125 * (1 << (nCommand - IDM_EFFECTTIME_VERY_FAST));
 			break;
+		case IDM_MOVIE_3_FPS:
 		case IDM_MOVIE_5_FPS:
 		case IDM_MOVIE_10_FPS:
 		case IDM_MOVIE_25_FPS:
@@ -3221,7 +3222,7 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		while (::PeekMessage(&msg, this->m_hWnd, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE));
 	}
 
-	if (!m_pCurrentImage && (_tcscmp(strPrevImage, m_pFileList->Current()) == 0))
+	if (!m_pCurrentImage && strPrevImage && (_tcscmp(strPrevImage, m_pFileList->Current()) == 0))
 	{
 		if (++m_nImageRetryCnt < 2)
 		{
@@ -3613,8 +3614,10 @@ void CMainDlg::AdjustMovieSpeed(double dIncrement)
 			dFPS = 25.0;
 		else if (dFPS >= 5.0)
 			dFPS = 10.0;
-		else if (dFPS >= 1.0)
+		else if (dFPS >= 3.0)
 			dFPS = 5.0;
+		else if (dFPS >= 1.0)
+			dFPS = 3.0;
 		else if (dFPS >= 0.5)
 			dFPS = 1.0;
 		else if (dFPS >= 0.32)
@@ -3649,6 +3652,8 @@ void CMainDlg::AdjustMovieSpeed(double dIncrement)
 		else if (dFPS >= 10.0)
 			dFPS = 5.0;
 		else if (dFPS >= 5.0)
+			dFPS = 3.0;
+		else if (dFPS >= 3.0)
 			dFPS = 1.0;
 		else if (dFPS >= 1.0)
 			dFPS = 0.5;
