@@ -75,6 +75,7 @@ Alt+Z		7030	//SORT_RANDOM: sorting order random
 //no_hotkey	7040	//SORT_SIZE: sorting order file size in bytes
 //no_hotkey	7100	//SORT_UPCOUNTING: sort upcounting
 //no_hotkey	7110	//SORT_DOWNCOUNTING: sort downcounting
+Shift+R		7398	//SLIDESHOW: toggle direction
 Alt+R		7399	//SLIDESHOW_RESUME: resume slide show (after stop)
 Shift+Space	7401	//SLIDESHOW_1: start slide show @ 1fps
 Alt+Shift+R	7421	//SLIDESHOW_CUSTOM: start slide show @ custom fps, specified via INI SlildeShowCustomInterval

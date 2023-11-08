@@ -175,6 +175,7 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_bSelectMode(false),
 	m_bSingleZoom(false),
 	m_nTransparencyMode(Helpers::TP_BLEND),
+	m_bSlideShowForward(true),
 	m_hToastFont(0),
 	m_strToast(""),
 	m_nImageRetryCnt(0)
@@ -881,7 +882,6 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 	m_pPanelMgr->OnPostPaint(dc);
 
 	SetCursorForMoveSection();
-
 	return 0;
 }
 
@@ -1992,6 +1992,10 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			SetToast(_T("Play"));
 			StartMovieMode(m_dSlideShowCustomFps);
 			break;
+		case IDM_SLIDESHOW_TOGGLE_DIR:
+			m_bSlideShowForward = !m_bSlideShowForward;
+			SetToast(m_bSlideShowForward? _T("Forward"): _T("Reverse"));
+			break;
 		case IDM_TOGGLE_MIN_FILESIZE:
 		{
 			bool bWasInMovieMode = m_bMovieMode;
@@ -2761,6 +2765,7 @@ bool CMainDlg::SaveImage(bool bFullSize) {
 	if (sExtension.IsEmpty()) {
 		sExtension = CSettingsProvider::This().DefaultSaveFormat();
 	}
+	// NOTE: this list is used in the "Edit with" registry entry in JPEGView.Setup, update that when this updates
 	CFileDialog fileDlg(FALSE, sExtension, sCurrentFile, 
 			OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT,
 			Helpers::CReplacePipe(CString(_T("JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP (*.bmp)|*.bmp|PNG (*.png)|*.png|TIFF (*.tiff;*.tif)|*.tiff;*.tif|WEBP (*.webp)|*.webp|WEBP lossless (*.webp)|*.webp|AVIF (*.avif)|*.avif|AVIF lossless (*.avif)|*.avif|QOI (*.qoi)|*.qoi|")) +
@@ -3080,11 +3085,20 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		{
 			bool bGotoNextImage;
 			nFrameIndex = Helpers::GetFrameIndex(m_pCurrentImage, true, ePos == POS_NextAnimation, bGotoNextImage);
-			if (bGotoNextImage) m_pFileList = m_pFileList->Next();
+			if (bGotoNextImage)
+			{
+				if (m_bSlideShowForward)
+					m_pFileList = m_pFileList->Next();
+				else
+					m_pFileList = m_pFileList->Prev();
+			}
 			break;
 		}
 		case POS_NextSlideShow:
-			m_pFileList = m_pFileList->Next();
+			if (m_bSlideShowForward)
+				m_pFileList = m_pFileList->Next();
+			else
+				m_pFileList = m_pFileList->Prev();
 			break;
 		case POS_Previous:
 		{
@@ -3119,7 +3133,7 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		}
 		case POS_Next_Folder:
 		{
-			m_pFileList = m_pFileList->NextFolder();
+ 			m_pFileList = m_pFileList->NextFolder();
 			break;
 		}
 		case POS_Previous_Folder:
@@ -3302,6 +3316,27 @@ void CMainDlg::PerformZoom(double dValue, bool bExponent, bool bZoomToMouse, boo
 		nNewYSize = (int)(m_pCurrentImage->OrigHeight() * m_dZoom + 0.5);
 	}
 
+	// because we've increased/decreased to the maximum zoom allowed,
+	// only actually perform the zoom if the old and new dimensions differ
+	// the float arithmetic doesn't always come up with the same answer, but the new sizes can be directly compared
+	if (nNewXSize == nOldXSize && nNewYSize == nOldYSize) {
+		// because there's rounding errors, it is possible to get stuck zooming out from fractional zoom,
+		// due to the new/old size being the same, but the zoom factor still changing
+		// hence, only reset the zoom value IF when zooming out (aka, it is getting smaller)
+		//
+		// when zooming in, do not set the old zoom value so that it can "escape" the initial few steps where
+		// the zoom ratio has changed, but the size is still the same, due to rounding errors
+		if (bExponent && dValue < 0) {
+			// zooming out
+			// NOTE: this gets triggered on pauseAtZoom
+			m_dZoom = dOldZoom;  // restore previous zoom value
+		}
+		// zooming in does not require restoring the previous zoom value
+		// because the code which checks the 65535 will re-scale the zoom factor to ensure it never exceeds 65535
+
+		return; // then do nothing
+	}
+
 	if (bZoomToMouse) {
 		// zoom to mouse
 		int nCenterX = m_bZoomMode ? m_nCapturedX : m_nMouseX;
@@ -3437,7 +3472,8 @@ void CMainDlg::ResetZoomToFitScreen(bool bFillWithCrop, bool bAllowEnlarge, bool
 
 void CMainDlg::ResetZoomTo100Percents(bool bZoomToMouse) {
 	if (m_pCurrentImage != NULL && fabs(m_dZoom - 1) > 0.01) {
-		PerformZoom(1.0, false, bZoomToMouse, true);
+		// the current design (unless changed) cursor always shows in windowed mode, so always zoom to cursor when not fullscreen
+		PerformZoom(1.0, false, bZoomToMouse || !m_bFullScreenMode, true);
 	}
 }
 
@@ -3596,7 +3632,7 @@ void CMainDlg::AdjustMovieSpeed(double dIncrement)
 	/*
 	//Available steps (interval, s): 1,2,3,4,5,7,10,20
 	//  ~> (fps): 1, 0.5, 0.33, 0.25, 0.2, 0.143, 0.1, 0.05
-	//AVailable movie mode fps: 5, 10, 25, 30, 50, 100
+	//Available movie mode fps: 3, 5, 10, 25, 30, 50, 100
 	We'll change to stepping thru' above choices instead
 	*/
 	if (dIncrement < 0.0)

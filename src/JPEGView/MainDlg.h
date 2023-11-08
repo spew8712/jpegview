@@ -336,6 +336,7 @@ private:
 	bool m_bSelectMode, m_bSingleZoom,
 		m_bMinFilesize, m_bHideHidden;
 	Helpers::ETransparencyMode m_nTransparencyMode; //for transparent background
+	bool m_bSlideShowForward; //direction of slideshow
 	bool m_bWindowBorderless;
 	bool m_bAlwaysOnTop;
 	//Toast stuff
