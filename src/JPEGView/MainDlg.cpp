@@ -178,7 +178,8 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_bSlideShowForward(true),
 	m_hToastFont(0),
 	m_strToast(""),
-	m_nImageRetryCnt(0)
+	m_nImageRetryCnt(0),
+	m_bMouseTracking(false)
 {
 	CSettingsProvider& sp = CSettingsProvider::This();
 
@@ -1195,6 +1196,17 @@ LRESULT CMainDlg::OnXButtonDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/,
 }
 
 LRESULT CMainDlg::OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
+	if (!m_bMouseTracking)
+	{
+		//must re-register once every time to get WM_MOUSELEAVE event
+		TRACKMOUSEEVENT tme;
+		tme.cbSize = sizeof(tme);
+		tme.hwndTrack = m_hWnd;
+		tme.dwFlags = TME_LEAVE; //Add '| TME_HOVER' if need WM_MOUSEHOVER event
+		tme.dwHoverTime = 1;
+		_TrackMouseEvent(&tme);
+		m_bMouseTracking = true;
+	}
 	// Turn mouse pointer on when mouse has moved some distance
 	int nOldMouseY = m_nMouseY;
 	int nOldMouseX = m_nMouseX;
@@ -1245,6 +1257,15 @@ LRESULT CMainDlg::OnMouseWheel(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, 
 	} else if (m_dZoom > 0 && !m_pUnsharpMaskPanelCtl->IsVisible()) {
 		PerformZoom(CSettingsProvider::This().MouseWheelZoomSpeed() * double(nDelta) / WHEEL_DELTA, true, m_bMouseOn, true);
 	}
+	return 0;
+}
+
+LRESULT CMainDlg::OnMouseLeave(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+{
+	m_bMouseTracking = false; //reset to let next mouse move event reactivate this handler
+	//hide unwanted panels so as not to obscure image, when mouse exits window
+	m_pImageProcPanelCtl->SetVisible(false);
+	m_pNavPanelCtl->HideNavPanelTemporary(); //somehow only this works; SetVisible(false), Invalidate, etc., all failed to hide nav panel
 	return 0;
 }
 

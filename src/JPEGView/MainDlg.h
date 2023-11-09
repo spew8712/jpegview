@@ -79,6 +79,7 @@ public:
 		MESSAGE_HANDLER(WM_XBUTTONDOWN, OnXButtonDown)
 		MESSAGE_HANDLER(WM_XBUTTONDBLCLK, OnXButtonDown)
 		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+		MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
 		MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
 		MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
 		MESSAGE_HANDLER(WM_SYSKEYDOWN, OnSysKeyDown)
@@ -121,6 +122,7 @@ public:
 	LRESULT OnMButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnXButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnMouseMove(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnMouseLeave(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnMouseWheel(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnKeyDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnSysKeyDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
@@ -343,6 +345,7 @@ private:
 	HFONT m_hToastFont;
 	CString m_strToast;
 	int m_nImageRetryCnt;
+	bool m_bMouseTracking;
 
 	void SetToast(LPCTSTR a_strToast, DWORD a_nDurationMs = 3000);
 	void SetToastIfEmpty(LPCTSTR a_strToast, DWORD a_nDurationMs = 3000);
