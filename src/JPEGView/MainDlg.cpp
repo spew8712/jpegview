@@ -3108,10 +3108,14 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 			nFrameIndex = Helpers::GetFrameIndex(m_pCurrentImage, true, ePos == POS_NextAnimation, bGotoNextImage);
 			if (bGotoNextImage)
 			{
-				if (m_bSlideShowForward)
-					m_pFileList = m_pFileList->Next();
-				else
-					m_pFileList = m_pFileList->Prev();
+				if (ePos == POS_NextAnimation)
+				{
+					if (m_bSlideShowForward)
+						m_pFileList = m_pFileList->Next();
+					else
+						m_pFileList = m_pFileList->Prev();
+				}
+				else m_pFileList = m_pFileList->Next();
 			}
 			break;
 		}
