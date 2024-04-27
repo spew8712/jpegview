@@ -279,7 +279,7 @@ LRESULT CFileExtensionsDlg::OnListViewKeyDown(WPARAM /*wParam*/, LPNMHDR lpnmhdr
 }
 
 void CFileExtensionsDlg::FillFileExtensionsList() {
-	InsertExtension(_T("*.jpg;*.jpeg"), FormatHint(CNLS::GetString(_T("%s images")), _T("JPEG")));
+	InsertExtension(_T("*.jpg;*.jpeg;*.jfif"), FormatHint(CNLS::GetString(_T("%s images")), _T("JPEG")));
 	InsertExtension(_T("*.png"), FormatHint(CNLS::GetString(_T("%s images")), _T("PNG")));
 	InsertExtension(_T("*.avif"), FormatHint(CNLS::GetString(_T("%s images")), _T("AVIF")));
 	InsertExtension(_T("*.bmp"), FormatHint(CNLS::GetString(_T("%s images")), _T("Windows bitmap")));
@@ -292,6 +292,7 @@ void CFileExtensionsDlg::FillFileExtensionsList() {
 	InsertExtension(_T("*.webp"), FormatHint(CNLS::GetString(_T("%s images")), _T("Google WEBP")));
 	InsertExtension(_T("*.jxl"), FormatHint(CNLS::GetString(_T("%s images")), _T("JPEG XL")));
 	InsertExtension(_T("*.qoi"), FormatHint(CNLS::GetString(_T("%s images")), _T("Quite OK Image")));
+	InsertExtension(_T("*.psd"), FormatHint(CNLS::GetString(_T("%s images")), _T("Photoshop Document")));
 	InsertExtensions(CSettingsProvider::This().FilesProcessedByWIC(), CNLS::GetString(_T("%s images (processed by Window Imaging Component - WIC)")));
 	InsertExtensions(CSettingsProvider::This().FileEndingsRAW(), CNLS::GetString(_T("%s camera raw images (embedded JPEGs only)")));
 }

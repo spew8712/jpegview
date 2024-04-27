@@ -90,8 +90,12 @@ namespace Helpers {
 	};
 
 	// Maximum and minimum allowed zoom factors for images
-	const double ZoomMax = 16.0;
-	const double ZoomMin = 0.1;
+	const double ZoomMax = DBL_MAX; // unbound the maximum zoom, previously set at 16.0 (1600%)
+	const double ZoomMin = DBL_MIN; // unbound the minimum zoom, previously set at 0.1 (10%)
+
+	// this is specified all over the code as the maximum image dimension that one side can be
+	// this particular variable will have limited usage, but is used to reflect that limitation.  DO NOT CHANGE
+	const int MAX_IMAGE_DIMENSION = 65535;
 
 	// Round to integer
 	inline int RoundToInt(double d) {
@@ -103,6 +107,34 @@ namespace Helpers {
 
 	// Converts the system time to a string
 	CString SystemTimeToString(const SYSTEMTIME &time);
+
+	// pixel is ARGB, backgroundColor is BGR. Returns ARGB
+	static inline uint32 AlphaBlendBackground(uint32 pixel, COLORREF backgroundColor)
+	{
+		uint32 alpha = pixel & 0xFF000000;
+		if (alpha == 0xFF000000)
+			return pixel;
+
+		uint8 bg_r = GetRValue(backgroundColor);
+		uint8 bg_g = GetGValue(backgroundColor);
+		uint8 bg_b = GetBValue(backgroundColor);
+
+		if (alpha == 0) {
+			return (bg_r << 16) + (bg_g << 8) + (bg_b);
+		} else {
+			uint8 r = (pixel >> 16) & 0xFF;
+			uint8 g = (pixel >>  8) & 0xFF;
+			uint8 b = (pixel      ) & 0xFF;
+			uint8 a = alpha >> 24;
+			uint8 one_minus_a = 255 - a;
+
+			return
+				0xFF000000 + 
+				(  (uint8)(((r * a + bg_r * one_minus_a) / 255.0) + 0.5) << 16) +
+				(  (uint8)(((g * a + bg_g * one_minus_a) / 255.0) + 0.5) <<  8) + 
+				(  (uint8)(((b * a + bg_b * one_minus_a) / 255.0) + 0.5)      );
+		}
+}
 
 	// Gets the image size to be used when fitting the image to screen, either using 'fit to screen'
 	// or 'fill with crop' method. If 'fill with crop' is used, the bLimitAR can be set to avoid
@@ -250,7 +282,7 @@ namespace Helpers {
 
 	// Conversion class that replaces the | by null character in a string.
 	// Caution: Uses a static buffer and therefore only one string can be replaced concurrently
-	const int MAX_SIZE_REPLACE_PIPE = 512;
+	const int MAX_SIZE_REPLACE_PIPE = 1024;
 
 	class CReplacePipe {
 	public:

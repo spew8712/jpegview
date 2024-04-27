@@ -270,6 +270,9 @@
     <ClCompile Include="ICCProfileTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PSDWrapper.cpp">
+      <Filter>Source Files\Image Types</Filter>
+    </ClCompile>
     <ClCompile Include="QOIWrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -532,6 +535,9 @@
     </ClInclude>
     <ClInclude Include="QOIWrapper.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PSDWrapper.h">
+      <Filter>Header Files\Image Types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

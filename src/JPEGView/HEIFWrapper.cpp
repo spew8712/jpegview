@@ -51,21 +51,16 @@ void * HeifReader::ReadImage(int &width,
 	}
 	std::vector<uint8_t> iccp = image.get_raw_color_profile();
 	void* transform = ICCProfileTransform::CreateTransform(iccp.data(), iccp.size(), ICCProfileTransform::FORMAT_RGBA);
-	uint8_t* p;
 	size_t i, j;
 	if (!ICCProfileTransform::DoTransform(transform, data, pPixelData, width, height, stride=stride)) {
-		memcpy(pPixelData, data, size);
-		unsigned char* o = pPixelData;
-		for (i = 0; i < height; i++) {
-			p = data + i * stride;
-			for (j = 0; j < width; j++) {
+		unsigned int* o = (unsigned int*)pPixelData;
+		for (i = 0; i < height; ++i) {
+			unsigned int* p = (unsigned int*)(data + i * stride);
+			for (j = 0; j < width; ++j) {
 				// RGBA -> BGRA conversion
-				o[0] = p[2];
-				o[1] = p[1];
-				o[2] = p[0];
-				o[3] = p[3];
-				p += nchannels;
-				o += nchannels;
+				*o = _rotr(_byteswap_ulong(*p), 8);
+				++p;
+				++o;
 			}
 		}
 	}
@@ -75,12 +70,28 @@ void * HeifReader::ReadImage(int &width,
 
 	if (!exif_blocks.empty()) {
 		std::vector<uint8_t> exif = handle.get_metadata(exif_blocks[0]);
-		if (exif.size() > 8 && exif.size() < 65538) {
-			exif_chunk = malloc(exif.size());
+		// 65538 magic number comes from investigations by qbnu
+		// see https://github.com/sylikc/jpegview/pull/213#pullrequestreview-1494451359 for more details
+		/*
+		* These libraries all have their own ideas about where to start the Exif data from.
+		* JPEG Exif blocks are in the format
+		  FF E1 SS SS 45 78 69 66 00 00 [data]
+
+		  The SS SS is a big-endian unsigned short representing the size of everything after FF E1.
+
+		  libjxl gives 00 00 00 00 [data]
+		  libheif gives 00 00 00 00 45 78 69 66 00 00 [data]
+		  libavif, libwebp and libpng give [data], so they have different limits for size.
+
+		  If you want I can change it to 65536 + an offset and add notes explaining why.
+		*/
+		size_t size = exif.size();
+		if (size > 8 && size < 65538) {
+			exif_chunk = malloc(size);
 			if (exif_chunk != NULL) {
-				memcpy(exif_chunk, exif.data(), exif.size());
+				memcpy(exif_chunk, exif.data(), size);
 				*((unsigned short*)exif_chunk) = _byteswap_ushort(0xFFE1);
-				*((unsigned short*)exif_chunk + 1) = _byteswap_ushort(exif.size() - 2);
+				*((unsigned short*)exif_chunk + 1) = _byteswap_ushort(size - 2);
 			}
 		}
 	}

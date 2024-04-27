@@ -131,6 +131,7 @@ public:
 	Helpers::EIniEditor IniEditor() { return m_eIniEditor; }
 	LPCTSTR CustomIniEditor() { return m_sIniEditor; }
 	LPCTSTR GPSMapProvider() { return m_sGPSMapProvider; }
+	bool WindowAlwaysOnTopOnStartup() { return m_bWindowAlwaysOnTopOnStartup; }
 
 	// Returns if a user INI file exists
 	bool ExistsUserINI();
@@ -297,6 +298,7 @@ private:
 	Helpers::EIniEditor  m_eIniEditor;
 	CString m_sIniEditor;
 	CString m_sGPSMapProvider;
+	bool m_bWindowAlwaysOnTopOnStartup;
 
 	std::list<CUserCommand*> m_userCommands;
 	std::list<CUserCommand*> m_openWithCommands;

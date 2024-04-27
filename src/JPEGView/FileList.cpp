@@ -16,6 +16,16 @@ Helpers::ENavigationMode CFileList::sm_eMode = Helpers::NM_LoopDirectory;
 
 // Helper to add the current file of filefind object to the list
 static void AddToFileList(std::list<CFileDesc> & fileList, CFindFile &fileFind, LPCTSTR expectedExtension, int nMinFilesize = 1, bool bHideHidden = false) {
+	//std::list<CFileDesc>::iterator iter = fileList.begin();
+	//if (iter != fileList.end())
+	//{
+	//	CString fileName = fileFind.GetFilePath(),
+	//		fileName0 = (*iter).GetName();
+	//	if (fileName == fileName0)
+	//	{
+	//		return; //already exists
+	//	}
+	//}
 	if (!fileFind.IsDirectory()) {
 		if (expectedExtension != NULL) {
 			// compare if the extension is the expected extension
@@ -130,9 +140,10 @@ void CFileDesc::SetModificationDate(const FILETIME& lastModDate) {
 ///////////////////////////////////////////////////////////////////////////////////
 
 // image file types supported internally (there are additional endings for RAW and WIC - these come from INI file)
-static const int cnNumEndingsInternal = 15;
+// NOTE: when adding more supported filetypes, update installer to add another extension for "SupportedTypes"
+static const int cnNumEndingsInternal = 17;
 static const TCHAR* csFileEndingsInternal[cnNumEndingsInternal] = {_T("jpg"), _T("jpeg"), _T("png"),
-	_T("avif"), _T("bmp"), _T("gif"), _T("heic"), _T("heif"), _T("ico"), _T("jxl"), _T("qoi"), _T("tif"), _T("tiff"), _T("tga"), _T("webp")};
+	_T("avif"), _T("bmp"), _T("gif"), _T("heic"), _T("heif"), _T("ico"), _T("jxl"), _T("psb"), _T("psd"), _T("qoi"), _T("tif"), _T("tiff"), _T("tga"), _T("webp")};
 // supported camera RAW formats
 static const TCHAR* csFileEndingsRAW = _T("*.pef;*.dng;*.crw;*.nef;*.cr2;*.mrw;*.rw2;*.orf;*.x3f;*.arw;*.kdc;*.nrw;*.dcr;*.sr2;*.raf");
 
@@ -358,8 +369,7 @@ bool CFileList::DeleteFile(LPCTSTR fileNameWithPath) const {
 		_tcscpy(fileName, fileNameWithPath);
 		fileName[_tcslen(fileName) + 1] = 0;
 
-		SHFILEOPSTRUCT fileOp;
-		memset(&fileOp, 0, sizeof(SHFILEOPSTRUCT));
+		SHFILEOPSTRUCT fileOp{ 0 };
 		fileOp.hwnd = NULL;
 		fileOp.wFunc = FO_DELETE;
 		fileOp.pFrom = fileName;

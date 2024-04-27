@@ -380,7 +380,7 @@ static RegResult ResetPermissionsForRegistryKey(LPCTSTR subKeyRelativeToHKCU)
 
 	const int MAX_SIZE_SEC_DESC = 1024;
 	SECURITY_DESCRIPTOR* pExistingSecDesc = (SECURITY_DESCRIPTOR*)new char[MAX_SIZE_SEC_DESC];
-	std::auto_ptr<char> auto_ptr_sec_desc((char*)pExistingSecDesc);
+	std::unique_ptr<char> auto_ptr_sec_desc((char*)pExistingSecDesc);
 
 	// Get the existing DACL of the registry key
 	DWORD sizeDecDesc = MAX_SIZE_SEC_DESC;
@@ -394,8 +394,7 @@ static RegResult ResetPermissionsForRegistryKey(LPCTSTR subKeyRelativeToHKCU)
 	}
 
 	// Obtain DACL information.
-	ACL_SIZE_INFORMATION asi;
-	memset(&asi, 0, sizeof(ACL_SIZE_INFORMATION));
+	ACL_SIZE_INFORMATION asi{ 0 };
 	if (pACL != NULL && !::GetAclInformation(pACL, (LPVOID)&asi, (DWORD)sizeof(ACL_SIZE_INFORMATION), AclSizeInformation)) {
 		return Reg_ErrorChangeDACL;
 	}

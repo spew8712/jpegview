@@ -21,13 +21,14 @@ static __int64 CalculateSum(const int* pHistogram) {
 // CHistogram class
 ///////////////////////////////////////////////////////////////////////////////////
 
-CHistogram::CHistogram(const CJPEGImage & image, bool bUseOrigPixels) {
+CHistogram::CHistogram(const CJPEGImage & image, bool bUseOrigPixels)
+	: m_ChannelR{ 0 },
+	m_ChannelG{ 0 },
+	m_ChannelB{ 0 },
+	m_ChannelGrey{ 0 }
+{
 	const int NUM_VALUES = 50000;
 
-	memset(m_ChannelB, 0, sizeof(int)*256);
-	memset(m_ChannelG, 0, sizeof(int)*256);
-	memset(m_ChannelR, 0, sizeof(int)*256);
-	memset(m_ChannelGrey, 0, sizeof(int)*256);
 	m_nBMean = m_nGMean = m_nRMean = 0;
 	m_bUseOrigPixels = bUseOrigPixels;
 	m_fNightshot = -1.0f;
@@ -77,11 +78,12 @@ CHistogram::CHistogram(const CJPEGImage & image, bool bUseOrigPixels) {
 	m_nRMean /= m_nTotalValues;
 }
 
-CHistogram::CHistogram(const void* pPixels, const CSize& size) {
-	memset(m_ChannelB, 0, sizeof(int)*256);
-	memset(m_ChannelG, 0, sizeof(int)*256);
-	memset(m_ChannelR, 0, sizeof(int)*256);
-	memset(m_ChannelGrey, 0, sizeof(int)*256);
+CHistogram::CHistogram(const void* pPixels, const CSize& size)
+	: m_ChannelR{ 0 },
+	m_ChannelG{ 0 },
+	m_ChannelB{ 0 },
+	m_ChannelGrey{ 0 }
+{
 	m_nBMean = m_nGMean = m_nRMean = 0;
 	m_fNightshot = -1.0f;
 
@@ -248,13 +250,13 @@ uint8* CHistogramCorr::CalculateCorrectionLUT(const CHistogram & histogram, floa
 
 	// Reduce the maximal applied correction - if the black or white point is far from 0,
 	// respectively 1, we only apply a decreasing fraction of the full correction.
-	float fHistogramWidthFactor = pow((fWhitePtGrey - fBlackPtGrey), fStrength*0.5f);
-	fBlackPtB = fBlackPtB*pow((1 - fBlackPtB)*(1 - fBlackPtGrey), fStrength)*fHistogramWidthFactor;
-	fBlackPtG = fBlackPtG*pow((1 - fBlackPtG)*(1 - fBlackPtGrey), fStrength)*fHistogramWidthFactor;
-	fBlackPtR = fBlackPtR*pow((1 - fBlackPtR)*(1 - fBlackPtGrey), fStrength)*fHistogramWidthFactor;
-	fWhitePtB = 1 - (1 - fWhitePtB)*pow(fWhitePtB*fWhitePtGrey, fStrength)*fHistogramWidthFactor;
-	fWhitePtG = 1 - (1 - fWhitePtG)*pow(fWhitePtG*fWhitePtGrey, fStrength)*fHistogramWidthFactor;
-	fWhitePtR = 1 - (1 - fWhitePtR)*pow(fWhitePtR*fWhitePtGrey, fStrength)*fHistogramWidthFactor;
+	float fHistogramWidthFactor = powf((fWhitePtGrey - fBlackPtGrey), fStrength*0.5f);
+	fBlackPtB = fBlackPtB*powf((1 - fBlackPtB)*(1 - fBlackPtGrey), fStrength)*fHistogramWidthFactor;
+	fBlackPtG = fBlackPtG*powf((1 - fBlackPtG)*(1 - fBlackPtGrey), fStrength)*fHistogramWidthFactor;
+	fBlackPtR = fBlackPtR*powf((1 - fBlackPtR)*(1 - fBlackPtGrey), fStrength)*fHistogramWidthFactor;
+	fWhitePtB = 1 - (1 - fWhitePtB)*powf(fWhitePtB*fWhitePtGrey, fStrength)*fHistogramWidthFactor;
+	fWhitePtG = 1 - (1 - fWhitePtG)*powf(fWhitePtG*fWhitePtGrey, fStrength)*fHistogramWidthFactor;
+	fWhitePtR = 1 - (1 - fWhitePtR)*powf(fWhitePtR*fWhitePtGrey, fStrength)*fHistogramWidthFactor;
 
 	// If the brightness decreased by the correction, undo this
 	float fMeanBlackPt = (fBlackPtB + fBlackPtG + fBlackPtR)/3;

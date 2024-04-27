@@ -16,6 +16,7 @@
 #include "JXLWrapper.h"
 #include "HEIFWrapper.h"
 #include "QOIWrapper.h"
+#include "PSDWrapper.h"
 #include "MaxImageDef.h"
 
 using namespace Gdiplus;
@@ -168,13 +169,15 @@ static EImageFormat GetImageFormat(LPCTSTR sFileName) {
 		{
 			return IF_HEIF;
 		}
+	} else if (header[0] == '8' && header[1] == 'B' && header[2] == 'P' && header[3] == 'S') {
+		return IF_PSD;
 	}
+	// default fallback if no matches based on magic bytes
 	return Helpers::GetImageFormat(sFileName);
 }
 
 static EImageFormat GetBitmapFormat(Gdiplus::Bitmap* pBitmap) {
-	GUID guid;
-	memset(&guid, 0, sizeof(GUID));
+	GUID guid{ 0 };
 	pBitmap->GetRawFormat(&guid);
 	if (guid == Gdiplus::ImageFormatBMP) {
 		return IF_WindowsBMP;
@@ -468,6 +471,14 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		ProcessReadAVIFRequest(&rq);
+		break;
+	case IF_PSD:
+		DeleteCachedGDIBitmap();
+		DeleteCachedWebpDecoder();
+		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
+		ProcessReadPSDRequest(&rq);
 		break;
 	default:
 		// try with GDI+
@@ -1151,6 +1162,13 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 	SetErrorMode(nPrevErrorMode);
 	::CloseHandle(hFile);
 	delete[] pBuffer;
+}
+
+void CImageLoadThread::ProcessReadPSDRequest(CRequest* request) {
+	request->Image = PsdReader::ReadImage(request->FileName, request->OutOfMemory);
+	if (request->Image == NULL && !request->OutOfMemory) {
+		request->Image = PsdReader::ReadThumb(request->FileName, request->OutOfMemory);
+	}
 }
 
 void CImageLoadThread::ProcessReadQOIRequest(CRequest* request) {

@@ -179,7 +179,9 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_hToastFont(0),
 	m_strToast(""),
 	m_nImageRetryCnt(0),
-	m_bMouseTracking(false)
+	m_bMouseTracking(false),
+	m_nLastAnimationOffset(0),
+	m_nExpectedNextAnimationTickCount(0)
 {
 	CSettingsProvider& sp = CSettingsProvider::This();
 
@@ -449,7 +451,7 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	// create JPEG provider and request first image - do no processing yet if not in fullscreen mode (as we do not know the size yet)
 	m_pJPEGProvider = new CJPEGProvider(m_hWnd, NUM_THREADS, READ_AHEAD_BUFFERS);	
-	m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, CJPEGProvider::FORWARD,
+	m_pCurrentImage = m_pJPEGProvider->RequestImage(0, CJPEGProvider::FORWARD,
 		m_pFileList->Current(), 0, CreateProcessParams(!m_bFullScreenMode), m_bOutOfMemoryLastImage, m_bExceptionErrorLastImage);
 	if (m_pCurrentImage != NULL && m_pCurrentImage->IsAnimation()) {
 		StartAnimation();
@@ -475,6 +477,11 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		SetWindowLong(GWL_STYLE, WS_VISIBLE);
 		SetWindowPos(HWND_TOP, &m_monitorRect, SWP_NOZORDER);
 		SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOCOPYBITS | SWP_FRAMECHANGED);
+	}
+
+	if (CSettingsProvider::This().WindowAlwaysOnTopOnStartup()) {
+		// if set by default for startup ... it is false by default, toggle = true
+		ToggleAlwaysOnTop();
 	}
 
 	m_bLockPaint = false;
@@ -936,8 +943,7 @@ void CMainDlg::BlendBlackRect(CDC & targetDC, CPanel& panel, float fBlendFactor)
 	memDCPanel.SelectBitmap(bitmapPanel);
 	memDCPanel.FillSolidRect(0, 0, nW, nH, RGB(0, 0, 1)); // nVidia workaround: blending pure black has a bug
 	
-	BLENDFUNCTION blendFunc;
-	memset(&blendFunc, 0, sizeof(blendFunc));
+	BLENDFUNCTION blendFunc{ 0 };
 	blendFunc.BlendOp = AC_SRC_OVER;
 	blendFunc.SourceConstantAlpha = (unsigned char)(fBlendFactor*255 + 0.5f);
 	blendFunc.AlphaFormat = 0;
@@ -2379,14 +2385,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 
 			break;
 		case IDM_ALWAYS_ON_TOP:
-			m_bAlwaysOnTop = !m_bAlwaysOnTop;
-
-			// SetWindowPos - https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
-			this->SetWindowPos(
-				m_bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
-				0, 0, 0, 0,
-				SWP_NOMOVE | SWP_NOSIZE  // causes SetWindowPos to ignore the parameters for top/left/width/height
-			);
+			ToggleAlwaysOnTop();
 
 			break;
 		case IDM_FIT_WINDOW_TO_IMAGE:
@@ -2748,7 +2747,7 @@ void CMainDlg::OpenFile(LPCTSTR sFileName, bool bAfterStartup) {
 	InitParametersForNewImage();
 	m_pJPEGProvider->NotifyNotUsed(m_pCurrentImage);
 	m_pJPEGProvider->ClearAllRequests();
-	m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, CJPEGProvider::FORWARD,
+	m_pCurrentImage = m_pJPEGProvider->RequestImage(0, CJPEGProvider::FORWARD,
 		m_pFileList->Current(), 0, CreateProcessParams(!m_bFullScreenMode && (bAfterStartup || IsAdjustWindowToImage())),
 		m_bOutOfMemoryLastImage, m_bExceptionErrorLastImage);
 	m_nLastLoadError = GetLoadErrorAfterOpenFile();
@@ -4150,8 +4149,7 @@ void CMainDlg::AnimateTransition() {
 
 	int nSteps = max(1, (m_nTransitionTime + 20) / nFrameTimeMs);
 
-	BLENDFUNCTION blendFunc;
-	memset(&blendFunc, 0, sizeof(blendFunc));
+	BLENDFUNCTION blendFunc{ 0 };
 	blendFunc.BlendOp = AC_SRC_OVER;
 	blendFunc.AlphaFormat = 0;
 	float fAlphaStep = 255.0f / nSteps;
@@ -4289,15 +4287,22 @@ void CMainDlg::StartAnimation() {
 	m_bLDC = false;
 	m_bLandscapeMode = false;
 	m_bIsAnimationPlaying = true;
-	::SetTimer(this->m_hWnd, ANIMATION_TIMER_EVENT_ID, max(10, m_pCurrentImage->FrameTimeMs()), NULL);
+	int nNewFrameTime = max(10, m_pCurrentImage->FrameTimeMs());
+	::SetTimer(this->m_hWnd, ANIMATION_TIMER_EVENT_ID, nNewFrameTime, NULL);
 	m_pNavPanelCtl->EndNavPanelAnimation();
 	m_nLastSlideShowImageTickCount = ::GetTickCount();
+	m_nLastAnimationOffset = 0;
+	m_nExpectedNextAnimationTickCount = ::GetTickCount() + nNewFrameTime;
 }
 
 void CMainDlg::AdjustAnimationFrameTime() {
 	// restart timer with new frame time
 	::KillTimer(this->m_hWnd, ANIMATION_TIMER_EVENT_ID);
-	::SetTimer(this->m_hWnd, ANIMATION_TIMER_EVENT_ID, max(10, m_pCurrentImage->FrameTimeMs()), NULL);
+	m_nLastAnimationOffset += ::GetTickCount() - m_nExpectedNextAnimationTickCount;
+	m_nLastAnimationOffset = min(m_nLastAnimationOffset, max(100, m_pCurrentImage->FrameTimeMs())); // prevent offset from getting too big
+	int nNewFrameTime = max(10, m_pCurrentImage->FrameTimeMs() - max(0, m_nLastAnimationOffset));
+	m_nExpectedNextAnimationTickCount = ::GetTickCount() + max(10, m_pCurrentImage->FrameTimeMs());
+	::SetTimer(this->m_hWnd, ANIMATION_TIMER_EVENT_ID, nNewFrameTime, NULL);
 }
 
 void CMainDlg::StopAnimation() {
@@ -4318,4 +4323,17 @@ void CMainDlg::StopAnimation() {
 	}
 	::KillTimer(this->m_hWnd, ANIMATION_TIMER_EVENT_ID);
 	m_bIsAnimationPlaying = false;
+}
+
+void CMainDlg::ToggleAlwaysOnTop() {
+	// toggle the member variable and call the SetWindowPos to set
+	m_bAlwaysOnTop = !m_bAlwaysOnTop;
+
+	// SetWindowPos - https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
+	this->SetWindowPos(
+		m_bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
+		0, 0, 0, 0,
+		SWP_NOMOVE | SWP_NOSIZE  // causes SetWindowPos to ignore the parameters for top/left/width/height
+	);
+
 }

@@ -273,6 +273,7 @@ xcopy "$(ProjectDir)libheif\bin\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <OpenMPSupport>false</OpenMPSupport>
       <CompileAs>CompileAsCpp</CompileAs>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -337,6 +338,7 @@ xcopy "$(ProjectDir)lcms2\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
     <ClCompile Include="PrintDlg.cpp" />
     <ClCompile Include="PrintImage.cpp" />
     <ClCompile Include="ProcessingThreadPool.cpp" />
+    <ClCompile Include="PSDWrapper.cpp" />
     <ClCompile Include="QOIWrapper.cpp" />
     <ClCompile Include="ReaderBMP.cpp" />
     <ClCompile Include="ReaderTGA.cpp" />
@@ -428,6 +430,7 @@ xcopy "$(ProjectDir)lcms2\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
     <ClInclude Include="PrintParameters.h" />
     <ClInclude Include="ProcessingThreadPool.h" />
     <ClInclude Include="ProcessParams.h" />
+    <ClInclude Include="PSDWrapper.h" />
     <ClInclude Include="QOIWrapper.h" />
     <ClInclude Include="RawMetadata.h" />
     <ClInclude Include="ReaderBMP.h" />
