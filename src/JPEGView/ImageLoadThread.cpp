@@ -15,6 +15,7 @@
 #include "PNGWrapper.h"
 #include "JXLWrapper.h"
 #include "HEIFWrapper.h"
+#include "RAWWrapper.h"
 #include "QOIWrapper.h"
 #include "PSDWrapper.h"
 #include "MaxImageDef.h"
@@ -1218,9 +1219,29 @@ void CImageLoadThread::ProcessReadQOIRequest(CRequest* request) {
 void CImageLoadThread::ProcessReadRAWRequest(CRequest * request) {
 	bool bOutOfMemory = false;
 	try {
-		request->Image = CReaderRAW::ReadRawImage(request->FileName, bOutOfMemory);
-	}
-	catch (...) {
+		int fullsize = CSettingsProvider::This().DisplayFullSizeRAW();
+
+#ifndef WINXP
+		// Try with libraw
+		UINT nPrevErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+		try {
+			if (fullsize == 2 || fullsize == 3) {
+				request->Image = RawReader::ReadImage(request->FileName, bOutOfMemory, fullsize == 2);
+			}
+			if (request->Image == NULL) {
+				request->Image = RawReader::ReadImage(request->FileName, bOutOfMemory, fullsize == 0 || fullsize == 3);
+			}
+		} catch (...) {
+			// libraw.dll not found or VC++ Runtime not installed
+		}
+		SetErrorMode(nPrevErrorMode);
+#endif
+
+		// Try with dcraw_mod
+		if (request->Image == NULL && fullsize != 1) {
+			request->Image = CReaderRAW::ReadRawImage(request->FileName, bOutOfMemory);
+		}
+	} catch (...) {
 		delete request->Image;
 		request->Image = NULL;
 	}

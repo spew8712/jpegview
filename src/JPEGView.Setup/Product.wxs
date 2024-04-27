@@ -215,6 +215,10 @@
 				<ComponentRef Id="vcruntime1401DLL"/>
 				<ComponentRef Id="msvcp140DLL"/>
 			</Feature>
+			<!-- dcraw is compiled into JPEGView, but doesn't support the latest (modern) camera formats -->
+			<Feature Id="FeatureRAW" Title="Camera RAW Files Support (modern cameras)">
+				<ComponentRef Id="rawDLL"/>
+			</Feature>
 			<Feature Id="FeatureLCMS" Title="ICC Profile Support (WebP, JPEG XL, HEIF/HEIC/AVIF)">
 				<ComponentRef Id="lcmsDLL"/>
 			</Feature>
@@ -408,6 +412,7 @@
 						<!-- csFileEndingsInternal -->
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".jpg" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".jpeg" Value="" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".jfif" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".bmp" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".png" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".tif" Value="" Type="string" />
@@ -420,6 +425,7 @@
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".heic" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".tga" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".qoi" Value="" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".psd" Value="" Type="string" />
 						<!-- csFileEndingsRAW -->
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".pef" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".dng" Value="" Type="string" />
@@ -509,6 +515,11 @@
 					<Component Id="msvcp140DLL" Guid="4b47fa28-c3cf-42f4-a035-be08287bedb7">
 						<File Id="msvcp140.dll" Name="msvcp140.dll" Source="..\JPEGView\vcredist\msvcp140.dll"  KeyPath="yes" />
 					</Component>
+					<!-- DLL required for RAW Files support (modern cameras using LibRaw) -->
+					<Component Id="rawDLL" Guid="e469088b-ab00-43cd-a5eb-57f09a6cc3b2">
+						<File Id="libraw.dll" Name="libraw.dll" Source="..\JPEGView\libraw\bin64\libraw.dll" />
+					</Component>
+
 				    <Component Id="apimswincorefilel120DLL" Guid="834081b5-0084-4948-979a-00015e7b5f87">
 					<File Id="apimswincorefilel120.dll" Name="api-ms-win-core-file-l1-2-0.dll" Source="..\JPEGView\vcredist\api-ms-win-core-file-l1-2-0.dll"  KeyPath="yes" />
 				    </Component>
