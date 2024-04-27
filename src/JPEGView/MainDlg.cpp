@@ -1346,7 +1346,7 @@ LRESULT CMainDlg::OnKeyDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOO
 			}
 			m_pCropCtl->Refresh();
 		}
-	} else if (wParam == VK_F1) {
+	} else if ((wParam == VK_F1) && !(bCtrl || bShift || bAlt)) { //free up modified combos for other hotkey usage!
 		bHandled = true;
 		ExecuteCommand(IDM_HELP);
 	} else {
