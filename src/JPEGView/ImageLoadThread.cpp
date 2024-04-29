@@ -841,7 +841,13 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 			// * number of total images in the AVIF (decoder->imageCount)
 			// * overall image sequence timing (including per-frame timing with avifDecoderNthImageTiming())
 		
-			if (avifDecoderNextImage(m_avifDecoder) == AVIF_RESULT_OK)
+			avifResult r = avifDecoderNextImage(m_avifDecoder);
+			if (r != AVIF_RESULT_OK)
+			{
+				//probably looping back on animation, so just retry using 'avifDecoderNthImage'
+				r = avifDecoderNthImage(m_avifDecoder, m_avifDecoder->imageIndex);
+			}
+			if (r == AVIF_RESULT_OK)
 			{
 				// Now available (for this frame):
 				// * All decoder->image YUV pixel data (yuvFormat, yuvPlanes, yuvRange, yuvChromaSamplePosition, yuvRowBytes)
