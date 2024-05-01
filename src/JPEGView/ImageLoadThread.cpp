@@ -761,16 +761,17 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 	bool bUseCachedDecoder = false,
 		bHasAnimation = false;
 	const wchar_t* sFileName;
-		sFileName = (const wchar_t*)request->FileName;
+	int nFrameIndex = request->FrameIndex;
+	sFileName = (const wchar_t*)request->FileName;
 	if ((sFileName == m_sLastAvifFileName) && m_avifDecoder) {
 		bUseCachedDecoder = true;
-		m_avifDecoder->imageIndex = request->FrameIndex - 1;
-		if (m_avifDecoder->imageIndex >= m_avifDecoder->imageCount)
-			m_avifDecoder->imageIndex = m_avifDecoder->imageCount - 1;
-		if (m_avifDecoder->imageIndex < 0)
-			m_avifDecoder->imageIndex = 0;
+		if (nFrameIndex >= m_avifDecoder->imageCount)
+			nFrameIndex = m_avifDecoder->imageCount - 1;
+		if (nFrameIndex < 0)
+			nFrameIndex = 0;
 		bHasAnimation = m_avifDecoder->imageCount > 1;
-	} else {
+	}
+	else {
 		DeleteCachedAvifDecoder();
 	}
 
@@ -840,13 +841,8 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 			// * decoder->alphaPresent
 			// * number of total images in the AVIF (decoder->imageCount)
 			// * overall image sequence timing (including per-frame timing with avifDecoderNthImageTiming())
-		
-			avifResult r = avifDecoderNextImage(m_avifDecoder);
-			if (r != AVIF_RESULT_OK)
-			{
-				//probably looping back on animation, so just retry using 'avifDecoderNthImage'
-				r = avifDecoderNthImage(m_avifDecoder, m_avifDecoder->imageIndex);
-			}
+
+			avifResult r = avifDecoderNthImage(m_avifDecoder, nFrameIndex);
 			if (r == AVIF_RESULT_OK)
 			{
 				// Now available (for this frame):
@@ -868,7 +864,7 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 				// Be sure to use uint16_t* instead of uint8_t* for rgb.pixels/rgb.rowBytes if (rgb.depth > 8)
 				// Use new(std::nothrow) unsigned char[] as per JPEGView internals (so it can cleanup itself), instead of avifRGBImageAllocatePixels(&rgb)'s c-based malloc.
 				if (rgb.pixels) {
-					delete [] rgb.pixels;
+					delete[] rgb.pixels;
 					rgb.pixels = 0;
 				}
 				rgb.rowBytes = rgb.width * avifRGBImagePixelSize(&rgb);
