@@ -71,6 +71,10 @@ CRect CMultiMonitorSupport::GetMonitorRect(int nIndex) {
 	if (!CMultiMonitorSupport::IsMultiMonitorSystem()) {
 		return CRect(0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN));
 	}
+	if (nIndex < 0) //allow span all screens
+	{
+		return GetVirtualDesktop();
+	}
 	EnumMonitorParams params(nIndex);
 	::EnumDisplayMonitors(NULL, NULL, &MonitorEnumProc, (LPARAM) &params);
 	if (params.rectMonitor.Width() == 0) {

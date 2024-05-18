@@ -267,6 +267,7 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_bSpanVirtualDesktop = false;
 	m_bPanMouseCursorSet = false;
 	m_storedWindowPlacement.length = sizeof(WINDOWPLACEMENT);
+	m_storedWindowPlacement.showCmd = -1;
 	m_nMonitor = 0;
 	m_monitorRect = CRect(0, 0, 0, 0);
 	m_windowRectOnClose = CRect(0, 0, 0, 0);
@@ -371,7 +372,10 @@ void CMainDlg::SetStartupInfo(LPCTSTR sStartupFile, int nAutostartSlideShow, Hel
 	m_bAutoExit = bAutoExit;
 	if ((int)eEffect >= 0) m_eTransitionEffect = eEffect;
 	if (nTransitionTime > 0) m_nTransitionTime = nTransitionTime;
-	if (nDisplayMonitor >= 0) CSettingsProvider::This().SetMonitorOverride(nDisplayMonitor);
+	if (nDisplayMonitor >= 0)
+		CSettingsProvider::This().SetMonitorOverride(nDisplayMonitor);
+	else
+		this->m_bSpanVirtualDesktop = true;
 }
 
 LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {	
@@ -2293,7 +2297,14 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 				m_dZoom = -1.0;
 				this->Invalidate(FALSE);
 				if (m_bSpanVirtualDesktop) {
-					this->SetWindowPlacement(&m_storedWindowPlacement);
+					if (m_storedWindowPlacement.showCmd != -1)
+						this->SetWindowPlacement(&m_storedWindowPlacement);
+					else
+					{
+						m_nMonitor = 0;
+						m_monitorRect = CMultiMonitorSupport::GetMonitorRect(m_nMonitor);
+						SetWindowPos(HWND_TOP, &m_monitorRect, SWP_NOZORDER);
+					}
 				} else {
 					this->GetWindowPlacement(&m_storedWindowPlacement);
 					CRect rectAllScreens = CMultiMonitorSupport::GetVirtualDesktop();
