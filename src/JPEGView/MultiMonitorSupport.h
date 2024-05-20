@@ -14,6 +14,10 @@ public:
 	// 1 to n for the secondary or other monitors
 	static CRect GetMonitorRect(int nIndex);
 
+	// Display rectangle of the monitor, with given monitor excluded .
+	// 1 or n-1 for the excluded monitor
+	static CRect GetMonitorRectExclude(int nIndex);
+
 	// Display rectangle of monitor the main part of the given window is shown on
 	static CRect GetMonitorRect(HWND hWnd);
 

@@ -76,12 +76,31 @@ CRect CMultiMonitorSupport::GetMonitorRect(int nIndex) {
 		return GetVirtualDesktop();
 	}
 	EnumMonitorParams params(nIndex);
-	::EnumDisplayMonitors(NULL, NULL, &MonitorEnumProc, (LPARAM) &params);
+	::EnumDisplayMonitors(NULL, NULL, &MonitorEnumProc, (LPARAM)&params);
 	if (params.rectMonitor.Width() == 0) {
 		return CRect(0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN));
-	} else {
+	}
+	else {
 		return params.rectMonitor;
 	}
+}
+
+//assumes monitor in a horizontal row and system orders them left to right, and nIndex is either first or last one
+CRect CMultiMonitorSupport::GetMonitorRectExclude(int nIndex) {
+	if (!CMultiMonitorSupport::IsMultiMonitorSystem()) {
+		return CRect(0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN));
+	}
+	CRect rect = GetVirtualDesktop(),
+		rectExclude = GetMonitorRect(nIndex);
+	if (rectExclude.left == 0)
+	{
+		rect.left = rectExclude.right;
+	}
+	else
+	{
+		rect.right = rectExclude.left;
+	}
+	return rect;
 }
 
 CRect CMultiMonitorSupport::GetMonitorRect(HWND hWnd) {

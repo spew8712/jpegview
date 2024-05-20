@@ -4009,8 +4009,37 @@ void CMainDlg::ToggleMonitor() {
 		}
 		m_dZoom = -1.0;
 		this->Invalidate(FALSE);
-		m_nMonitor = (m_nMonitor + 1) % nMaxMonitorIdx;
-		m_monitorRect = CMultiMonitorSupport::GetMonitorRect(m_nMonitor);
+		if (nMaxMonitorIdx <= 2)
+		{
+			m_nMonitor = (m_nMonitor + 1) % nMaxMonitorIdx;
+			m_monitorRect = CMultiMonitorSupport::GetMonitorRect(m_nMonitor);
+		}
+		else
+		{
+			int max = nMaxMonitorIdx - 1;
+			if (m_nMonitor == max) //toggle from last monitor to exclude right most
+			{
+				m_nMonitor = -2; //-2: exclude right most, -3: exclude left most
+				m_monitorRect = CMultiMonitorSupport::GetMonitorRectExclude(max);
+			}
+			else if (m_nMonitor == -2) //toggle from exclude right most to exclude left most
+			{
+				m_nMonitor = -3;
+				m_monitorRect = CMultiMonitorSupport::GetMonitorRectExclude(0);
+			}
+			else 
+			{
+				if (m_nMonitor >= 0) //next monitor
+				{
+					m_nMonitor = (m_nMonitor + 1) % nMaxMonitorIdx;
+				}
+				else //m_nMonitor == -3; //toggle from left most to 1st monitor
+				{
+					m_nMonitor = 0;
+				}
+				m_monitorRect = CMultiMonitorSupport::GetMonitorRect(m_nMonitor);
+			}
+		}
 		SetWindowPos(HWND_TOP, &m_monitorRect, SWP_NOZORDER);
 		this->GetClientRect(&m_clientRect);
 	}

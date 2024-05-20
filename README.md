@@ -265,19 +265,51 @@ Roughly follow the steps in [aom's guide](https://aomedia.googlesource.com/aom) 
 * These tools are needed. Install them:
   * Microsoft Visual Studio 2019.
   * CMake. Must be sufficiently new version in order to have (VS project generator for >= VS2019).
+  * [Meson](https://mesonbuild.com/Quick-guide.html) (2024).
+    * Install using Python. E.g.:
+      ```
+      c:
+      cd c:\p\Python3\Scripts
+      pip3 install meson
+      ```
+    * Set in CMake GUI: MESON_EXECUTABLE to C:/P/Python3/Scripts/meson.exe
+  * [RustC Compiler](https://www.rust-lang.org/tools/install) (2024). Needed to build AVIF_CODEC_RAV1E.
+    * Its command-prompt style installer installs to %USERPROFILE%\.cargo\bin.
 * These libraries are needed. Find, download and unzip them. Not sure if they're really needed for `avif.lib`, but CMake will scream and break if their Name-Value info aren't filled in. The (key) Name's in CMake are:
-    * JPEG_LIBRARY_DEBUG / JPEG_LIBRARY_RELEASE
-    * PNG_LIBRARY_DEBUG / PNG_LIBRARY_RELEASE
-    * ZLIB_LIBRARY_DEBUG / ZLIB_LIBRARY_RELEASE
+    * LIBYUV_INCLUDE_DIR & LIBYUV_LIBRARY (2024)
+    * JPEG_LIBRARY_DEBUG / JPEG_LIBRARY_RELEASE (< 2024)
+      * https://chromium.googlesource.com/chromium/deps/libjpeg_turbo/ <- Not CMake project
+        * Needed by libyuv
+        * Manually create new VS solution...
+          * In jerror.h, comment out the `#if JPEG_LIB_VERSION >= #0` for missing error code definitions.
+          * In tjutil.j, change to '_stricmp' to `#define strcasecmp _stricmp`.
+          * Exclude .c files included in .c files! Like jdcol565.c.
+    * PNG_LIBRARY_DEBUG / PNG_LIBRARY_RELEASE (< 2024)
+      * https://chromium.googlesource.com/chromium/src/third_party/libpng/ <- Not CMake project
+      * Manually create new VS solution...
+        * Needs extra file of zconf.h: http://dlib.net/dlib/external/zlib/zconf.h.html
+        * Exclude pngtest.c
+        * #define PNG_eXIf_SUPPORTED in libpng/pnglibconf.h! to avoid libavif build encoutnering undefined PNG_eXIf_SUPPORTED.
+    * ZLIB_LIBRARY_DEBUG / ZLIB_LIBRARY_RELEASE (< 2024)
+      * https://chromium.googlesource.com/chromium/src/third_party/zlib/ <- CMake project
+    * Source: https://chromium.googlesource.com/
+      * https://chromium.googlesource.com/libyuv/libyuv/ -> needs JPEG_INCLUDE_DIR, JPEG_LIBRARY_DEBUG & JPEG_LIBRARY_RELEASE
+        * Specify the .lib for the DEBUG & RELEASE
 *  Open Developer Tools for VS2019 command prompt, launch CMake GUI from it.
     * For 'Where the source code is', select the unzipped libavif folder.
     * Create a new folder, say 'libavif_build', elsewhere for CMake & build output.
     * Check these (key) Name-Value pairs to ensure these are properly (detected and) filled in: JPEG_LIBRARY_*, PNG_LIBRARY_* and ZLIB_LIBRARY_*
     * Tick these (key) Name's:
-        * `AVIF_CODEC_AOM` and maybe `AVIF_CODEC_AOM_ENCODE` & `AVIF_CODEC_AOM_DECODE`
+        * `AVIF_CODEC_AOM` -> LOCAL, and `AVIF_CODEC_AOM_ENCODE` & `AVIF_CODEC_AOM_DECODE` -> ticked
+          * Do NOT choose `AVIF_CODEC_AVM` (experimental AV2) along with AOM, as CMake will be confused and "can't find sources" to generate VS project files.
+          * Do NOT choose `AVIF_CODEC_LIBGGAV1` - it (release ver; debug version is ok) fails for some frames in animated AVIF!
+        * Leave `AVIF_CODEC_DAV1D` as `OFF` to avoid 'unresolved external symbol ___chkstk_ms' & __mingw_vfprintf link errors!
+        * These are ok (set to LOCAL): AVIF_CODEC_GAV1, AVIF_CODEC_RAV1E, AVIF_CODEC_SVT.
         * `AOM_INCLUDE_FOLDER`: fill in the 'aom' folder path from earlier, like `c:/aom`.
         * `AOM_LIBRARY`: fill in the earlier, like `c:/aom_build/Release/aom.lib`
-    * Click the 'Configure' button. Hopefully there're no errors, so as to be able to move to the next step. If not, good luck resolve any errors.
+    * Click the 'Configure' button.
+      * Hopefully there're no errors, so as to be able to move to the next step. If not, good luck resolve any errors.
+      * Otherwise, change the missing settings and re-click Configure to try again, until all's well.
     * Click the 'Generate' button to generate VS solution and projects files. If all goes well, click the 'Open Project' button to open in VS2019 =)
     * Probably only need to initate build on the `ext/avif/avif` project to get `avif.lib` & `avif.dll`.
         * Optional: build `ext/avid/examples/avif_example_decode_file` project to get a .EXE to test decoding AVIF images.
