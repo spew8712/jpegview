@@ -2298,17 +2298,22 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 				this->Invalidate(FALSE);
 				if (m_bSpanVirtualDesktop) {
 					if (m_storedWindowPlacement.showCmd != -1)
+					{
 						this->SetWindowPlacement(&m_storedWindowPlacement);
+						SetToast(_T("\u2591\u2588\u2591"));
+					}
 					else
 					{
 						m_nMonitor = 0;
 						m_monitorRect = CMultiMonitorSupport::GetMonitorRect(m_nMonitor);
 						SetWindowPos(HWND_TOP, &m_monitorRect, SWP_NOZORDER);
+						SetToast(_T("[0]"));
 					}
 				} else {
 					this->GetWindowPlacement(&m_storedWindowPlacement);
 					CRect rectAllScreens = CMultiMonitorSupport::GetVirtualDesktop();
 					this->SetWindowPos(HWND_TOP, &rectAllScreens, SWP_NOZORDER);
+					SetToast(_T("\u2588\u2588\u2588"));
 				}
 				m_bSpanVirtualDesktop = !m_bSpanVirtualDesktop;
 				this->GetClientRect(&m_clientRect);
@@ -4021,21 +4026,27 @@ void CMainDlg::ToggleMonitor() {
 			{
 				m_nMonitor = -2; //-2: exclude right most, -3: exclude left most
 				m_monitorRect = CMultiMonitorSupport::GetMonitorRectExclude(max);
+				SetToast(_T("\u2588\u2588\u2591"));
 			}
 			else if (m_nMonitor == -2) //toggle from exclude right most to exclude left most
 			{
 				m_nMonitor = -3;
 				m_monitorRect = CMultiMonitorSupport::GetMonitorRectExclude(0);
+				SetToast(_T("\u2591\u2588\u2588"));
 			}
 			else 
 			{
 				if (m_nMonitor >= 0) //next monitor
 				{
 					m_nMonitor = (m_nMonitor + 1) % nMaxMonitorIdx;
+					CString text;
+					text.Format(_T("[%i]"), m_nMonitor + 1);
+					SetToast(text);
 				}
 				else //m_nMonitor == -3; //toggle from left most to 1st monitor
 				{
 					m_nMonitor = 0;
+					SetToast(_T("[1]"));
 				}
 				m_monitorRect = CMultiMonitorSupport::GetMonitorRect(m_nMonitor);
 			}
