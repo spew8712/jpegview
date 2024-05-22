@@ -176,24 +176,7 @@ CSettingsProvider::CSettingsProvider(void) {
 	CString sSlideShowCustomInterval = GetString(_T("SlideShowCustomInterval"), _T("")).Trim();
 	if (sSlideShowCustomInterval.GetLength() > 0)
 	{
-		double dMultiplier = 1.0;
-		int nLastChIndex = sSlideShowCustomInterval.GetLength() - 1;
-		wchar_t chUnits = sSlideShowCustomInterval[nLastChIndex];
-		if (chUnits == 'm')
-		{
-			dMultiplier = 60.0;
-			sSlideShowCustomInterval = sSlideShowCustomInterval.Left(nLastChIndex);
-		}
-		else if (chUnits == 'h')
-		{
-			dMultiplier = 3600.0;
-			sSlideShowCustomInterval = sSlideShowCustomInterval.Left(nLastChIndex);
-		}
-		else if (chUnits == 's')
-		{
-			sSlideShowCustomInterval = sSlideShowCustomInterval.Left(nLastChIndex);
-		}
-		double dInterval = _wtof((LPCTSTR)sSlideShowCustomInterval) * dMultiplier;
+		double dInterval = ParseTimeInterval(sSlideShowCustomInterval);
 		if (dInterval > 1e-10) //guard against division by zero -> infinite FPS
 			m_dSlideShowCustomFps = 1.0 / dInterval;
 	}
@@ -929,4 +912,27 @@ void CSettingsProvider::WriteInt(LPCTSTR sKey, int nValue) {
 	TCHAR buff[32];
 	_stprintf_s(buff, 32, _T("%d"), nValue);
 	WriteString(sKey, buff);
+}
+
+double CSettingsProvider::ParseTimeInterval(CString &strInterval) {
+	if (strInterval.GetLength() <= 0)
+		return NAN;
+	double dMultiplier = 1.0;
+	int nLastChIndex = strInterval.GetLength() - 1;
+	wchar_t chUnits = strInterval[nLastChIndex];
+	if (chUnits == 'm')
+	{
+		dMultiplier = 60.0;
+		strInterval = strInterval.Left(nLastChIndex);
+	}
+	else if (chUnits == 'h')
+	{
+		dMultiplier = 3600.0;
+		strInterval = strInterval.Left(nLastChIndex);
+	}
+	else if (chUnits == 's')
+	{
+		strInterval = strInterval.Left(nLastChIndex);
+	}
+	return _wtof((LPCTSTR)strInterval) * dMultiplier;
 }

@@ -230,7 +230,7 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_nLastLoadError = HelpersGUI::FileLoad_Ok;
 
 	m_dMovieFPS = 1.0;
-	m_nAutoStartSlideShow = false;
+	m_dAutoStartSlideShow = 0.0;
 	m_eForcedSorting = Helpers::FS_Undefined;
 
 	m_eProcFlagsBeforeMovie = PFLAG_None;
@@ -365,9 +365,9 @@ void CMainDlg::DetermineInitMinFilesizeMode()
 	}
 }
 
-void CMainDlg::SetStartupInfo(LPCTSTR sStartupFile, int nAutostartSlideShow, Helpers::ESorting eSorting, Helpers::ETransitionEffect eEffect, 
+void CMainDlg::SetStartupInfo(LPCTSTR sStartupFile, double dAutostartSlideShow, Helpers::ESorting eSorting, Helpers::ETransitionEffect eEffect, 
 	int nTransitionTime, bool bAutoExit, int nDisplayMonitor) { 
-	m_sStartupFile = sStartupFile; m_nAutoStartSlideShow = nAutostartSlideShow; m_eForcedSorting = eSorting;
+	m_sStartupFile = sStartupFile; m_dAutoStartSlideShow = dAutostartSlideShow; m_eForcedSorting = eSorting;
 	DetermineInitMinFilesizeMode();
 	m_bAutoExit = bAutoExit;
 	if ((int)eEffect >= 0) m_eTransitionEffect = eEffect;
@@ -492,8 +492,8 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	m_bLockPaint = false;
 	m_isBeforeFileSelected = m_sStartupFile.IsEmpty();
 
-	if (!m_isBeforeFileSelected && (m_nAutoStartSlideShow > 0)) {
-		StartMovieMode(1.0 / m_nAutoStartSlideShow);
+	if (!m_isBeforeFileSelected && (m_dAutoStartSlideShow > 0)) {
+		StartMovieMode(1.0 / m_dAutoStartSlideShow);
 	}
 
 	this->Invalidate(FALSE);
@@ -747,8 +747,8 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			else {
 				OpenFileWithDialog(true, true);
 				Invalidate(TRUE);
-				if (m_nAutoStartSlideShow > 0) {
-					StartMovieMode(1.0 / m_nAutoStartSlideShow);
+				if (m_dAutoStartSlideShow > 0) {
+					StartMovieMode(1.0 / m_dAutoStartSlideShow);
 				}
 			}
 		}

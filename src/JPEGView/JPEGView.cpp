@@ -69,13 +69,14 @@ static CString ParseCommandLineForStartupFile(LPCTSTR sCommandLine) {
 	return sStartupFile;
 }
 
-static int ParseCommandLineForAutostart(LPCTSTR sCommandLine) {
+static double ParseCommandLineForAutostart(LPCTSTR sCommandLine) {
 	LPCTSTR sAutoStart = Helpers::stristr(sCommandLine, _T("/slideshow"));
 	if (sAutoStart == NULL) {
 		return 0;
 	}
-	int interval = _ttoi(sAutoStart + _tcslen(_T("/slideshow")));
-	return (interval == 0) ? 5 : interval;
+	CString strInterval(sAutoStart + _tcslen(_T("/slideshow")));
+	double dInterval = CSettingsProvider::ParseTimeInterval(strInterval);
+	return !isnan(dInterval) ? dInterval : 5;
 }
 
 static bool ParseCommandLineForFullScreen(LPCTSTR sCommandLine) {
@@ -203,9 +204,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	ATLASSERT(SUCCEEDED(hRes));
 
 	CString sStartupFile = ParseCommandLineForStartupFile(lpstrCmdLine);
-	//int nAutostartSlideShow = (sStartupFile.GetLength() == 0) ? 0 : ParseCommandLineForAutostart(lpstrCmdLine);
 	//Allow selection of image later, then auto-start slideshow
-	int nAutostartSlideShow = ParseCommandLineForAutostart(lpstrCmdLine);
+	double dAutostartSlideShow = ParseCommandLineForAutostart(lpstrCmdLine);
 	bool bForceFullScreen = ParseCommandLineForFullScreen(lpstrCmdLine);
 	bool bAutoExit = ParseCommandLineForAutoExit(lpstrCmdLine);
 	Helpers::ESorting eSorting = ParseCommandLineForSorting(lpstrCmdLine);
@@ -241,7 +241,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 		CMainDlg dlgMain(bForceFullScreen);
 
-		dlgMain.SetStartupInfo(sStartupFile, nAutostartSlideShow, eSorting, eTransitionEffect, nTransitionTime, bAutoExit, nDisplayMonitor);
+		dlgMain.SetStartupInfo(sStartupFile, dAutostartSlideShow, eSorting, eTransitionEffect, nTransitionTime, bAutoExit, nDisplayMonitor);
 
 		try {
 			nRet = (int)dlgMain.DoModal();

@@ -139,7 +139,7 @@ public:
 	LRESULT OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 
 	// Called by main()
-	void SetStartupInfo(LPCTSTR sStartupFile, int nAutostartSlideShow, Helpers::ESorting eSorting, Helpers::ETransitionEffect eEffect, 
+	void SetStartupInfo(LPCTSTR sStartupFile, double dAutostartSlideShow, Helpers::ESorting eSorting, Helpers::ETransitionEffect eEffect, 
 		int nTransitionTime, bool bAutoExit, int nDisplayMonitor);
 
 	// Called by the different controller classes
@@ -231,7 +231,7 @@ public:
 private:
 
 	CString m_sStartupFile; // file passed on command line
-	int m_nAutoStartSlideShow; // if positive: Auto start slide show with given interval in seconds, passed on command line
+	double m_dAutoStartSlideShow; // if positive: Auto start slide show with given interval in seconds, passed on command line
 	bool m_bAutoExit;
 	Helpers::ESorting m_eForcedSorting; // forced sorting mode on command line
 	CFileList* m_pFileList; // used for navigation
