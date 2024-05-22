@@ -68,8 +68,14 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
       * Command# 6000 (LOOP_FOLDER, hotkey: F7) now toggles between `LoopFolder` and `Auto`.
     * Set `MinFilesize > 0` to Hide of small images. It auto-disables temporarily if 1st image opened is small (< MinFilesize), so as to view that image as intended.
   * [Experimental]: include a mod of [mez0ru's PR for quick image show despite large folder](https://github.com/sylikc/jpegview/pull/172)
+  * Span _nearly_ all monitors.
+    * No change:
+      * F12: toggles span all monitors, or not.
+      * SHF+F12: toggles always on top.
+    * CTRL+F12: toggle to next monitor. Now if there are more than 2 monitors (assuming horizontal row), this hotkey toggles in this cycle: monitor #1, #2, ...  #last, all but last `[XX ]`, all but 1st `[ XX]`, and back.
+ * F1 with CTRL, SHF or ALT combos can now be used as hotkeys for other commands; only F1 shows the help info.
 
-(Last selectively sync'd up to original's ~31 Jan 2023 updates, with occasional cherry picks going ahead).
+(Last selectively sync'd up to original's ~23 Nov 2023 updates, with occasional cherry picks going ahead).
 
 ### Slideshow
 
@@ -91,10 +97,11 @@ JPEGView has a slideshow mode which can be activated in various ways:
 * **context menu**: right click image, select "Play folder as slideshow/movie" any of the options available - which are different slideshow speeds.
   * available speeds in fps: 100, 50, 30, 25, 10, 5, 1, 0.5, 0.33, 0.25, 0.2, 0.143, 0.1, 0.05, and _custom_ (interval)
   * _custom_ (_**added in mod**_): as per `SlideShowCustomInterval` setting.
-* **commandline**: `JPEGView.exe [optional image/path] /slideshow <interval in secs>`
-  Interval must be integer >= 1, or defaults to 5s; no upper limit.
-    * E.g.: `JPEGView.exe c:\image.png /slideshow 1`
-    starts JPEGView in slideshow with image switching at 1s intervals, beginning with given image or folder.
+* **commandline**: `JPEGView.exe [optional image/path] /slideshow <interval>`
+  Interval as positive floating point number with optional units, or defaults to 5s; no upper limit.
+    * Units: s for secs (default if no unit specified), m for minutes, h for hours.
+    * E.g.: `JPEGView.exe c:\image.png /slideshow 0.5`
+    starts JPEGView in slideshow with image switching at 0.5s intervals, beginning with given image or folder.
     * E.g.: `JPEGView.exe /slideshow 2`
     (**modified in mod**) starts JPEGView in image selection mode, and then starts slideshow with image switching at 2s intervals. (Previously when an image/path is not specified, `/slideshow` is ignored)
 * Slideshow no longer paused when jumping into an image from a different folder.
