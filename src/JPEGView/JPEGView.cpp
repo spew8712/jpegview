@@ -89,7 +89,7 @@ static bool ParseCommandLineForAutoExit(LPCTSTR sCommandLine) {
 static int ParseCommandLineForDisplayMonitor(LPCTSTR sCommandLine) {
 	LPCTSTR sMonitor = Helpers::stristr(sCommandLine, _T("/monitor"));
 	if (sMonitor == NULL) {
-		return -1;
+		return 0;
 	}
 	return _ttoi(sMonitor + _tcslen(_T("/monitor")));
 }
