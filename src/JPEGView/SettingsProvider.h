@@ -133,6 +133,7 @@ public:
 	LPCTSTR CustomIniEditor() { return m_sIniEditor; }
 	LPCTSTR GPSMapProvider() { return m_sGPSMapProvider; }
 	bool WindowAlwaysOnTopOnStartup() { return m_bWindowAlwaysOnTopOnStartup; }
+	void SetWindowAlwaysOnTopOnStartup(bool bAlwaysOnTop) { m_bWindowAlwaysOnTopOnStartup = bAlwaysOnTop; }
 	static double ParseTimeInterval(CString &strInterval);
 
 	// Returns if a user INI file exists

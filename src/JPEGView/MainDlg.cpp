@@ -2414,6 +2414,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDM_ALWAYS_ON_TOP:
 			ToggleAlwaysOnTop();
+			SetToast(m_bAlwaysOnTop? _T("Always on Top"): _T("Not on Top"));
 
 			break;
 		case IDM_FIT_WINDOW_TO_IMAGE:

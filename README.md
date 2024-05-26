@@ -72,6 +72,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
     * No change:
       * F12: toggles span all monitors, or not.
       * SHF+F12: toggles always on top.
+        * New: Override via commandline option `/top` to enable always on top. Use `/top 0` or `/top false` to disable.
     * CTRL+F12: toggle to next monitor. Now if there are more than 2 monitors (assuming horizontal row), this hotkey toggles in this cycle: monitor #1, #2, ...  #last, all but last `[XX ]`, all but 1st `[ XX]`, and back.
  * F1 with CTRL, SHF or ALT combos can now be used as hotkeys for other commands; only F1 shows the help info.
 

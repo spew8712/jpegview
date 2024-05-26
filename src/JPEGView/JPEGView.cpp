@@ -69,6 +69,20 @@ static CString ParseCommandLineForStartupFile(LPCTSTR sCommandLine) {
 	return sStartupFile;
 }
 
+static void ParseCommandLineForAlwaysOnTop(LPCTSTR sCommandLine) {
+	LPCTSTR sTop = Helpers::stristr(sCommandLine, _T("/top"));
+	if (sTop == NULL) {
+		return;
+	}
+	CString strState(sTop + _tcslen(_T("/top")));
+	strState.Trim();
+	bool bAlwaysOnTop = true;
+	if ( (strState.GetLength() > 0)
+		&& ((strState.CompareNoCase(_T("false")) == 0) || (strState.Compare(_T("0")) == 0)) )
+		bAlwaysOnTop = false;
+	CSettingsProvider::This().SetWindowAlwaysOnTopOnStartup(bAlwaysOnTop);
+}
+
 static double ParseCommandLineForAutostart(LPCTSTR sCommandLine) {
 	LPCTSTR sAutoStart = Helpers::stristr(sCommandLine, _T("/slideshow"));
 	if (sAutoStart == NULL) {
@@ -205,6 +219,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	CString sStartupFile = ParseCommandLineForStartupFile(lpstrCmdLine);
 	//Allow selection of image later, then auto-start slideshow
+	ParseCommandLineForAlwaysOnTop(lpstrCmdLine);
 	double dAutostartSlideShow = ParseCommandLineForAutostart(lpstrCmdLine);
 	bool bForceFullScreen = ParseCommandLineForFullScreen(lpstrCmdLine);
 	bool bAutoExit = ParseCommandLineForAutoExit(lpstrCmdLine);
