@@ -585,6 +585,28 @@ LPCTSTR CFileList::CurrentDirectory() const {
 	}
 }
 
+CString CFileList::CurrentDirectoryName() const {
+	if (m_sDirectory.GetLength() > 0) {
+		int pos = m_sDirectory.ReverseFind('\\');
+		if (pos >= 0)
+		{
+			int cnt = m_sDirectory.GetLength() - pos - 1;
+			if (cnt > 0)
+				return m_sDirectory.Right(cnt);
+		}
+	}
+	return m_sDirectory;
+}
+
+CString CFileList::CurrentDirectoryNameShort() const {
+	CString name = CurrentDirectoryName();
+	int len = name.GetLength();
+	if (len <= 44)
+		return name;
+
+	return name.Left(10) + "..." + name.Right(10);
+}
+
 int CFileList::CurrentIndex() const {
 	int i = 0;
 	std::list<CFileDesc>::const_iterator iter;

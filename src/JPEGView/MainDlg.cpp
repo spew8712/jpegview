@@ -3187,11 +3187,19 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		case POS_Next_Folder:
 		{
  			m_pFileList = m_pFileList->NextFolder();
+			if (m_pFileList)
+			{
+				SetToast("Jumped > " + m_pFileList->CurrentDirectoryNameShort());
+			}
 			break;
 		}
 		case POS_Previous_Folder:
 		{
 			m_pFileList = m_pFileList->PrevFolder();
+			if (m_pFileList)
+			{
+				SetToast("Jumped < " + m_pFileList->CurrentDirectoryNameShort());
+			}
 			break;
 		}
 	}

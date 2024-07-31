@@ -98,6 +98,10 @@ public:
 	LPCTSTR CurrentFileTitle() const;
 	// Current directory without file name, NULL if none
 	LPCTSTR CurrentDirectory() const;
+	// Current directory's base name
+	CString CurrentDirectoryName() const;
+	// Current directory's base name shortened if too long
+	CString CurrentDirectoryNameShort() const;
 	// Modification time of current file
 	const FILETIME* CurrentModificationTime() const;
 	// Get the n-next file, does not change the internal state
