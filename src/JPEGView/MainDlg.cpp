@@ -179,6 +179,8 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_bSlideShowForward(true),
 	m_hToastFont(0),
 	m_strToast(""),
+	m_sStartupFile(""),
+	m_sPrevStartupFile(""),
 	m_nImageRetryCnt(0),
 	m_bMouseTracking(false),
 	m_nLastAnimationOffset(0),
@@ -368,6 +370,7 @@ void CMainDlg::DetermineInitMinFilesizeMode()
 void CMainDlg::SetStartupInfo(LPCTSTR sStartupFile, double dAutostartSlideShow, Helpers::ESorting eSorting, Helpers::ETransitionEffect eEffect, 
 	int nTransitionTime, bool bAutoExit, int nDisplayMonitor) { 
 	m_sStartupFile = sStartupFile; m_dAutoStartSlideShow = dAutostartSlideShow; m_eForcedSorting = eSorting;
+	m_sPrevStartupFile = m_sStartupFile;
 	DetermineInitMinFilesizeMode();
 	m_bAutoExit = bAutoExit;
 	if ((int)eEffect >= 0) m_eTransitionEffect = eEffect;
@@ -1025,6 +1028,7 @@ LRESULT CMainDlg::OnAnotherInstanceStarted(UINT /*uMsg*/, WPARAM /*wParam*/, LPA
 	COPYDATASTRUCT* pData = (COPYDATASTRUCT*)lParam;
 	if (pData != NULL && pData->dwData == KEY_MAGIC && pData->cbData > 0 && 
 		((m_bFullScreenMode && CSettingsProvider::This().SingleFullScreenInstance()) || CSettingsProvider::This().SingleInstance())) {
+		m_sPrevStartupFile = m_sStartupFile;
 		m_sStartupFile = CString((LPCTSTR)pData->lpData, pData->cbData / sizeof(TCHAR) - 1);
 		::PostMessage(m_hWnd, WM_LOAD_FILE_ASYNCH, 0, KEY_MAGIC);
 		bHandled = TRUE;
@@ -1433,6 +1437,7 @@ LRESULT CMainDlg::OnDropFiles(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 			if (::GetFileAttributes(buff) & FILE_ATTRIBUTE_DIRECTORY) {
 				_tcsncat_s(buff, BUFF_SIZE, _T("\\"), BUFF_SIZE);
 			}
+			m_sPrevStartupFile = m_sStartupFile;
 			OpenFile(buff, false);
 		}
 		::DragFinish(hDrop);
@@ -1807,6 +1812,9 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDM_OPEN:
 			OpenFileWithDialog(false, false);
+			break;
+		case IDM_OPEN_PREV_ALBUM:
+			OpenPrevAlbumIfAny();
 			break;
 		case IDM_EXPLORE:
 			if (m_pCurrentImage != NULL && m_pCurrentImage->IsClipboardImage()) {
@@ -2789,6 +2797,17 @@ void CMainDlg::OpenFile(LPCTSTR sFileName, bool bAfterStartup) {
 	m_sSaveDirectory = _T("");
 	MouseOff();
 	this->Invalidate(FALSE);
+}
+
+void CMainDlg::OpenPrevAlbumIfAny()
+{
+	if (m_sPrevStartupFile.GetLength() > 0)
+	{
+		CString sNewStartupFile = m_sPrevStartupFile;
+		m_sPrevStartupFile = m_sStartupFile;
+		SetToast("Revert > " + sNewStartupFile);
+		OpenFile(sNewStartupFile, true);
+	}
 }
 
 bool CMainDlg::SaveImage(bool bFullSize) {

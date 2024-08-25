@@ -32,6 +32,7 @@
 S		1016	//SELECT_MODE
 Z		1017	//SINGLE_ZOOM
 Ctrl+O		1100	//OPEN: open file
+Alt+P       1102 //IDM_OPEN_PREV_ALBUM: open previous album if any
 W		1101	//EXPLORE: open and select file in Explorer
 //no_hotkey	1500	//SAVE: save to file in original size, don't allow override without prompt
 Ctrl+Shift+S	1501	//SAVE_SCREEN: save to file in screen size

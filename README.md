@@ -52,6 +52,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
    * **ALT+<Left/Right arrow>**: Jump back/forward 100 images.
    * **CTRL+ALT+<Left/Right arrow>**: Jump to previous/next folder.
    * Wrap backwards. Allowed for `LoopSameFolderLevel` & `LoopSubFolders` too, not just`LoopFolder`.
+   * **ALT+P**: Jump back to previous opened folder if any.
 * Filter
   * Hide small images below `MinFilesize`. **ALT+M** to toggle and reload.
     * Enabled by default if MinFilesize > 0, but auto-disabled if 1st image opened is small (< MinFilesize).

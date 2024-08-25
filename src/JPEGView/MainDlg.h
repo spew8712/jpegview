@@ -231,6 +231,7 @@ public:
 private:
 
 	CString m_sStartupFile; // file passed on command line
+	CString m_sPrevStartupFile;
 	double m_dAutoStartSlideShow; // if positive: Auto start slide show with given interval in seconds, passed on command line
 	bool m_bAutoExit;
 	Helpers::ESorting m_eForcedSorting; // forced sorting mode on command line
@@ -355,6 +356,7 @@ private:
 	void ExploreFile();
 	bool OpenFileWithDialog(bool bFullScreen, bool bAfterStartup);
 	void OpenFile(LPCTSTR sFileName, bool bAfterStartup);
+	void OpenPrevAlbumIfAny();
 	bool SaveImage(bool bFullSize);
 	bool SaveImageNoPrompt(LPCTSTR sFileName, bool bFullSize);
 	bool SaveAnimatedImageAVIF(LPCTSTR sFileName, bool bFullSize);
