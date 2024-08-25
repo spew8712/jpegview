@@ -607,6 +607,49 @@ CString CFileList::CurrentDirectoryNameShort() const {
 	return name.Left(10) + "..." + name.Right(10);
 }
 
+CString CFileList::ShortName(CString path)
+{
+	int len = path.GetLength();
+	if (len <= 23)
+		return path;
+
+	return path.Left(10) + "..." + path.Right(10);
+}
+
+CString CFileList::ShortBasePath(CString path)
+{
+	int len = path.GetLength();
+	if (len > 0) {
+		int pos = path.ReverseFind('\\');
+		if (pos == (len - 1))
+		{
+			path = path.Left(pos);
+			pos = path.ReverseFind('\\');
+		}
+		if (pos >= 0)
+		{
+			int cnt = len - pos - 1;
+			if (cnt > 0)
+			{
+				CString name = ShortName(path.Right(cnt));
+				path = path.Left(pos);
+				len = path.GetLength();
+				pos = path.ReverseFind('\\');
+				if (pos >= 0)
+				{
+					cnt = len - pos - 1;
+					if (cnt > 0)
+					{
+						name = ShortName(path.Right(cnt)) + "\\" + name;
+					}
+					return name;
+				}
+			}
+		}
+	}
+	return ShortName(path);
+}
+
 int CFileList::CurrentIndex() const {
 	int i = 0;
 	std::list<CFileDesc>::const_iterator iter;

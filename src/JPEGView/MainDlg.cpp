@@ -2759,6 +2759,7 @@ bool CMainDlg::OpenFileWithDialog(bool bFullScreen, bool bAfterStartup) {
 	CFileOpenDialog dlgOpen(this->m_hWnd, m_pFileList->Current(), CFileList::GetSupportedFileEndings(), bFullScreen);
 	if (IDOK == dlgOpen.DoModal(this->m_hWnd)) {
 		m_isBeforeFileSelected = false;
+		m_sPrevStartupFile = m_sStartupFile;
 		m_sStartupFile = dlgOpen.m_szFileName;
 		DetermineInitMinFilesizeMode();
 		OpenFile(dlgOpen.m_szFileName, bAfterStartup);
@@ -2805,7 +2806,7 @@ void CMainDlg::OpenPrevAlbumIfAny()
 	{
 		CString sNewStartupFile = m_sPrevStartupFile;
 		m_sPrevStartupFile = m_sStartupFile;
-		SetToast("Revert > " + sNewStartupFile);
+		SetToast("Revert > " + CFileList::ShortBasePath(sNewStartupFile));
 		OpenFile(sNewStartupFile, true);
 	}
 }

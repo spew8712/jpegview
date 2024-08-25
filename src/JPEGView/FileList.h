@@ -102,6 +102,10 @@ public:
 	CString CurrentDirectoryName() const;
 	// Current directory's base name shortened if too long
 	CString CurrentDirectoryNameShort() const;
+	//Get short base name with '...' substituted if too long
+	static CString ShortName(CString path);
+	//Get base name with immediate containing folder
+	static CString ShortBasePath(CString path);
 	// Modification time of current file
 	const FILETIME* CurrentModificationTime() const;
 	// Get the n-next file, does not change the internal state
