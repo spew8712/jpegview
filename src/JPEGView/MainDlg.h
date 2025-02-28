@@ -339,7 +339,7 @@ private:
 	bool m_isBeforeFileSelected;
 	double m_dLastImageDisplayTime;
 	bool m_bSelectMode, m_bSingleZoom,
-		m_bMinFilesize, m_bHideHidden;
+		m_bMinFilesize, m_bHideHidden, m_bHideSameName;
 	Helpers::ETransparencyMode m_nTransparencyMode; //for transparent background
 	bool m_bSlideShowForward; //direction of slideshow
 	bool m_bWindowBorderless;

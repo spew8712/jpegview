@@ -82,6 +82,7 @@ Shift+Space	7401	//SLIDESHOW_1: start slide show @ 1fps
 Alt+Shift+R	7421	//SLIDESHOW_CUSTOM: start slide show @ custom fps, specified via INI SlildeShowCustomInterval
 Alt+M		7430	//TOGGLE_MIN_FILESIZE: toggle ignoring small images
 Alt+H		7431	//TOGGLE_HIDE_HIDDEN: toggle ignoring hidden images
+Alt+N		7432	//TOGGLE_HIDE_SAME_NAME: toggle ignoring duplicate images with same name but different extensions
 Down		8000	//ROTATE_90: rotate image 90 deg
 Up		9000	//ROTATE_270: rotate image 270 deg
 //no_hotkey	9100	//ROTATE: show free rotation dialog

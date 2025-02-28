@@ -220,6 +220,7 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_dSlideShowCustomFps = sp.SlideShowCustomFps();
 	m_bMinFilesize = sp.MinFilesize() > 0;
 	m_bHideHidden = sp.HideHidden();
+	m_bHideSameName = sp.HideSameName();
 
 	CHistogramCorr::SetContrastCorrectionStrength((float)sp.AutoContrastAmount());
 	CHistogramCorr::SetBrightnessCorrectionStrength((float)sp.AutoBrightnessAmount());
@@ -451,7 +452,7 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	// intitialize list of files to show with startup file (and folder)
 	m_pFileList = new CFileList(m_sStartupFile, *m_pDirectoryWatcher,
 		(m_eForcedSorting == Helpers::FS_Undefined) ? sp.Sorting() : m_eForcedSorting, sp.IsSortedUpcounting(), sp.WrapAroundFolder(),
-		0, m_eForcedSorting != Helpers::FS_Undefined, m_bMinFilesize? CSettingsProvider::This().MinFilesize(): 0, m_bHideHidden);
+		0, m_eForcedSorting != Helpers::FS_Undefined, m_bMinFilesize? CSettingsProvider::This().MinFilesize(): 0, m_bHideHidden, m_bHideSameName);
 	m_pFileList->SetNavigationMode(sp.Navigation());
 
 	// create thread pool for processing requests on multiple CPU cores
@@ -2056,6 +2057,15 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			if (bWasInMovieMode) StartMovieMode(m_dMovieFPS);
 			break;
 		}
+		case IDM_TOGGLE_HIDE_SAME_NAME:
+		{
+			bool bWasInMovieMode = m_bMovieMode;
+			m_bHideSameName = !m_bHideSameName;
+			SetToast(m_bHideSameName ? _T("Hide duplicate images of same name") : _T("Show duplicate images of same name"));
+			OpenFile(m_sStartupFile, false);
+			if (bWasInMovieMode) StartMovieMode(m_dMovieFPS);
+			break;
+		}
 		case IDM_EFFECT_NONE:
 		case IDM_EFFECT_BLEND:
 		case IDM_EFFECT_SLIDE_RL:
@@ -2779,7 +2789,7 @@ void CMainDlg::OpenFile(LPCTSTR sFileName, bool bAfterStartup) {
 	m_sStartupFile = sFileName;
 	CSettingsProvider& sp = CSettingsProvider::This();
 	m_pFileList = new CFileList(m_sStartupFile, *m_pDirectoryWatcher, eOldSorting, oOldUpcounting, CSettingsProvider::This().WrapAroundFolder(),
-		0, false, m_bMinFilesize? sp.MinFilesize(): 0, m_bHideHidden);
+		0, false, m_bMinFilesize? sp.MinFilesize(): 0, m_bHideHidden, m_bHideSameName);
 	m_pFileList->SetNavigationMode(sp.Navigation());
 	// free current image and all read ahead images
 	InitParametersForNewImage();

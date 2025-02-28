@@ -205,6 +205,7 @@ CSettingsProvider::CSettingsProvider(void) {
 		m_nMinFilesize = (int) (_wtof((LPCTSTR)sMinFilesize) * nMultiplier);
 	}
 	m_bHideHidden = GetBool(_T("HideHidden"), false);
+	m_bHideSameName = GetBool(_T("HideSameName"), false);
 
 	m_bForceGDIPlus = GetBool(_T("ForceGDIPlus"), false);
 	m_bSingleInstance = GetBool(_T("SingleInstance"), false);

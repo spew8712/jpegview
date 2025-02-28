@@ -73,7 +73,8 @@ public:
 	int SlideShowEffectTimeMs() { return m_nSlideShowEffectTimeMs; }
 	double SlideShowCustomFps() { return m_dSlideShowCustomFps; }
 	int MinFilesize() { return m_nMinFilesize; }
-	bool HideHidden() { return m_bHideHidden;  }
+	bool HideHidden() { return m_bHideHidden; }
+	bool HideSameName() { return m_bHideSameName; }
 	bool ForceGDIPlus() { return m_bForceGDIPlus; }
 	bool SingleInstance() { return m_bSingleInstance; }
 	bool SingleFullScreenInstance() { return m_bSingleFullScreenInstance; }
@@ -245,6 +246,7 @@ private:
 	double m_dSlideShowCustomFps;
 	int m_nMinFilesize;
 	bool m_bHideHidden;
+	bool m_bHideSameName;
 	bool m_bForceGDIPlus;
 	bool m_bSingleInstance;
 	bool m_bSingleFullScreenInstance;

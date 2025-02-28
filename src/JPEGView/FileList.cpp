@@ -205,10 +205,11 @@ static LPCTSTR* GetSupportedFileEndingList() {
 
 CFileList::CFileList(const CString & sInitialFile, CDirectoryWatcher & directoryWatcher, 
 	Helpers::ESorting eInitialSorting, bool isSortedUpcounting, bool bWrapAroundFolder, int nLevel, bool forceSorting,
-	int nMinFilesize, bool bHideHidden)
+	int nMinFilesize, bool bHideHidden, bool bHideSameName)
 	: m_directoryWatcher(directoryWatcher),
 	m_nMinFilesize(nMinFilesize),
 	m_bHideHidden(bHideHidden),
+	m_bHideSameName(bHideSameName),
 	m_bFindingFiles(false),
 	m_bForceExitFindFiles(false)
 {
@@ -260,6 +261,27 @@ CFileList::CFileList(const CString & sInitialFile, CDirectoryWatcher & directory
 					m_fileList.clear();
 					m_fileList.splice(m_fileList.begin(), m_fileList2);
 					m_fileList.sort();
+
+					if (m_bHideSameName)
+					{
+						//Remove duplicate images with different extension
+						CString lastName(_T(""));
+						std::list<CFileDesc>::iterator iter;
+						for (iter = m_fileList.begin(); iter != m_fileList.end();) {
+							CString fileName = iter->GetName();
+							int lastDot = fileName.ReverseFind(_T('.'));
+							fileName = fileName.Left(lastDot);
+							if (_tcsicmp((LPCTSTR)fileName, (LPCTSTR)lastName) == 0) {
+								iter = m_fileList.erase(iter);
+								if (iter == m_fileList.end()) {
+									break;
+								}
+							}
+							else iter++;
+							lastName = fileName;
+						}
+					}
+
 					m_iter = FindFile(sInitialFile);
 					m_iterStart = bWrapAroundFolder ? m_iter : m_fileList.begin();
 				}
@@ -389,7 +411,7 @@ void CFileList::FileHasRenamed(LPCTSTR sOldFileName, LPCTSTR sNewFileName) {
 	}
 	std::list<CFileDesc>::iterator iter;
 	WaitIfNotReady(); // If async is still processing, then wait.
-	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++ ) {
+	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++) {
 		if (_tcsicmp(sOldFileName, iter->GetName()) == 0) {
 			iter->SetName(sNewFileName);
 		}
@@ -815,7 +837,7 @@ std::list<CFileDesc>::iterator CFileList::FindFile(const CString& sName) {
 		return m_fileList.begin();
 	}
 	std::list<CFileDesc>::iterator iter;
-	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++ ) {
+	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++) {
 		if (_tcsicmp((LPCTSTR)sName + nStart, iter->GetTitle()) == 0) {
 			return iter;
 		}
@@ -1141,7 +1163,7 @@ void CFileList::FindFiles(std::list<CFileDesc>& fileList) {
 
 void CFileList::VerifyFiles() {
 	std::list<CFileDesc>::iterator iter;
-	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++ ) {
+	for (iter = m_fileList.begin(); iter != m_fileList.end(); iter++) {
 		if (::GetFileAttributes(iter->GetName()) == INVALID_FILE_ATTRIBUTES) {
 			iter = m_fileList.erase(iter);
 			if (iter == m_fileList.end()) {
