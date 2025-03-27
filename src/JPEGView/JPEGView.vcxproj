@@ -186,6 +186,7 @@ xcopy "$(ProjectDir)libheif\bin\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
     </Manifest>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Config\*" "$(ProjectDir)\$(OutDir)" /Y /C /D
+xcopy "$(ProjectDir)libavif\lib64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D
 xcopy "$(ProjectDir)libjxl\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D
 xcopy "$(ProjectDir)libheif\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D
 xcopy "$(ProjectDir)libraw\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D
@@ -296,6 +297,7 @@ xcopy "$(ProjectDir)libheif\bin\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
     </Manifest>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Config\*" "$(ProjectDir)\$(OutDir)" /Y /C /D
+xcopy "$(ProjectDir)libavif\lib64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D
 xcopy "$(ProjectDir)libjxl\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D
 xcopy "$(ProjectDir)libheif\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D
 xcopy "$(ProjectDir)libraw\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D
