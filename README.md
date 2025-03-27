@@ -57,6 +57,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
   * Hide small images below `MinFilesize`. **ALT+M** to toggle and reload.
     * Enabled by default if MinFilesize > 0, but auto-disabled if 1st image opened is small (< MinFilesize).
   * `HideHidden` setting: hide hidden images and folders. **ALT+H** to toggle and reload.
+  * `HideSameName` setting: ignore/skip duplicate images with same name but different extension, i.e. show only 1 of them.  **ALT+N** to toggle.
 * Simplified KeyMap.txt format with direct hotkey to command ID mapping.
   * Old format still supported.
   * Use ConvertKeyMap tool to make one-off conversion if desired.
