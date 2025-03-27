@@ -98,7 +98,7 @@ jobs:
     - name: Upload No-Install Outputs Only
       # if not master branch, only upload the extract-and-run artifact
       if: github.ref_name != 'master'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: release-${{ inputs.platform-arch }}
         path: |
@@ -108,7 +108,7 @@ jobs:
       # reduce the ambiguous versions of installers in the wild by
       # only including the installer for master branch
       if: github.ref_name == 'master'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: release-${{ inputs.platform-arch }}
         path: |
