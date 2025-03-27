@@ -231,7 +231,7 @@ void* JxlReader::ReadImage(int& width,
 }
 
 void JxlReader::DeleteCache() {
-	free(cache.data);
+	//free(cache.data); //SD: Don't free cache.data which is pBuffer allocated in CImageLoadThread!
 	ICCProfileTransform::DeleteTransform(cache.transform);
 	// Setting the decoder and runner to 0 (NULL) will automatically destroy them
 	cache = { 0 };

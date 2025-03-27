@@ -44,15 +44,23 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 * Image formats
   * Read/write **AVIF**, include animated. Dev notes below.
   * View _largest_ icon in **ICO**
-*  Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
+* [Experimental] Browse manga/comics.
+  * Container format: ZIP/CBZ. Within can be JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, or BMP images; animation ignored.
+  * Navigation keys page through images in archive instead of advancing to next file. See 'Navigation' section below.
+* Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
    * Option for selection box to match image aspect ratio.
-*  Toggle 3 transparency modes: TransparencyColor (default), checkerboard pattern or inverse TransparencyColor, via hotkey: SHIFT+V.
-*  Navigation
+* Toggle 3 transparency modes: TransparencyColor (default), checkerboard pattern or inverse TransparencyColor, via hotkey: SHIFT+V.
+* Navigation
    * **ALT+<Left/Right arrow>**: Jump back/forward 100 images.
    * **CTRL+ALT+<Left/Right arrow>**: Jump to previous/next folder.
    * Wrap backwards. Allowed for `LoopSameFolderLevel` & `LoopSubFolders` too, not just`LoopFolder`.
    * **ALT+P**: Jump back to previous opened folder if any.
+   * In manga/CBZ mode:
+     * **Left**/**Right**: previous/next image in archive.
+     * **ALT+<Left/Right arrow>**: Jump back/forward 100 images in archive. If overshoot, stop at first/last image in archive.
+     * **CTRL+<Left/Right arrow>**: Exit archive to previous/next image file.
+     * **ALT+G**: Enter 'goto image number' mode (toast prompt appears), key in desired number and hit **<ENTER>** to jump to that image in archive. To cancel, hit **<ESCAPE>** or let entry timeout (toast disappears).
 * Filter
   * Hide small images below `MinFilesize`. **ALT+M** to toggle and reload.
     * Enabled by default if MinFilesize > 0, but auto-disabled if 1st image opened is small (< MinFilesize).
@@ -207,7 +215,6 @@ This needs more work!
 From timing printouts, it does help 'significantly'.
 However 'by feel', perhaps owing to my defragmented drive, opening an image in a folder with 25k is still _very fast_ (< 1s)! Thus, I can't really test other situations like jumping 100 images, etc. As such, I'll leave this patch as is, for now.
 
-
 ### Wishlist
 
 * Filter images by date, like show newest images only?
@@ -325,6 +332,21 @@ Roughly follow the steps in [aom's guide](https://aomedia.googlesource.com/aom) 
         * Optional: build `ext/avid/examples/avif_example_decode_file` project to get a .EXE to test decoding AVIF images.
         * Many project may fail to build (like owing to bad jpeg libs, etc), but they probably don't matter / aren't needed.
         * Desired output: `libavif_build/avif.lib` and `avif.dll`, which are needed by JPEGView =)
+
+## [Experimental WIP] Browse Manga/Comics
+Support viewing manga/comics in CBZ archives.
+* Image formats: JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, BMP.
+* Uses [kuba zip](https://github.com/kuba--/zip) which wraps around the minimal 1-file [miniz zip library](https://github.com/richgel999/miniz).
+  * Kuba/miniz is good as there's a minimal set of only 3 files total!
+* Reuses part of the image loading codes.
+  * Some image loaders read from disk instead of memory, so are not easily portable/reusable to decode CBZ's image contents in memory. Hence, ignores all special handling, such as for animation and colour profiles.
+     * Incompatible formats/loaders: GDI+ (GIF, BMP), WIC, PSD, RAW.
+     * Reworked and added a ReaderBMP method to read from memory. It has another untidy bit: it creates the CJPEGImage instead of CImageLoadThread caller, as other loaders do.
+  * Known issues:
+     * miniz: unable to uncompress files beyond ~5MB, such as BMP images. May need to find a better library after all?
+    * compilation problem ('incomplete' file): so have to disable usage of precompilied headers in JPEGView.
+    * JxlReader has a memory leak. It is supplied a pBuffer allocated by CImageLoadThread, but randomly deallocates it or not.
+* Reworked navigation keys to page through the archive's images when in manga/CBZ mode.
 
 ### Building JPEGView
 The above `avif.lib` then goes into `src\JPEGView\libavif\lib64`.

@@ -56,6 +56,9 @@ Ctrl+Shift+E	2710	//TOUCH_IMAGE_EXIF: set modification time to EXIF time
 F2		2800	//SHOW_FILEINFO: toggle show file and EXIF info box in top, left corner
 Ctrl+F2		3000	//SHOW_FILENAME: toggle show file name on top of screen
 Ctrl+N		3100	//SHOW_NAVPANEL: toggle show navigation panel
+Ctrl+Left   5003    //PREV_IMAGE: exit manga archive to previous image file
+Ctrl+Right  4003    //NEXT_IMAGE: exit manga archive to next image file
+Alt+G       5300    //GOTO_IMAGE_NUM: enter input mode to sepecify which image number to go to (in archive)
 PgDn		4000	//NEXT: go to next image
 Right		4000
 Alt+Right	4001	//NEXT_100: skip ahead 100 images
@@ -133,8 +136,7 @@ Ctrl+Z		12300	//ZOOM_MODE: toggle zoom mode
 //no_hotkey	12630	//RESTORE_PARAMDB: restore parameter DB
 //no_hotkey	12900	//ABOUT: show about box
 //no_hotkey	13000	//EXIT: exit JPEGView application
-Ctrl+Left	14100	//TOGGLE: toggle between marked image and current image
-Ctrl+Right	14100
+Shift+M 	14100	//TOGGLE: toggle between marked image and current image
 Ctrl+M		14101	//MARK_FOR_TOGGLE: mark current image for toggling
 Ctrl+Alt+Plus	14200	//COLOR_CORRECTION_INC: increase color correction amount
 Ctrl+Alt+Equals	14200

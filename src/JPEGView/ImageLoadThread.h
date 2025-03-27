@@ -5,6 +5,7 @@
 #include "WorkThread.h"
 #include <gdiplus.h>
 #include "avif/avif.h"
+#include <vector>
 
 class CJPEGImage;
 
@@ -25,6 +26,24 @@ public:
 		IsRequestFailedException = isRequestFailedException;
 	}
 };
+
+class ZipEntry
+{
+public:
+	CString name;
+	BOOL isDir;
+	unsigned long long size;
+	unsigned int crc32;
+
+	ZipEntry(CString a_name, BOOL a_isDir, unsigned long long a_size, unsigned int a_crc32) :
+		name(a_name),
+		isDir(a_isDir),
+		size(a_size),
+		crc32(a_crc32)
+	{
+	}
+};
+
 
 // Read ahead and processing thread
 class CImageLoadThread : public CWorkThread
@@ -100,6 +119,9 @@ private:
 	CString m_sLastJxlFileName; // Only for animated JPEG XL files
 	CString m_sLastAvifFileName; // Only for animated AVIF files
 	avifDecoder *m_avifDecoder;
+	CString m_sLastZipFileName; // Only for ZIP files
+	int m_nLastZipIndex, m_nZipCount;
+	std::vector<ZipEntry> zipEntries;
 
 	virtual void ProcessRequest(CRequestBase& request);
 	virtual void AfterFinishProcess(CRequestBase& request);
@@ -108,11 +130,13 @@ private:
 	void DeleteCachedPngDecoder();
 	void DeleteCachedJxlDecoder();
 	void DeleteCachedAvifDecoder();
+	void DeleteCachedZip();
 
 	void BlendAlpha(uint32* pImage32, int nWidth, int nHeight, Helpers::ETransparencyMode TransparencyMode);
 	void ProcessReadJPEGRequest(CRequest * request);
 	void ProcessReadPNGRequest(CRequest* request);
 	void ProcessReadAVIFRequest(CRequest* request);
+	void ProcessReadZipRequest(CRequest* request);
 	void ProcessReadBMPRequest(CRequest * request);
 	void ProcessReadTGARequest(CRequest * request);
 	void ProcessReadWEBPRequest(CRequest * request);

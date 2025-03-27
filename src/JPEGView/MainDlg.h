@@ -55,7 +55,11 @@ public:
 		POS_Next_100,
 		POS_Previous_100,
 		POS_Next_Folder,
-		POS_Previous_Folder
+		POS_Previous_Folder,
+		//exit manga archive to next/previous image:
+		POS_Next_Image,
+		POS_Previous_Image,
+		POS_Goto_Image_Num
 	};
 
 	CMainDlg(bool bForceFullScreen);
@@ -349,6 +353,8 @@ private:
 	CString m_strToast;
 	int m_nImageRetryCnt;
 	bool m_bMouseTracking;
+	bool m_bInputMode;
+	CString m_InputText;
 
 	void SetToast(LPCTSTR a_strToast, DWORD a_nDurationMs = 3000);
 	void SetToastIfEmpty(LPCTSTR a_strToast, DWORD a_nDurationMs = 3000);

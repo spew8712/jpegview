@@ -184,7 +184,8 @@ CMainDlg::CMainDlg(bool bForceFullScreen):
 	m_nImageRetryCnt(0),
 	m_bMouseTracking(false),
 	m_nLastAnimationOffset(0),
-	m_nExpectedNextAnimationTickCount(0)
+	m_nExpectedNextAnimationTickCount(0),
+	m_bInputMode(false)
 {
 	CSettingsProvider& sp = CSettingsProvider::This();
 
@@ -1292,6 +1293,48 @@ LRESULT CMainDlg::OnKeyDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOO
 	if (m_pPanelMgr->OnKeyDown((unsigned int)wParam, bShift, bAlt, bCtrl)) {
 		return 1; // a panel has handled the key
 	}
+	if (m_bInputMode)
+	{
+		if (wParam == VK_ESCAPE)
+		{
+			m_bInputMode = false;
+			SetToast(_T(""));
+		}
+		else if (wParam == VK_RETURN)
+		{
+			m_bInputMode = false;
+			if (m_InputText.GetLength() > 0)
+			{
+				int index = _wtoi(m_InputText) - 1;
+				if (m_pCurrentImage->IsContainer()
+					&& (index < m_pCurrentImage->NumberOfFrames()) && (index >= 0))
+				{
+					SetToast(_T("Jump to #" + m_InputText));
+					GotoImage(POS_Goto_Image_Num, index);
+				}
+				else
+				{
+					SetToast(_T("Invalid image #" + m_InputText));
+				}
+			}
+			else
+			{
+				SetToast(_T(""));
+			}
+		}
+		else if (wParam >= VK_NUMPAD0 && wParam <= VK_NUMPAD9)
+		{
+			int ch = wParam - VK_NUMPAD0 + '0';
+			m_InputText += (char)ch;
+			SetToast(_T("Goto #") + m_InputText);
+		}
+		else if (wParam >= '0' && wParam <= '9')
+		{
+			m_InputText += (char)wParam;
+			SetToast(_T("Goto #") + m_InputText);
+		}
+		return 1;
+	}
 	bool bHandled = false;
 	if (wParam == VK_ESCAPE && CloseHelpDlg()) {
 		bHandled = true;
@@ -1499,6 +1542,7 @@ LRESULT CMainDlg::OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 	} else if (wParam == TOAST_EXPIRY_TIMER_EVENT_ID) {
 		m_strToast = "";
 		this->Invalidate(FALSE);
+		m_bInputMode = false; //switch off special input mode upon expiry
 	} else if (wParam == ZOOM_TEXT_TIMER_EVENT_ID) {
 	} else {
 		if (!m_pCropCtl->OnTimer((int)wParam)) {
@@ -1913,10 +1957,45 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			m_pNavPanelCtl->SetActive(!m_pNavPanelCtl->IsActive());
 			break;
 		case IDM_NEXT:
-			GotoImage(POS_Next);
+			if (!m_pCurrentImage || !m_pCurrentImage->IsContainer())
+				GotoImage(POS_Next);
+			else
+				GotoImage(POS_Next_Image);
 			break;
 		case IDM_PREV:
-			GotoImage(POS_Previous);
+			if (!m_pCurrentImage || !m_pCurrentImage->IsContainer())
+				GotoImage(POS_Previous);
+			else
+				GotoImage(POS_Previous_Image);
+			break;
+		case IDM_NEXT_IMAGE:
+			if (m_pCurrentImage && !m_pCurrentImage->IsContainer())
+				GotoImage(POS_Next_Image);
+			else
+				GotoImage(POS_Next);
+			break;
+		case IDM_GOTO_IMAGE_NUM:
+			if (!m_bInputMode)
+			{
+				if (m_pCurrentImage && m_pCurrentImage->IsContainer()
+					&& (m_pCurrentImage->NumberOfFrames() > 1))
+				{
+					m_bInputMode = true;
+					m_InputText = "";
+					SetToast(_T("Goto #") + m_InputText);
+				}
+			}
+			else
+			{
+				m_bInputMode = false;
+				SetToast(_T(""));
+			}
+			break;
+		case IDM_PREV_IMAGE:
+			if (m_pCurrentImage && !m_pCurrentImage->IsContainer())
+				GotoImage(POS_Previous_Image);
+			else
+				GotoImage(POS_Previous);
 			break;
 		case IDM_NEXT_100:
 			SetToast(_T("Jump: +100"));
@@ -3146,6 +3225,67 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 
 	m_pCropCtl->CancelCropping(); // cancel any running crop
 
+	if (m_pCurrentImage
+		&& (((ePos == POS_Next_Image) || (ePos == POS_Previous_Image))
+			|| (m_pCurrentImage->IsContainer() && ((ePos == POS_Next_100) || (ePos == POS_Previous_100) || (ePos == POS_Goto_Image_Num)))))
+	{
+		int numFrames = m_pCurrentImage->NumberOfFrames();
+		if (numFrames <= 1) return;
+		int nFrameIndex;
+
+		if (ePos != POS_Goto_Image_Num)
+		{
+			int inc = ((ePos == POS_Next_100) || (ePos == POS_Previous_100)) ? 100 : 1;
+			if ((ePos == POS_Previous_Image) || (ePos == POS_Previous_100))
+				inc = -inc;
+			nFrameIndex = m_pCurrentImage->FrameIndex() + inc;
+		}
+		else
+		{
+			nFrameIndex = nFlags;
+		}
+		if (nFrameIndex >= numFrames)
+			nFrameIndex = numFrames - 1;
+		if  (nFrameIndex < 0)
+			nFrameIndex = 0;
+
+		if (nFlags & KEEP_PARAMETERS) {
+			if (!(m_bUserZoom || IsAdjustWindowToImage())) {
+				m_dZoom = -1;
+			}
+		}
+		else {
+			InitParametersForNewImage();
+		}
+		m_pJPEGProvider->NotifyNotUsed(m_pCurrentImage);
+		CProcessParams procParams = CreateProcessParams(false);
+		if (nFlags & KEEP_PARAMETERS) {
+			procParams.ProcFlags = SetProcessingFlag(procParams.ProcFlags, PFLAG_KeepParams, true);
+		}
+		m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, CJPEGProvider::NONE,
+			m_pFileList->Current(), nFrameIndex, procParams,
+			m_bOutOfMemoryLastImage, m_bExceptionErrorLastImage);
+		m_nLastLoadError = (m_pCurrentImage == NULL) ? ((m_pFileList->Current() == NULL) ? HelpersGUI::FileLoad_NoFilesInDirectory : HelpersGUI::FileLoad_LoadError) : HelpersGUI::FileLoad_Ok;
+
+		if (m_pCurrentImage)
+		{
+			//double minimalDisplayTime = CSettingsProvider::This().MinimalDisplayTime();
+			//bool bSynchronize = (nFlags & KEEP_PARAMETERS) == 0;
+			m_nImageRetryCnt = 0;
+			//AfterNewImageLoaded(bSynchronize, false, minimalDisplayTime > 0);
+			//if (m_pCurrentImage && minimalDisplayTime > 0 && bSynchronize && !m_bIsAnimationPlaying) {
+			//	AdjustWindowToImage(false);
+			//}
+				
+			if ((nFlags & NO_UPDATE_WINDOW) == 0) {
+				this->Invalidate(FALSE);
+				// this will force to wait until really redrawn, preventing to process images but do not show them
+				this->UpdateWindow();
+			}
+		}
+
+		return;
+	}
 	int nFrameIndex = 0;
 	bool bCheckIfSameImage = true;
 	m_pFileList->SetCheckpoint();
@@ -3278,7 +3418,7 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 		}
 		m_nImageRetryCnt = 0;
 	} else {
-		m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, (ePos == POS_AwayFromCurrent) ? CJPEGProvider::NONE : eDirection,  
+		m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, (ePos == POS_AwayFromCurrent) ? CJPEGProvider::NONE : eDirection,
 			m_pFileList->Current(), nFrameIndex, procParams,
 			m_bOutOfMemoryLastImage, m_bExceptionErrorLastImage);
 		m_nLastLoadError = (m_pCurrentImage == NULL) ? ((m_pFileList->Current() == NULL) ? HelpersGUI::FileLoad_NoFilesInDirectory : HelpersGUI::FileLoad_LoadError) : HelpersGUI::FileLoad_Ok;

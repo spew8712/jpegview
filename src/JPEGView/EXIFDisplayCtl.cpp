@@ -104,10 +104,21 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 	CString sPrefix, sFileTitle;
 	LPCTSTR sCurrentFileName = m_pMainDlg->CurrentFileName(true);
 	const CFileList* pFileList = m_pMainDlg->GetFileList();
+	const CJPEGImage *pImage = CurrentImage();
 	if (CurrentImage()->IsClipboardImage()) {
 		sPrefix = sCurrentFileName;
 	} else if (pFileList->Current() != NULL) {
 		sPrefix.Format(_T("[%d/%d]"), pFileList->CurrentIndex() + 1, pFileList->Size());
+		if (pImage->IsContainer())
+		{
+			int numFrames = pImage->NumberOfFrames();
+			if (numFrames > 1)
+			{
+				CString sFrameInfo("");
+				sFrameInfo.Format(_T(" (%d/%d)"), pImage->FrameIndex() + 1, numFrames);
+				sPrefix += sFrameInfo;
+			}
+		}
 		sFileTitle = sCurrentFileName;
 		sFileTitle += Helpers::GetMultiframeIndex(m_pMainDlg->GetCurrentImage());
 	}

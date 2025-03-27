@@ -20,6 +20,7 @@
 #include "QOIWrapper.h"
 #include "PSDWrapper.h"
 #include "MaxImageDef.h"
+#include "zip/zip.h"
 
 using namespace Gdiplus;
 
@@ -174,6 +175,9 @@ static EImageFormat GetImageFormat(LPCTSTR sFileName) {
 	} else if (header[0] == '8' && header[1] == 'B' && header[2] == 'P' && header[3] == 'S') {
 		return IF_PSD;
 	}
+	else if (header[0] == 'P' && header[1] == 'K' && header[2] == 0x03 && header[3] == 0x04) {
+		return IF_ZIP;
+	}
 	// default fallback if no matches based on magic bytes
 	return Helpers::GetImageFormat(sFileName);
 }
@@ -326,6 +330,7 @@ CImageLoadThread::~CImageLoadThread(void) {
 	DeleteCachedPngDecoder();
 	DeleteCachedJxlDecoder();
 	DeleteCachedAvifDecoder();
+	DeleteCachedZip();
 }
 
 int CImageLoadThread::AsyncLoad(LPCTSTR strFileName, int nFrameIndex, const CProcessParams& processParams, HWND targetWnd, HANDLE eventFinished) {
@@ -397,6 +402,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadJPEGRequest(&rq);
 		break;
 	case IF_WindowsBMP:
@@ -405,6 +411,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadBMPRequest(&rq);
 		break;
 	case IF_TGA:
@@ -413,6 +420,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadTGARequest(&rq);
 		break;
 	case IF_WEBP:
@@ -420,6 +428,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadWEBPRequest(&rq);
 		break;
 	case IF_JXL:
@@ -427,6 +436,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
 		ProcessReadJXLRequest(&rq);
+		DeleteCachedZip();
 		DeleteCachedAvifDecoder();
 		break;
 	case IF_HEIF:
@@ -435,6 +445,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadHEIFRequest(&rq);
 		break;
 	case IF_QOI:
@@ -443,6 +454,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadQOIRequest(&rq);
 		break;
 	case IF_CameraRAW:
@@ -451,6 +463,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadRAWRequest(&rq);
 		break;
 	case IF_WIC:
@@ -459,6 +472,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadWICRequest(&rq);
 		break;
 	case IF_PNG:
@@ -466,12 +480,14 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedWebpDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadPNGRequest(&rq);
 		break;
 	case IF_AVIF:
 		DeleteCachedGDIBitmap();
 		DeleteCachedWebpDecoder();
 		DeleteCachedPngDecoder();
+		DeleteCachedZip();
 		ProcessReadAVIFRequest(&rq);
 		break;
 	case IF_PSD:
@@ -480,7 +496,16 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadPSDRequest(&rq);
+		break;
+	case IF_ZIP:
+		DeleteCachedGDIBitmap();
+		DeleteCachedWebpDecoder();
+		DeleteCachedPngDecoder();
+		DeleteCachedJxlDecoder();
+		DeleteCachedAvifDecoder();
+		ProcessReadZipRequest(&rq);
 		break;
 	default:
 		// try with GDI+
@@ -488,6 +513,7 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 		DeleteCachedPngDecoder();
 		DeleteCachedJxlDecoder();
 		DeleteCachedAvifDecoder();
+		DeleteCachedZip();
 		ProcessReadGDIPlusRequest(&rq);
 		break;
 	}
@@ -563,6 +589,13 @@ void CImageLoadThread::DeleteCachedAvifDecoder() {
 		m_avifDecoder = 0;
 	}
 	m_sLastAvifFileName.Empty();
+}
+
+void CImageLoadThread::DeleteCachedZip()
+{
+	m_sLastZipFileName.Empty();
+	m_nLastZipIndex = -1; m_nZipCount = 0;
+	zipEntries.clear();
 }
 
 void CImageLoadThread::ProcessReadJPEGRequest(CRequest* request) {
@@ -749,6 +782,248 @@ void CImageLoadThread::ProcessReadPNGRequest(CRequest* request) {
 		if (request->Image)
 			request->ExceptionError = false; //GDIPlus succeeded, so clear PNG flagged ExceptionError
 	}
+}
+
+BOOL StringEndsWithIgnoreCase(CString& str, CString& end)
+{
+	int lenFind = end.GetLength(),
+		len = str.GetLength();
+	if (len < lenFind) return false;
+	CString find = str.Right(lenFind);
+	return find.CompareNoCase(end) == 0;
+}
+
+void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
+	bool bSuccess = false;
+	bool bUseCachedDecoder = false,
+		bMultipleFiles = false;
+	const wchar_t* sFileName;
+	int nFrameIndex = request->FrameIndex;
+	sFileName = (const wchar_t*)request->FileName;
+	if (sFileName == m_sLastZipFileName) {
+		bUseCachedDecoder = true;
+		if (nFrameIndex >= m_nZipCount)
+			nFrameIndex = m_nZipCount - 1;
+		if (nFrameIndex < 0)
+			nFrameIndex = 0;
+		bMultipleFiles = m_nZipCount > 1;
+	}
+	else {
+		DeleteCachedZip();
+	}
+
+	char bufFilename[500];
+	wcstombs(bufFilename, request->FileName.GetString(), 500);
+	struct zip_t* zip = zip_open(bufFilename, 0, 'r');
+	if (!bUseCachedDecoder) {
+		int i,
+			n = m_nZipCount = zip_entries_total(zip);
+		for (i = 0; i < n; ++i) {
+			zip_entry_openbyindex(zip, i);
+			{
+				const char* name = zip_entry_name(zip);
+				int isdir = zip_entry_isdir(zip);
+				unsigned long long size = zip_entry_size(zip);
+				unsigned int crc32 = zip_entry_crc32(zip);
+				zipEntries.push_back(ZipEntry(name, isdir, size, crc32));
+			}
+			zip_entry_close(zip);
+		}
+		//zip_close(zip);
+		if (m_nZipCount < 0) {
+			zip_close(zip);
+			return;
+		}
+		if (m_nZipCount > 1) {
+			bMultipleFiles = true;
+			bUseCachedDecoder = true;
+			m_sLastZipFileName = sFileName;
+		}
+		m_nLastZipIndex = 0;
+		if (nFrameIndex >= m_nZipCount)
+			nFrameIndex = m_nZipCount - 1;
+		if (nFrameIndex < 0)
+			nFrameIndex = 0;
+		bMultipleFiles = m_nZipCount > 1;
+	}
+	char* pBuffer = NULL;
+	try {
+		ZipEntry z = zipEntries.at(nFrameIndex);
+		CString entryName = z.name;
+		char bufEntryName[500];
+		wcstombs(bufEntryName, entryName.GetString(), 500);
+		size_t nFileSize = z.size;
+		zip_entry_open(zip, bufEntryName);
+		{
+			pBuffer = new(std::nothrow) char[nFileSize];
+			zip_entry_noallocread(zip, (void*)pBuffer, nFileSize);
+			//known issue: cannot unzip BMP ~> 5MB!
+
+			//void* buf = NULL;
+			//size_t bufsize;
+			//zip_entry_read(zip, &buf, &bufsize);
+			//memcpy(pBuffer, buf, bufsize);
+			//if (buf)
+			//	free(buf);
+		}
+		zip_entry_close(zip);
+		zip_close(zip);
+		zip = NULL;
+
+		bool bHasAnimation = false;
+		if (StringEndsWithIgnoreCase(entryName, CString(".jxl"))
+			|| ((nFileSize > 2) && (pBuffer[0] == 0xff && pBuffer[1] == 0x0a))
+			|| ((nFileSize > 12) && (memcmp(pBuffer, "\x00\x00\x00\x0cJXL\x20\x0d\x0a\x87\x0a", 12) == 0)))
+		{
+			int nWidth, nHeight, nBPP, nFrameCount, nFrameTimeMs;
+			void* pEXIFData;
+			uint8* pPixelData = (uint8*)JxlReader::ReadImage(nWidth, nHeight, nBPP, bHasAnimation, nFrameCount, nFrameTimeMs, pEXIFData, request->OutOfMemory, pBuffer, nFileSize);
+			if (pPixelData != NULL) {
+				// Multiply alpha value into each AABBGGRR pixel
+				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
+				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, 4, 0, IF_ZIP, IF_JXL, bMultipleFiles, request->FrameIndex, m_nZipCount, 360000); //1hr
+				free(pEXIFData);
+				if (request->Image) bSuccess = true;
+			}
+		}
+		else if (StringEndsWithIgnoreCase(entryName, CString(".jpeg")) || StringEndsWithIgnoreCase(entryName, CString(".jpg"))
+			|| ((nFileSize > 2) && (pBuffer[0] == 0xff && pBuffer[1] == 0xd8)))
+		{
+			int nWidth, nHeight, nBPP;
+			TJSAMP eChromoSubSampling;
+			bool bOutOfMemory;
+
+			void* pPixelData = TurboJpeg::ReadImage(nWidth, nHeight, nBPP, eChromoSubSampling, bOutOfMemory, pBuffer, nFileSize);
+
+			// Color and b/w JPEG is supported
+			if (pPixelData != NULL && (nBPP == 3 || nBPP == 1)) {
+				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData,
+					Helpers::FindEXIFBlock(pBuffer, nFileSize), nBPP,
+					Helpers::CalculateJPEGFileHash(pBuffer, nFileSize), IF_ZIP, IF_JPEG, bMultipleFiles, request->FrameIndex, m_nZipCount, 360000);
+				request->Image->SetJPEGComment(Helpers::GetJPEGComment(pBuffer, nFileSize));
+				request->Image->SetJPEGChromoSampling(eChromoSubSampling);
+				if (request->Image) bSuccess = true;
+			}
+			else if (bOutOfMemory) {
+				request->OutOfMemory = true;
+			}
+		}
+		else if (StringEndsWithIgnoreCase(entryName, CString(".png"))
+			|| ((nFileSize > 8) && (pBuffer[0] == 0x89 && pBuffer[1] == 'P' && pBuffer[2] == 'N' && pBuffer[3] == 'G' &&
+				pBuffer[4] == 0x0d && pBuffer[5] == 0x0a && pBuffer[6] == 0x1a && pBuffer[7] == 0x0a)))
+		{
+			int nWidth, nHeight, nBPP, nFrameCount, nFrameTimeMs;
+			bool bHasAnimation;
+			void* pEXIFData = NULL;
+			uint8* pPixelData = (uint8*)PngReader::ReadImage(nWidth, nHeight, nBPP, bHasAnimation, nFrameCount, nFrameTimeMs, pEXIFData, request->OutOfMemory, pBuffer, nFileSize);
+			if (pPixelData != NULL) {
+				// Multiply alpha value into each AABBGGRR pixel
+				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
+				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, 4, 0, IF_ZIP, IF_PNG, bMultipleFiles, request->FrameIndex, m_nZipCount, 360000);
+				free(pEXIFData);
+				if (request->Image) bSuccess = true;
+			}
+		}
+		else if (StringEndsWithIgnoreCase(entryName, CString(".webp"))
+			|| ((nFileSize > 12) && pBuffer[0] == 'R' && pBuffer[1] == 'I' && pBuffer[2] == 'F' && pBuffer[3] == 'F' &&
+				pBuffer[8] == 'W' && pBuffer[9] == 'E' && pBuffer[10] == 'B' && pBuffer[11] == 'P'))
+		{
+			int nWidth, nHeight;
+			bool bHasAnimation = bUseCachedDecoder;
+			int nFrameCount = 1;
+			int nFrameTimeMs = 0;
+			int nBPP;
+			void* pEXIFData;
+			uint8* pPixelData = (uint8*)WebpReaderWriter::ReadImage(nWidth, nHeight, nBPP, bHasAnimation, nFrameCount, nFrameTimeMs, pEXIFData, request->OutOfMemory, pBuffer, nFileSize);
+			if (pPixelData && nBPP == 4) {
+				// Multiply alpha value into each AABBGGRR pixel
+				BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
+				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, nBPP, 0, IF_ZIP, IF_WEBP, bMultipleFiles, request->FrameIndex, m_nZipCount, 360000);
+				free(pEXIFData);
+				if (request->Image) bSuccess = true;
+			}
+			else {
+				delete[] pPixelData;
+			}
+		}
+		//else if (StringEndsWithIgnoreCase(entryName, CString(".avif"))) {}
+		else if (StringEndsWithIgnoreCase(entryName, CString(".heif")) || StringEndsWithIgnoreCase(entryName, CString(".heic"))
+			|| StringEndsWithIgnoreCase(entryName, CString(".avif"))
+			|| ((nFileSize > 12)
+				&& (pBuffer[0] == 0x00 && pBuffer[1] == 0x00 && pBuffer[2] == 0x00 &&
+					memcmp(pBuffer + 4, "ftyp", 4) == 0)
+				&& (
+					memcmp(pBuffer + 8, "avis", 4) == 0 ||
+					// https://github.com/strukturag/libheif/issues/83
+					memcmp(pBuffer + 8, "avif", 4) == 0 ||
+					memcmp(pBuffer + 8, "heic", 4) == 0 ||
+					memcmp(pBuffer + 8, "heix", 4) == 0 ||
+					memcmp(pBuffer + 8, "hevc", 4) == 0 ||
+					memcmp(pBuffer + 8, "hevx", 4) == 0 ||
+					memcmp(pBuffer + 8, "heim", 4) == 0 ||
+					memcmp(pBuffer + 8, "heis", 4) == 0 ||
+					memcmp(pBuffer + 8, "hevm", 4) == 0 ||
+					memcmp(pBuffer + 8, "hevs", 4) == 0 ||
+					memcmp(pBuffer + 8, "mif1", 4) == 0 ||
+					memcmp(pBuffer + 8, "msf1", 4) == 0
+					) ))
+		{
+			try
+			{
+				int nWidth, nHeight, nBPP, nFrameCount, nFrameTimeMs;
+				nFrameCount = 1;
+				nFrameTimeMs = 0;
+				void* pEXIFData;
+				uint8* pPixelData = (uint8*)HeifReader::ReadImage(nWidth, nHeight, nBPP, nFrameCount, pEXIFData, request->OutOfMemory, request->FrameIndex, pBuffer, nFileSize);
+				if (pPixelData != NULL) {
+					// Multiply alpha value into each AABBGGRR pixel
+					BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
+
+					request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, nBPP, 0, IF_ZIP, IF_HEIF, bMultipleFiles, request->FrameIndex, m_nZipCount, 360000);
+					free(pEXIFData);
+					if (request->Image) bSuccess = true;
+				}
+			}
+			catch (heif::Error he) {
+				// invalid image
+				delete request->Image;
+				request->Image = NULL;
+			}
+		}
+		else if (StringEndsWithIgnoreCase(entryName, CString(".qoi")))
+		{
+			int nWidth, nHeight, nBPP;
+			void* pPixelData = QoiReaderWriter::ReadImage(nWidth, nHeight, nBPP, request->OutOfMemory, pBuffer, nFileSize);
+			if (pPixelData != NULL) {
+				if (nBPP == 4) {
+					// Multiply alpha value into each AABBGGRR pixel
+					BlendAlpha((uint32*)pPixelData, nWidth, nHeight, request->ProcessParams.TransparencyMode);
+				}
+				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, nBPP, 0, IF_ZIP, IF_QOI, bMultipleFiles, request->FrameIndex, m_nZipCount, 360000);
+				if (request->Image) bSuccess = true;
+			}
+		}
+		else if (StringEndsWithIgnoreCase(entryName, CString(".bmp")))
+		{
+			bool bOutOfMemory;
+			request->Image = CReaderBMP::ReadBmpImage(pBuffer, nFileSize, bOutOfMemory, bMultipleFiles, request->FrameIndex, m_nZipCount, 360000);
+			if (request->Image) bSuccess = true;
+			if (bOutOfMemory) {
+				request->OutOfMemory = true;
+			}
+		}
+		//else //unable to do as API reads from file and not buffer. GDI+ (GIF, BMP), WIC, PSD, RAW
+	}
+	catch (...) {
+		delete request->Image;
+		request->Image = NULL;
+		request->ExceptionError = true;
+	}
+
+cleanup:
+	if (zip != NULL)
+		zip_close(zip);
+	if (pBuffer) delete[] pBuffer;
 }
 
 void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
@@ -1082,7 +1357,7 @@ void CImageLoadThread::ProcessReadJXLRequest(CRequest* request) {
 	SetErrorMode(nPrevErrorMode);
 	if (!bUseCachedDecoder) {
 		::CloseHandle(hFile);
-		// delete[] pBuffer;
+		delete[] pBuffer;
 	}
 }
 

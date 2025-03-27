@@ -771,6 +771,8 @@ EImageFormat GetImageFormat(LPCTSTR sFileName) {
 			return IF_TGA;
 		} else if (_tcsicmp(sEnding, _T("AVIF")) == 0) {
 			return IF_AVIF;
+		} else if ((_tcsicmp(sEnding, _T("ZIP")) == 0) || (_tcsicmp(sEnding, _T("CBZ")) == 0) ){
+			return IF_ZIP;
 		} else if (_tcsicmp(sEnding, _T("QOI")) == 0) {
 			return IF_QOI;
 		} else if ((_tcsicmp(sEnding, _T("PSD")) == 0) || (_tcsicmp(sEnding, _T("PSB")) == 0)) {

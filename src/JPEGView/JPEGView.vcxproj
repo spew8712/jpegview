@@ -159,7 +159,7 @@ xcopy "$(ProjectDir)libheif\bin\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
       <ExceptionHandling>Async</ExceptionHandling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -266,7 +266,7 @@ xcopy "$(ProjectDir)libheif\bin\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
       <StringPooling>false</StringPooling>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>
       </DebugInformationFormat>
@@ -377,6 +377,7 @@ xcopy "$(ProjectDir)lcms2\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
     <ClCompile Include="Tooltip.cpp" />
     <ClCompile Include="UnsharpMaskPanel.cpp" />
     <ClCompile Include="WndButtonPanel.cpp" />
+    <ClCompile Include="zip\zip.c" />
     <ClCompile Include="ZoomNavigator.cpp" />
     <ClCompile Include="EXIFDisplayCtl.cpp" />
     <ClCompile Include="HelpDisplayCtl.cpp" />
@@ -467,6 +468,8 @@ xcopy "$(ProjectDir)lcms2\bin64\*.dll" "$(ProjectDir)$(OutDir)" /Y /D</Command>
     <ClInclude Include="RotationPanel.h" />
     <ClInclude Include="UnsharpMaskPanel.h" />
     <ClInclude Include="WndButtonPanel.h" />
+    <ClInclude Include="zip\miniz.h" />
+    <ClInclude Include="zip\zip.h" />
     <ClInclude Include="ZoomNavigator.h" />
     <ClInclude Include="EXIFDisplayCtl.h" />
     <ClInclude Include="HelpDisplayCtl.h" />
