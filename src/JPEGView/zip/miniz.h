@@ -4621,10 +4621,14 @@ tinfl_status tinfl_decompress(tinfl_decompressor *r,
             num_bits -= code_len;
 
             /* assert(sym2 != 0 && counter != 0); */
+            /*
+            //SD: Disable as loop ending @ L4618 may trigger this exit and incomplete decompression of large file (like >~2MB BMP).
+            //    Dunno why, but disabling works, with no ill effect X)
             if (sym2 == 0 && counter == 0)
             {
                 TINFL_CR_RETURN_FOREVER(40, TINFL_STATUS_FAILED);
             }
+            */
 
             pOut_buf_cur[0] = (mz_uint8)counter;
             if (sym2 & 256) {

@@ -1306,7 +1306,7 @@ LRESULT CMainDlg::OnKeyDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOO
 			if (m_InputText.GetLength() > 0)
 			{
 				int index = _wtoi(m_InputText) - 1;
-				if (m_pCurrentImage->IsContainer()
+				if (m_pCurrentImage->ContainerHasMultipleImages()
 					&& (index < m_pCurrentImage->NumberOfFrames()) && (index >= 0))
 				{
 					SetToast(_T("Jump to #" + m_InputText));
@@ -1957,19 +1957,19 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			m_pNavPanelCtl->SetActive(!m_pNavPanelCtl->IsActive());
 			break;
 		case IDM_NEXT:
-			if (!m_pCurrentImage || !m_pCurrentImage->IsContainer())
+			if (!m_pCurrentImage || !m_pCurrentImage->ContainerHasMultipleImages())
 				GotoImage(POS_Next);
 			else
 				GotoImage(POS_Next_Image);
 			break;
 		case IDM_PREV:
-			if (!m_pCurrentImage || !m_pCurrentImage->IsContainer())
+			if (!m_pCurrentImage || !m_pCurrentImage->ContainerHasMultipleImages())
 				GotoImage(POS_Previous);
 			else
 				GotoImage(POS_Previous_Image);
 			break;
 		case IDM_NEXT_IMAGE:
-			if (m_pCurrentImage && !m_pCurrentImage->IsContainer())
+			if (m_pCurrentImage && !m_pCurrentImage->ContainerHasMultipleImages())
 				GotoImage(POS_Next_Image);
 			else
 				GotoImage(POS_Next);
@@ -1977,8 +1977,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_GOTO_IMAGE_NUM:
 			if (!m_bInputMode)
 			{
-				if (m_pCurrentImage && m_pCurrentImage->IsContainer()
-					&& (m_pCurrentImage->NumberOfFrames() > 1))
+				if (m_pCurrentImage && m_pCurrentImage->ContainerHasMultipleImages())
 				{
 					m_bInputMode = true;
 					m_InputText = "";
@@ -1992,7 +1991,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			}
 			break;
 		case IDM_PREV_IMAGE:
-			if (m_pCurrentImage && !m_pCurrentImage->IsContainer())
+			if (m_pCurrentImage && !m_pCurrentImage->ContainerHasMultipleImages())
 				GotoImage(POS_Previous_Image);
 			else
 				GotoImage(POS_Previous);
@@ -3225,12 +3224,13 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 
 	m_pCropCtl->CancelCropping(); // cancel any running crop
 
-	if (m_pCurrentImage
-		&& (((ePos == POS_Next_Image) || (ePos == POS_Previous_Image))
-			|| (m_pCurrentImage->IsContainer() && ((ePos == POS_Next_100) || (ePos == POS_Previous_100) || (ePos == POS_Goto_Image_Num)))))
+	if (m_pCurrentImage && m_pCurrentImage->ContainerHasMultipleImages()
+		&& ((ePos == POS_Next_Image) || (ePos == POS_Previous_Image))
+			|| (ePos == POS_Next_100) || (ePos == POS_Previous_100) || (ePos == POS_Goto_Image_Num))
 	{
 		int numFrames = m_pCurrentImage->NumberOfFrames();
 		if (numFrames <= 1) return;
+		int nLastFrameIndex = m_pCurrentImage->FrameIndex();
 		int nFrameIndex;
 
 		if (ePos != POS_Goto_Image_Num)
@@ -3238,7 +3238,7 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 			int inc = ((ePos == POS_Next_100) || (ePos == POS_Previous_100)) ? 100 : 1;
 			if ((ePos == POS_Previous_Image) || (ePos == POS_Previous_100))
 				inc = -inc;
-			nFrameIndex = m_pCurrentImage->FrameIndex() + inc;
+			nFrameIndex = nLastFrameIndex + inc;
 		}
 		else
 		{
@@ -3248,43 +3248,59 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 			nFrameIndex = numFrames - 1;
 		if  (nFrameIndex < 0)
 			nFrameIndex = 0;
-
-		if (nFlags & KEEP_PARAMETERS) {
-			if (!(m_bUserZoom || IsAdjustWindowToImage())) {
-				m_dZoom = -1;
-			}
-		}
-		else {
-			InitParametersForNewImage();
-		}
-		m_pJPEGProvider->NotifyNotUsed(m_pCurrentImage);
-		CProcessParams procParams = CreateProcessParams(false);
-		if (nFlags & KEEP_PARAMETERS) {
-			procParams.ProcFlags = SetProcessingFlag(procParams.ProcFlags, PFLAG_KeepParams, true);
-		}
-		m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, CJPEGProvider::NONE,
-			m_pFileList->Current(), nFrameIndex, procParams,
-			m_bOutOfMemoryLastImage, m_bExceptionErrorLastImage);
-		m_nLastLoadError = (m_pCurrentImage == NULL) ? ((m_pFileList->Current() == NULL) ? HelpersGUI::FileLoad_NoFilesInDirectory : HelpersGUI::FileLoad_LoadError) : HelpersGUI::FileLoad_Ok;
-
-		if (m_pCurrentImage)
+		bool bExitArchive = false;
+		if (nLastFrameIndex == nFrameIndex)
 		{
-			//double minimalDisplayTime = CSettingsProvider::This().MinimalDisplayTime();
-			//bool bSynchronize = (nFlags & KEEP_PARAMETERS) == 0;
-			m_nImageRetryCnt = 0;
-			//AfterNewImageLoaded(bSynchronize, false, minimalDisplayTime > 0);
-			//if (m_pCurrentImage && minimalDisplayTime > 0 && bSynchronize && !m_bIsAnimationPlaying) {
-			//	AdjustWindowToImage(false);
-			//}
-				
-			if ((nFlags & NO_UPDATE_WINDOW) == 0) {
-				this->Invalidate(FALSE);
-				// this will force to wait until really redrawn, preventing to process images but do not show them
-				this->UpdateWindow();
+			if (((ePos == POS_Next_Image) || (ePos == POS_Previous_Image))
+				&& ((nFrameIndex == (numFrames - 1)) || (nFrameIndex == 0)))
+			{
+				if (ePos == POS_Next_Image)
+					ePos = POS_Next;
+				else
+					ePos = POS_Previous;
+				bExitArchive = true; //exit archive when at 1st or last image and will land on same image again
 			}
+			 else return; //no change
 		}
+		if (!bExitArchive) //proceed with moving to another image in archive
+		{
+			if (nFlags & KEEP_PARAMETERS) {
+				if (!(m_bUserZoom || IsAdjustWindowToImage())) {
+					m_dZoom = -1;
+				}
+			}
+			else {
+				InitParametersForNewImage();
+			}
+			m_pJPEGProvider->NotifyNotUsed(m_pCurrentImage);
+			CProcessParams procParams = CreateProcessParams(false);
+			if (nFlags & KEEP_PARAMETERS) {
+				procParams.ProcFlags = SetProcessingFlag(procParams.ProcFlags, PFLAG_KeepParams, true);
+			}
+			m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, CJPEGProvider::NONE,
+				m_pFileList->Current(), nFrameIndex, procParams,
+				m_bOutOfMemoryLastImage, m_bExceptionErrorLastImage);
+			m_nLastLoadError = (m_pCurrentImage == NULL) ? ((m_pFileList->Current() == NULL) ? HelpersGUI::FileLoad_NoFilesInDirectory : HelpersGUI::FileLoad_LoadError) : HelpersGUI::FileLoad_Ok;
 
-		return;
+			if (m_pCurrentImage)
+			{
+				//double minimalDisplayTime = CSettingsProvider::This().MinimalDisplayTime();
+				//bool bSynchronize = (nFlags & KEEP_PARAMETERS) == 0;
+				m_nImageRetryCnt = 0;
+				//AfterNewImageLoaded(bSynchronize, false, minimalDisplayTime > 0);
+				//if (m_pCurrentImage && minimalDisplayTime > 0 && bSynchronize && !m_bIsAnimationPlaying) {
+				//	AdjustWindowToImage(false);
+				//}
+
+				if ((nFlags & NO_UPDATE_WINDOW) == 0) {
+					this->Invalidate(FALSE);
+					// this will force to wait until really redrawn, preventing to process images but do not show them
+					this->UpdateWindow();
+				}
+			}
+
+			return;
+		}
 	}
 	int nFrameIndex = 0;
 	bool bCheckIfSameImage = true;

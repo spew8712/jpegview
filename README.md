@@ -57,10 +57,11 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
    * Wrap backwards. Allowed for `LoopSameFolderLevel` & `LoopSubFolders` too, not just`LoopFolder`.
    * **ALT+P**: Jump back to previous opened folder if any.
    * In manga/CBZ mode:
-     * **Left**/**Right**: previous/next image in archive.
+     * **Left**/**Right**: previous/next image in archive. If already at 1st or last image of archive respectively, will exit archive to previous/next image.
      * **ALT+<Left/Right arrow>**: Jump back/forward 100 images in archive. If overshoot, stop at first/last image in archive.
      * **CTRL+<Left/Right arrow>**: Exit archive to previous/next image file.
      * **ALT+G**: Enter 'goto image number' mode (toast prompt appears), key in desired number and hit **<ENTER>** to jump to that image in archive. To cancel, hit **<ESCAPE>** or let entry timeout (toast disappears).
+     * Changed to **SHIFT+M**: Toggle between marked image and current image.
 * Filter
   * Hide small images below `MinFilesize`. **ALT+M** to toggle and reload.
     * Enabled by default if MinFilesize > 0, but auto-disabled if 1st image opened is small (< MinFilesize).
@@ -343,7 +344,8 @@ Support viewing manga/comics in CBZ archives.
      * Incompatible formats/loaders: GDI+ (GIF, BMP), WIC, PSD, RAW.
      * Reworked and added a ReaderBMP method to read from memory. It has another untidy bit: it creates the CJPEGImage instead of CImageLoadThread caller, as other loaders do.
   * Known issues:
-     * miniz: unable to uncompress files beyond ~5MB, such as BMP images. May need to find a better library after all?
+     * [Fixed] miniz: unable to uncompress files beyond ~2MB, such as BMP images. Found a quick fix, but don't know why it is so.
+       * May need to find a better library after all? So as to support 7z et al archive as well.
     * compilation problem ('incomplete' file): so have to disable usage of precompilied headers in JPEGView.
     * JxlReader has a memory leak. It is supplied a pBuffer allocated by CImageLoadThread, but randomly deallocates it or not.
 * Reworked navigation keys to page through the archive's images when in manga/CBZ mode.

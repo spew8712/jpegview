@@ -294,6 +294,7 @@ public:
 	// Gets the container format of this image; IF_Unknown is not
 	EImageFormat GetContainerFormat() const { return m_eContainerFormat; }
 	bool IsContainer() const { return m_eContainerFormat != IF_Unknown; }
+	bool ContainerHasMultipleImages() const { return (m_eContainerFormat != IF_Unknown) && (m_nNumberOfFrames > 1); }
 
 	// Gets if the image format is one of the formats supported by GDI+
 	bool IsGDIPlusFormat() const {

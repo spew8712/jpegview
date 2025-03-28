@@ -857,14 +857,6 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 		{
 			pBuffer = new(std::nothrow) char[nFileSize];
 			zip_entry_noallocread(zip, (void*)pBuffer, nFileSize);
-			//known issue: cannot unzip BMP ~> 5MB!
-
-			//void* buf = NULL;
-			//size_t bufsize;
-			//zip_entry_read(zip, &buf, &bufsize);
-			//memcpy(pBuffer, buf, bufsize);
-			//if (buf)
-			//	free(buf);
 		}
 		zip_entry_close(zip);
 		zip_close(zip);
