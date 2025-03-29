@@ -31,12 +31,14 @@ class ZipEntry
 {
 public:
 	CString name;
+	unsigned int index;
 	BOOL isDir;
 	unsigned long long size;
 	unsigned int crc32;
 
-	ZipEntry(CString a_name, BOOL a_isDir, unsigned long long a_size, unsigned int a_crc32) :
+	ZipEntry(CString a_name, unsigned int a_index, BOOL a_isDir, unsigned long long a_size, unsigned int a_crc32) :
 		name(a_name),
+		index(a_index),
 		isDir(a_isDir),
 		size(a_size),
 		crc32(a_crc32)

@@ -290,10 +290,9 @@ void CFileExtensionsDlg::FillFileExtensionsList() {
 	InsertExtension(_T("*.tga"), FormatHint(CNLS::GetString(_T("%s images")), _T("TGA")));
 	InsertExtension(_T("*.tif;*.tiff"), FormatHint(CNLS::GetString(_T("%s images")), _T("TIFF")));
 	InsertExtension(_T("*.webp"), FormatHint(CNLS::GetString(_T("%s images")), _T("Google WEBP")));
-	InsertExtension(_T("*.jxl"), FormatHint(CNLS::GetString(_T("%s images")), _T("JPEG XL")));
 	InsertExtension(_T("*.qoi"), FormatHint(CNLS::GetString(_T("%s images")), _T("Quite OK Image")));
-	InsertExtension(_T("*.psd"), FormatHint(CNLS::GetString(_T("%s images")), _T("Photoshop Document")));
-	InsertExtension(_T("*.zip;*.cbz"), FormatHint(CNLS::GetString(_T("%s images")), _T("Comics Archives")));
+	InsertExtension(_T("*.psb;*.psd"), FormatHint(CNLS::GetString(_T("%s images")), _T("Photoshop Document")));
+	InsertExtension(_T("*.cbz;*.cb7"), FormatHint(CNLS::GetString(_T("%s images")), _T("Comics Archives")));
 	InsertExtensions(CSettingsProvider::This().FilesProcessedByWIC(), CNLS::GetString(_T("%s images (processed by Window Imaging Component - WIC)")));
 	InsertExtensions(CSettingsProvider::This().FileEndingsRAW(), CNLS::GetString(_T("%s camera raw images (embedded JPEGs only)")));
 }

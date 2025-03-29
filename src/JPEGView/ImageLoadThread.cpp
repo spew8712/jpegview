@@ -21,7 +21,10 @@
 #include "PSDWrapper.h"
 #include "MaxImageDef.h"
 #include "zip/zip.h"
+#include "bit7z/include/bitfileextractor.hpp"
+#include "bit7z/include/bitarchivereader.hpp"
 
+using namespace bit7z;
 using namespace Gdiplus;
 
 // static initializers
@@ -812,26 +815,66 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 		DeleteCachedZip();
 	}
 
+	bool use7z = (StringEndsWithIgnoreCase(CString(sFileName), CString(".cb7")));
+
 	char bufFilename[500];
 	wcstombs(bufFilename, request->FileName.GetString(), 500);
-	struct zip_t* zip = zip_open(bufFilename, 0, 'r');
+	struct zip_t* zip = NULL;
+	BitArchiveReader* zip7 = NULL;
 	if (!bUseCachedDecoder) {
-		int i,
-			n = m_nZipCount = zip_entries_total(zip);
-		for (i = 0; i < n; ++i) {
-			zip_entry_openbyindex(zip, i);
+		if (use7z)
+		{
+			try
 			{
-				const char* name = zip_entry_name(zip);
-				int isdir = zip_entry_isdir(zip);
-				unsigned long long size = zip_entry_size(zip);
-				unsigned int crc32 = zip_entry_crc32(zip);
-				zipEntries.push_back(ZipEntry(name, isdir, size, crc32));
+				Bit7zLibrary lib{ "7z.dll" };
+				// Opening the archive
+				zip7 = new BitArchiveReader(lib, bufFilename, BitFormat::Auto); //BitFormat::SevenZip);
+
+				int n = m_nZipCount = zip7->filesCount();
+				for (const auto& item : *zip7) {
+					int isdir = item.isDir();
+					if (!isdir)
+					{
+						const tstring name = item.name();
+						unsigned long long size = item.size();
+						unsigned int crc32 = item.crc();
+						zipEntries.push_back(ZipEntry(name.c_str(), item.index(), isdir, size, crc32));
+					}
+				}
+				delete zip7; zip7 = 0; //somehow later extract will fail, unless reopened, so delete 1st
+				m_nZipCount = zipEntries.size(); //adjust count to valid one only
 			}
-			zip_entry_close(zip);
+			catch (const BitException& ex) {
+				::OutputDebugString(_T("bit7z ERR: ")); ::OutputDebugString(CString(ex.what()));
+				delete zip7; zip7 = 0;
+				return;
+			}
+		}
+		else
+		{
+			zip = zip_open(bufFilename, 0, 'r');
+			int i,
+				n = m_nZipCount = zip_entries_total(zip);
+			for (i = 0; i < n; ++i) {
+				zip_entry_openbyindex(zip, i);
+				{
+					int isdir = zip_entry_isdir(zip);
+					if (!isdir) //skip folders
+					{
+						const char* name = zip_entry_name(zip);
+						unsigned long long size = zip_entry_size(zip);
+						unsigned int crc32 = zip_entry_crc32(zip);
+						zipEntries.push_back(ZipEntry(name, i, isdir, size, crc32));
+					}
+				}
+				zip_entry_close(zip);
+			}
+			m_nZipCount = zipEntries.size(); //adjust count to valid one only
 		}
 		//zip_close(zip);
 		if (m_nZipCount < 0) {
-			zip_close(zip);
+			if (zip) zip_close(zip);
+			else if (zip7) delete zip7;
 			return;
 		}
 		if (m_nZipCount > 1) {
@@ -850,17 +893,41 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 	try {
 		ZipEntry z = zipEntries.at(nFrameIndex);
 		CString entryName = z.name;
-		char bufEntryName[500];
-		wcstombs(bufEntryName, entryName.GetString(), 500);
 		size_t nFileSize = z.size;
-		zip_entry_open(zip, bufEntryName);
+		if (!use7z)
 		{
-			pBuffer = new(std::nothrow) char[nFileSize];
-			zip_entry_noallocread(zip, (void*)pBuffer, nFileSize);
+			if (!zip)
+				zip = zip_open(bufFilename, 0, 'r');
+			char bufEntryName[500];
+			wcstombs(bufEntryName, entryName.GetString(), 500);
+			//zip_entry_open(zip, bufEntryName);
+			zip_entry_openbyindex(zip, z.index);
+			{
+				pBuffer = new(std::nothrow) char[nFileSize];
+				zip_entry_noallocread(zip, (void*)pBuffer, nFileSize);
+			}
+			zip_entry_close(zip);
+			zip_close(zip);
+			zip = NULL;
 		}
-		zip_entry_close(zip);
-		zip_close(zip);
-		zip = NULL;
+		else //if (use7z)
+		{
+			try
+			{
+				//const tstring name = ConvertLPCWSTRToString(entryName); //not needed, as can access by index
+				pBuffer = new(std::nothrow) char[nFileSize];
+				//somehow, has to reopen, else extract fails!
+				Bit7zLibrary lib{ "7z.dll" };
+				zip7 = new BitArchiveReader(lib, bufFilename, BitFormat::SevenZip);
+				zip7->extractTo((byte_t*)pBuffer, nFileSize, z.index);
+				delete zip7; zip7 = 0;
+			}
+			catch (const BitException& ex) {
+				::OutputDebugString(_T("bit7z Extract ERR: ")); ::OutputDebugString(CString(ex.what()));
+				delete zip7; zip7 = 0;
+				return;
+			}
+		}
 
 		bool bHasAnimation = false;
 		if (StringEndsWithIgnoreCase(entryName, CString(".jxl"))

@@ -34,6 +34,9 @@
     <Filter Include="Source Files\zip">
       <UniqueIdentifier>{04f26b28-f39c-4a2f-a7bd-9f3c4db7fc78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\bit7z">
+      <UniqueIdentifier>{7d6b3592-a9de-4f2b-8d74-b7e5834e1ac6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BasicProcessing.cpp">
@@ -562,6 +565,105 @@
     </ClInclude>
     <ClInclude Include="zip\zip.h">
       <Filter>Source Files\zip</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bit7z.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bit7zlibrary.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitabstractarchivecreator.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitabstractarchivehandler.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitabstractarchiveopener.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitarchiveeditor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitarchiveitem.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitarchiveiteminfo.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitarchiveitemoffset.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitarchivereader.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitarchivewriter.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitcompressionlevel.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitcompressionmethod.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitcompressor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitdefines.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\biterror.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitexception.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitextractor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitfilecompressor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitfileextractor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitformat.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitfs.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitgenericitem.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitinputarchive.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bititemsvector.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitmemcompressor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitmemextractor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitoutputarchive.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitpropvariant.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitstreamcompressor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitstreamextractor.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bittypes.hpp">
+      <Filter>Source Files\bit7z</Filter>
+    </ClInclude>
+    <ClInclude Include="bit7z\include\bitwindows.hpp">
+      <Filter>Source Files\bit7z</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

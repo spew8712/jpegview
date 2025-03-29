@@ -45,7 +45,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
   * Read/write **AVIF**, include animated. Dev notes below.
   * View _largest_ icon in **ICO**
 * [Experimental] Browse manga/comics.
-  * Container format: ZIP/CBZ. Within can be JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, or BMP images; animation ignored.
+  * Container format: CBZ/CB7. Within can be JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, or BMP images; animation ignored.
   * Navigation keys page through images in archive instead of advancing to next file. See 'Navigation' section below.
 * Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
@@ -335,7 +335,7 @@ Roughly follow the steps in [aom's guide](https://aomedia.googlesource.com/aom) 
         * Desired output: `libavif_build/avif.lib` and `avif.dll`, which are needed by JPEGView =)
 
 ## [Experimental WIP] Browse Manga/Comics
-Support viewing manga/comics in CBZ archives.
+Support viewing manga/comics in CBZ archives from v1.2.60.
 * Image formats: JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, BMP.
 * Uses [kuba zip](https://github.com/kuba--/zip) which wraps around the minimal 1-file [miniz zip library](https://github.com/richgel999/miniz).
   * Kuba/miniz is good as there's a minimal set of only 3 files total!
@@ -344,11 +344,13 @@ Support viewing manga/comics in CBZ archives.
      * Incompatible formats/loaders: GDI+ (GIF, BMP), WIC, PSD, RAW.
      * Reworked and added a ReaderBMP method to read from memory. It has another untidy bit: it creates the CJPEGImage instead of CImageLoadThread caller, as other loaders do.
   * Known issues:
-     * [Fixed] miniz: unable to uncompress files beyond ~2MB, such as BMP images. Found a quick fix, but don't know why it is so.
-       * May need to find a better library after all? So as to support 7z et al archive as well.
+     * [Fixed in v1.2.61] miniz: unable to uncompress files beyond ~2MB, such as BMP images. Found a quick fix, but don't know why it is so.
     * compilation problem ('incomplete' file): so have to disable usage of precompilied headers in JPEGView.
     * JxlReader has a memory leak. It is supplied a pBuffer allocated by CImageLoadThread, but randomly deallocates it or not.
 * Reworked navigation keys to page through the archive's images when in manga/CBZ mode.
+* [WIP] v1.2.70: added use of bit7z wrapper with 7z library to read CB7 (i.e. 7zip archive). And etc.?
+  * Removed ZIP from file (extension) filter to avoid trying to read non-comics archives. Added CB7 to file filters.
+  * Pre-built bit7z DLL is without auto format detection! Thus, needed to build our own copy with BIT7Z_AUTO_FORMAT option enabled.
 
 ### Building JPEGView
 The above `avif.lib` then goes into `src\JPEGView\libavif\lib64`.
