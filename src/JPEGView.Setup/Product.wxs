@@ -216,7 +216,7 @@
 				<ComponentRef Id="msvcp140DLL"/>
 			</Feature>
 			<Feature Id="FeatureCBZ" Title="Manga Support (CBZ, CB7)">
-				<ComponentRef Id="7zDLL"/>
+				<ComponentRef Id="sevenZipDLL"/>
 			</Feature>
 			<!-- dcraw is compiled into JPEGView, but doesn't support the latest (modern) camera formats -->
 			<Feature Id="FeatureRAW" Title="Camera RAW Files Support (modern cameras)">
@@ -488,7 +488,7 @@
 					<Component Id="avifDLL" Guid="749cdb71-07e5-4271-8321-4371e8596f73">
 						<File Id="avif.dll" Name="avif.dll" Source="..\JPEGView\libavif\lib64\avif.dll"  KeyPath="yes" />
 					</Component>
-					<Component Id="7zDLL" Guid="6215c4a0-ea36-463c-8dd8-072bc3748d87">
+					<Component Id="sevenZipDLL" Guid="6215c4a0-ea36-463c-8dd8-072bc3748d87">
 						<File Id="7z.dll" Name="7z.dll" Source="..\JPEGView\bit7z\lib\x64\Release\7z.dll"  KeyPath="yes" />
 					</Component>
 					<Component Id="dav1dDLL" Guid="b14897a6-5ab6-4c3c-ac16-0f7e7c9345c8">

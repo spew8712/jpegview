@@ -27,6 +27,8 @@
 using namespace bit7z;
 using namespace Gdiplus;
 
+#define EXT_MATCHES(extension) (ext.Compare(_T(extension)) == 0)
+
 // static initializers
 volatile int CImageLoadThread::m_curHandle = 0;
 
@@ -77,6 +79,37 @@ static inline uint32 WebpAlphaBlendBackground(uint32 pixel, uint32 backgroundCol
 			((uint8)(((b * a + bg_b * one_minus_a) / 255.0) + 0.5) << 16);
 	}
 }
+
+
+class ZipEntry
+{
+public:
+	CString ext;
+	unsigned int index;
+	unsigned long long size;
+
+	ZipEntry(const char *a_pchName, unsigned int a_index, unsigned long long a_size) :
+		index(a_index),
+		size(a_size)
+	{
+		//extract extension only, from filename provided by kuba-zip
+		CString name(a_pchName);
+		int pos = name.ReverseFind('.');
+		if (pos >= 0)
+		{
+			ext = name.Right(name.GetLength() - pos - 1);
+			ext.MakeLower();
+		}
+	}
+
+	ZipEntry(tstring a_ext, unsigned int a_index, unsigned long long a_size) :
+		ext(a_ext.c_str()), //extension provided directly by bit7z
+		index(a_index),
+		size(a_size)
+	{
+		ext.MakeLower();
+	}
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // static helpers
@@ -815,10 +848,11 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 		DeleteCachedZip();
 	}
 
-	bool use7z = (StringEndsWithIgnoreCase(CString(sFileName), CString(".cb7")));
+	bool use7z = !(StringEndsWithIgnoreCase(CString(sFileName), CString(".cbz"))); //true;
 
-	char bufFilename[500];
-	wcstombs(bufFilename, request->FileName.GetString(), 500);
+	int bufFilenameLen = request->FileName.GetLength() + 1;
+	char* bufFilename = new char[bufFilenameLen];
+	wcstombs(bufFilename, request->FileName.GetString(), bufFilenameLen);
 	struct zip_t* zip = NULL;
 	BitArchiveReader* zip7 = NULL;
 	if (!bUseCachedDecoder) {
@@ -827,54 +861,44 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 			try
 			{
 				Bit7zLibrary lib{ "7z.dll" };
-				// Opening the archive
-				zip7 = new BitArchiveReader(lib, bufFilename, BitFormat::Auto); //BitFormat::SevenZip);
+				zip7 = new BitArchiveReader(lib, bufFilename, BitFormat::Auto);
 
-				int n = m_nZipCount = zip7->filesCount();
 				for (const auto& item : *zip7) {
-					int isdir = item.isDir();
-					if (!isdir)
+					if (!item.isDir())
 					{
-						const tstring name = item.name();
-						unsigned long long size = item.size();
-						unsigned int crc32 = item.crc();
-						zipEntries.push_back(ZipEntry(name.c_str(), item.index(), isdir, size, crc32));
+						zipEntries.push_back(ZipEntry(item.extension(), item.index(), item.size()));
 					}
 				}
 				delete zip7; zip7 = 0; //somehow later extract will fail, unless reopened, so delete 1st
-				m_nZipCount = zipEntries.size(); //adjust count to valid one only
+				m_nZipCount = zipEntries.size();
 			}
 			catch (const BitException& ex) {
-				::OutputDebugString(_T("bit7z ERR: ")); ::OutputDebugString(CString(ex.what()));
+				//::OutputDebugString(_T("bit7z ERR: ")); ::OutputDebugString(CString(ex.what()));
 				delete zip7; zip7 = 0;
+				delete [] bufFilename;
 				return;
 			}
 		}
 		else
 		{
 			zip = zip_open(bufFilename, 0, 'r');
-			int i,
-				n = m_nZipCount = zip_entries_total(zip);
-			for (i = 0; i < n; ++i) {
+			int n = zip_entries_total(zip);
+			for (int i = 0; i < n; ++i) {
 				zip_entry_openbyindex(zip, i);
 				{
-					int isdir = zip_entry_isdir(zip);
-					if (!isdir) //skip folders
+					if (!zip_entry_isdir(zip)) //skip folders
 					{
-						const char* name = zip_entry_name(zip);
-						unsigned long long size = zip_entry_size(zip);
-						unsigned int crc32 = zip_entry_crc32(zip);
-						zipEntries.push_back(ZipEntry(name, i, isdir, size, crc32));
+						zipEntries.push_back(ZipEntry(zip_entry_name(zip), i, zip_entry_size(zip)));
 					}
 				}
 				zip_entry_close(zip);
 			}
 			m_nZipCount = zipEntries.size(); //adjust count to valid one only
 		}
-		//zip_close(zip);
 		if (m_nZipCount < 0) {
 			if (zip) zip_close(zip);
 			else if (zip7) delete zip7;
+			delete[] bufFilename;
 			return;
 		}
 		if (m_nZipCount > 1) {
@@ -887,20 +911,16 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 			nFrameIndex = m_nZipCount - 1;
 		if (nFrameIndex < 0)
 			nFrameIndex = 0;
-		bMultipleFiles = m_nZipCount > 1;
 	}
 	char* pBuffer = NULL;
 	try {
 		ZipEntry z = zipEntries.at(nFrameIndex);
-		CString entryName = z.name;
+		CString &ext = z.ext;
 		size_t nFileSize = z.size;
 		if (!use7z)
 		{
 			if (!zip)
 				zip = zip_open(bufFilename, 0, 'r');
-			char bufEntryName[500];
-			wcstombs(bufEntryName, entryName.GetString(), 500);
-			//zip_entry_open(zip, bufEntryName);
 			zip_entry_openbyindex(zip, z.index);
 			{
 				pBuffer = new(std::nothrow) char[nFileSize];
@@ -918,19 +938,20 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 				pBuffer = new(std::nothrow) char[nFileSize];
 				//somehow, has to reopen, else extract fails!
 				Bit7zLibrary lib{ "7z.dll" };
-				zip7 = new BitArchiveReader(lib, bufFilename, BitFormat::SevenZip);
+				zip7 = new BitArchiveReader(lib, bufFilename, BitFormat::Auto);
 				zip7->extractTo((byte_t*)pBuffer, nFileSize, z.index);
 				delete zip7; zip7 = 0;
 			}
 			catch (const BitException& ex) {
 				::OutputDebugString(_T("bit7z Extract ERR: ")); ::OutputDebugString(CString(ex.what()));
 				delete zip7; zip7 = 0;
+				delete[] bufFilename;
 				return;
 			}
 		}
 
 		bool bHasAnimation = false;
-		if (StringEndsWithIgnoreCase(entryName, CString(".jxl"))
+		if (EXT_MATCHES("jxl")
 			|| ((nFileSize > 2) && (pBuffer[0] == 0xff && pBuffer[1] == 0x0a))
 			|| ((nFileSize > 12) && (memcmp(pBuffer, "\x00\x00\x00\x0cJXL\x20\x0d\x0a\x87\x0a", 12) == 0)))
 		{
@@ -945,7 +966,7 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 				if (request->Image) bSuccess = true;
 			}
 		}
-		else if (StringEndsWithIgnoreCase(entryName, CString(".jpeg")) || StringEndsWithIgnoreCase(entryName, CString(".jpg"))
+		else if (EXT_MATCHES("jpeg") || EXT_MATCHES("jpg")
 			|| ((nFileSize > 2) && (pBuffer[0] == 0xff && pBuffer[1] == 0xd8)))
 		{
 			int nWidth, nHeight, nBPP;
@@ -967,7 +988,7 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 				request->OutOfMemory = true;
 			}
 		}
-		else if (StringEndsWithIgnoreCase(entryName, CString(".png"))
+		else if (EXT_MATCHES("png")
 			|| ((nFileSize > 8) && (pBuffer[0] == 0x89 && pBuffer[1] == 'P' && pBuffer[2] == 'N' && pBuffer[3] == 'G' &&
 				pBuffer[4] == 0x0d && pBuffer[5] == 0x0a && pBuffer[6] == 0x1a && pBuffer[7] == 0x0a)))
 		{
@@ -983,7 +1004,7 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 				if (request->Image) bSuccess = true;
 			}
 		}
-		else if (StringEndsWithIgnoreCase(entryName, CString(".webp"))
+		else if (EXT_MATCHES("webp")
 			|| ((nFileSize > 12) && pBuffer[0] == 'R' && pBuffer[1] == 'I' && pBuffer[2] == 'F' && pBuffer[3] == 'F' &&
 				pBuffer[8] == 'W' && pBuffer[9] == 'E' && pBuffer[10] == 'B' && pBuffer[11] == 'P'))
 		{
@@ -1005,9 +1026,7 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 				delete[] pPixelData;
 			}
 		}
-		//else if (StringEndsWithIgnoreCase(entryName, CString(".avif"))) {}
-		else if (StringEndsWithIgnoreCase(entryName, CString(".heif")) || StringEndsWithIgnoreCase(entryName, CString(".heic"))
-			|| StringEndsWithIgnoreCase(entryName, CString(".avif"))
+		else if (EXT_MATCHES("heif") || EXT_MATCHES("heic") || EXT_MATCHES("avif")
 			|| ((nFileSize > 12)
 				&& (pBuffer[0] == 0x00 && pBuffer[1] == 0x00 && pBuffer[2] == 0x00 &&
 					memcmp(pBuffer + 4, "ftyp", 4) == 0)
@@ -1049,7 +1068,7 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 				request->Image = NULL;
 			}
 		}
-		else if (StringEndsWithIgnoreCase(entryName, CString(".qoi")))
+		else if (EXT_MATCHES("qoi"))
 		{
 			int nWidth, nHeight, nBPP;
 			void* pPixelData = QoiReaderWriter::ReadImage(nWidth, nHeight, nBPP, request->OutOfMemory, pBuffer, nFileSize);
@@ -1062,7 +1081,7 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 				if (request->Image) bSuccess = true;
 			}
 		}
-		else if (StringEndsWithIgnoreCase(entryName, CString(".bmp")))
+		else if (EXT_MATCHES("bmp"))
 		{
 			bool bOutOfMemory;
 			request->Image = CReaderBMP::ReadBmpImage(pBuffer, nFileSize, bOutOfMemory, bMultipleFiles, request->FrameIndex, m_nZipCount, 360000);
@@ -1072,6 +1091,11 @@ void CImageLoadThread::ProcessReadZipRequest(CRequest* request) {
 			}
 		}
 		//else //unable to do as API reads from file and not buffer. GDI+ (GIF, BMP), WIC, PSD, RAW
+	}
+	catch (const std::exception& e) {
+		//std::exception_ptr p = std::current_exception();
+		//::OutputDebugString(_T("bit7z ERR?: ")); ::OutputDebugString(p._Current_exception);
+		::OutputDebugString(_T("bit7z ERR?: ")); ::OutputDebugString(CString(e.what()));
 	}
 	catch (...) {
 		delete request->Image;
@@ -1083,6 +1107,7 @@ cleanup:
 	if (zip != NULL)
 		zip_close(zip);
 	if (pBuffer) delete[] pBuffer;
+	delete[] bufFilename;
 }
 
 void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
