@@ -35,7 +35,7 @@ static void ReadUInt(FILE* file, uint32* pUInt) {
 	fread(pUInt, sizeof(uint32), 1, file);
 }
 
-CJPEGImage* CReaderBMP::ReadBmpImage(void* pBuffer, int bufsize, bool& bOutOfMemory, bool bIsAnimation, int nFrameIndex, int nNumberOfFrames, int nFrameTimeMs)
+CJPEGImage* CReaderBMP::ReadBmpImage(void* pBuffer, int bufsize, bool& bOutOfMemory, EImageFormat eContainerFormat, bool bIsAnimation, int nFrameIndex, int nNumberOfFrames, int nFrameTimeMs)
 {
 	BMHEADER header;
 	BMINFOHEADER infoheader;
@@ -137,7 +137,7 @@ CJPEGImage* CReaderBMP::ReadBmpImage(void* pBuffer, int bufsize, bool& bOutOfMem
 
 	// The CJPEGImage object gets ownership of the memory in pDest
 	CJPEGImage* pImage = (pDest == NULL) ? NULL : new CJPEGImage(infoheader.width, infoheader.height, pDest, NULL, infoheader.bits / 8,
-		0, IF_WindowsBMP, bIsAnimation? IF_ZIP: IF_Unknown, bIsAnimation, nFrameIndex, nNumberOfFrames, nFrameTimeMs);
+		0, IF_WindowsBMP, eContainerFormat, bIsAnimation, nFrameIndex, nNumberOfFrames, nFrameTimeMs);
 
 	bOutOfMemory = pImage == NULL;
 

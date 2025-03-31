@@ -11,13 +11,14 @@ JPEGView is a lean, fast and highly configurable image viewer/editor with a mini
 JPEGView has built-in support the following formats:
 
 * Popular: JPEG, GIF
-* Lossless: BMP, PNG, TIFF, QOI, ICO (mod only)
+* Lossless: BMP, PNG, TIFF, PSD, QOI, ICO (mod only)
 * Web: WEBP, JXL, HEIF/HEIC, AVIF (common subset)
 * Legacy: TGA, WDP, HDP, JXR
 * Camera RAW formats:
-  * Adobe (DNG), Canon (CRW, CR2), Nikon (NEF, NRW), Sony (ARW, SR2)
+  * Adobe (DNG), Canon (CRW, CR2, CR3), Nikon (NEF, NRW), Sony (ARW, SR2)
   * Olympus (ORF), Panasonic (RW2), Fujifilm (RAF)
-  * Sigma (X3F), Pentax (PEF),  Minolta (MRW), Kodak (KDC, DCR)
+  * Sigma (X3F), Pentax (PEF), Minolta (MRW), Kodak (KDC, DCR)
+  * A full list is available here: [LibRaw supported cameras](https://www.libraw.org/supported-cameras)
 
 Many additional formats are supported by Windows Imaging Component (WIC)
 
@@ -32,7 +33,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 * contrast
 * local under/over-exposure
 
-### Other Features:
+### Other Features
 
 * Small and fast, uses AVX2/SSE2 and up to 4 CPU cores
 * High quality resampling filter, preserving sharpness of images
@@ -45,7 +46,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
   * Read/write **AVIF**, include animated. Dev notes below.
   * View _largest_ icon in **ICO**
 * [Experimental] Browse manga/comics.
-  * Container format: CBZ/CB7. Within can be JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, or BMP images; animation ignored.
+  * Container format: CBZ/CB7. Within can be JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, BMP or RAW images; animation ignored.
   * Navigation keys page through images in archive instead of advancing to next file. See 'Navigation' section below.
 * Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
@@ -87,7 +88,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
     * CTRL+F12: toggle to next monitor. Now if there are more than 2 monitors (assuming horizontal row), this hotkey toggles in this cycle: monitor #1, #2, ...  #last, all but last `[XX ]`, all but 1st `[ XX]`, and back.
  * F1 with CTRL, SHF or ALT combos can now be used as hotkeys for other commands; only F1 shows the help info.
 
-(Last selectively sync'd up to original's ~23 Nov 2023 updates, with occasional cherry picks going ahead).
+(Last selectively sync'd up to original's ~6 Jul 2024 updates, with occasional cherry picks going ahead).
 
 ### Slideshow
 
@@ -336,13 +337,14 @@ Roughly follow the steps in [aom's guide](https://aomedia.googlesource.com/aom) 
 
 ## [Experimental WIP] Browse Manga/Comics
 Support viewing manga/comics in CBZ archives from v1.2.60.
-* Image formats: JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, BMP.
+* Image formats: JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, BMP, RAW.
 * Uses [kuba zip](https://github.com/kuba--/zip) which wraps around the minimal 1-file [miniz zip library](https://github.com/richgel999/miniz).
   * Kuba/miniz is good as there's a minimal set of only 3 files total!
 * Reuses part of the image loading codes.
   * Some image loaders read from disk instead of memory, so are not easily portable/reusable to decode CBZ's image contents in memory. Hence, ignores all special handling, such as for animation and colour profiles.
-     * Incompatible formats/loaders: GDI+ (GIF, BMP), WIC, PSD, RAW.
+     * Incompatible formats/loaders: GDI+ (GIF, BMP), WIC, PSD.
      * Reworked and added a ReaderBMP method to read from memory. It has another untidy bit: it creates the CJPEGImage instead of CImageLoadThread caller, as other loaders do.
+  * Not all combos are tested. Mainly tested: JXL in CBZ. Minimal test: Some RAW and AVIF in CB7, PNG & BMP in CBZ.
   * Known issues:
      * [Fixed in v1.2.61] miniz: unable to uncompress files beyond ~2MB, such as BMP images. Found a quick fix, but don't know why it is so.
     * compilation problem ('incomplete' file): so have to disable usage of precompilied headers in JPEGView.
@@ -351,6 +353,7 @@ Support viewing manga/comics in CBZ archives from v1.2.60.
 * [WIP] v1.2.70: added use of bit7z wrapper with 7z library to read CB7 (i.e. 7zip archive). And etc.?
   * Removed ZIP from file (extension) filter to avoid trying to read non-comics archives. Added CB7 to file filters.
   * Pre-built bit7z DLL is without auto format detection! Thus, needed to build our own copy with BIT7Z_AUTO_FORMAT option enabled.
+    * Building bit7z is reasonably easy. Use CMake to configure it with BIT7Z_AUTO_FORMAT enabled, and various options as desired. Generate VS project files and build.
 
 ### Building JPEGView
 The above `avif.lib` then goes into `src\JPEGView\libavif\lib64`.

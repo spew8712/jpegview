@@ -220,10 +220,6 @@ void CJPEGProvider::StartNewRequestBundle(CFileList* pFileList, EReadAheadDirect
 	for (int i = 0; i < nNumRequests; i++) {
 		bool bSwitchImage = true;
 		int nFrameIndex = (pLastReadyRequest != NULL) ? Helpers::GetFrameIndex(pLastReadyRequest->Image, eDirection == FORWARD, true, bSwitchImage) : 0;
-		//if (nFrameIndex < 0)
-		//{
-		//	//SetToast(_T("Error laoding image!"));
-		//}
 		LPCTSTR sFileName = bSwitchImage ? pFileList->PeekNextPrev(i + 1, eDirection == FORWARD, eDirection == TOGGLE) : pFileList->Current();
 		if (sFileName != NULL && FindRequest(sFileName, nFrameIndex) == NULL) {
 			if (GetProcessingFlag(PFLAG_NoProcessingAfterLoad, processParams.ProcFlags)) {
@@ -231,8 +227,7 @@ void CJPEGProvider::StartNewRequestBundle(CFileList* pFileList, EReadAheadDirect
 				CProcessParams paramsCopied = processParams;
 				paramsCopied.ProcFlags = SetProcessingFlag(paramsCopied.ProcFlags, PFLAG_NoProcessingAfterLoad, false);
 				StartNewRequest(sFileName, nFrameIndex, paramsCopied);
-			}
-			else {
+			} else {
 				StartNewRequest(sFileName, nFrameIndex, processParams);
 			}
 		}

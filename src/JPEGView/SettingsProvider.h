@@ -135,6 +135,7 @@ public:
 	LPCTSTR GPSMapProvider() { return m_sGPSMapProvider; }
 	bool WindowAlwaysOnTopOnStartup() { return m_bWindowAlwaysOnTopOnStartup; }
 	void SetWindowAlwaysOnTopOnStartup(bool bAlwaysOnTop) { m_bWindowAlwaysOnTopOnStartup = bAlwaysOnTop; }
+	double ZoomPauseFactor() { return m_zoomPauseFactor; }  // while internally this is represented in doubles, using a whole number percent simplifies it for the user... configuring doubles is not user friendly at all
 	static double ParseTimeInterval(CString &strInterval);
 
 	// Returns if a user INI file exists
@@ -304,6 +305,7 @@ private:
 	Helpers::EIniEditor  m_eIniEditor;
 	CString m_sIniEditor;
 	CString m_sGPSMapProvider;
+	int m_zoomPauseFactor;
 	bool m_bWindowAlwaysOnTopOnStartup;
 
 	std::list<CUserCommand*> m_userCommands;

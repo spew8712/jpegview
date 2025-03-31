@@ -16,16 +16,6 @@ Helpers::ENavigationMode CFileList::sm_eMode = Helpers::NM_LoopDirectory;
 
 // Helper to add the current file of filefind object to the list
 static void AddToFileList(std::list<CFileDesc> & fileList, CFindFile &fileFind, LPCTSTR expectedExtension, int nMinFilesize = 1, bool bHideHidden = false) {
-	//std::list<CFileDesc>::iterator iter = fileList.begin();
-	//if (iter != fileList.end())
-	//{
-	//	CString fileName = fileFind.GetFilePath(),
-	//		fileName0 = (*iter).GetName();
-	//	if (fileName == fileName0)
-	//	{
-	//		return; //already exists
-	//	}
-	//}
 	if (!fileFind.IsDirectory()) {
 		if (expectedExtension != NULL) {
 			// compare if the extension is the expected extension

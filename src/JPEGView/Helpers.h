@@ -256,6 +256,9 @@ namespace Helpers {
 	// Gets the image format given a file name (uses the file extension)
 	EImageFormat GetImageFormat(LPCTSTR sFileName);
 
+	// Checks if the image format is RAW given a file extension
+	bool IsRawImageFormat(LPCTSTR sExt);
+
 	// Returns the short form of the path (including the short form of the file name)
 	CString GetShortFilePath(LPCTSTR sPath);
 
@@ -267,6 +270,9 @@ namespace Helpers {
 	
 	// file size for file with path
 	__int64 GetFileSize(LPCTSTR sPath);
+
+	// file size for file with handle
+	__int64 GetFileSize(HANDLE hFile);
 
 	// Gets the frame index of the next frame, depending on the index of the last image (relevant if the image is a multiframe image)
 	int GetFrameIndex(CJPEGImage* pImage, bool bNext, bool bPlayAnimation, bool & switchImage);

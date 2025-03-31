@@ -72,7 +72,7 @@ CJPEGImage::CJPEGImage(int nWidth, int nHeight, void* pPixels, void* pEXIFData, 
 }
 
 CJPEGImage::CJPEGImage(int nWidth, int nHeight, void* pPixels, void* pEXIFData, int nChannels, __int64 nJPEGHash,
-	EImageFormat eContainerFormat, EImageFormat eImageFormat, bool bIsAnimation, int nFrameIndex, int nNumberOfFrames, int nFrameTimeMs,
+	EImageFormat eImageFormat, EImageFormat eContainerFormat, bool bIsAnimation, int nFrameIndex, int nNumberOfFrames, int nFrameTimeMs,
 	CLocalDensityCorr * pLDC, bool bIsThumbnailImage, CRawMetadata * pRawMetadata)
 	: m_rotationParams{ 0 },
 	m_fColorCorrectionFactorsNull{ 0 },
@@ -724,8 +724,7 @@ bool CJPEGImage::Mirror(bool bHorizontally) {
 	}
 
 	InvalidateAllCachedPixelData();
-	void* pNewOriginalPixels = bHorizontally ? CBasicProcessing::MirrorH32bpp(m_nOrigWidth, m_nOrigHeight, m_pOrigPixels) :
-		CBasicProcessing::MirrorV32bpp(m_nOrigWidth, m_nOrigHeight, m_pOrigPixels);
+	void* pNewOriginalPixels = CBasicProcessing::Mirror32bpp(m_nOrigWidth, m_nOrigHeight, m_pOrigPixels, bHorizontally);
 	if (pNewOriginalPixels == NULL) return false;
 	delete[] m_pOrigPixels;
 	m_pOrigPixels = pNewOriginalPixels;

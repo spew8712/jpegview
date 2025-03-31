@@ -820,7 +820,7 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 
 		// Paint the DIB
 		if (pDIBData != NULL) {
-			BITMAPINFO bmInfo;
+			BITMAPINFO bmInfo{ 0 };
 			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, offsetsInWin);
 			// The DIB is also blitted into the memory DCs of the panels
 			memDCMgr.BlitImageToMemDC(pDIBData, &bmInfo, ptDIBStart, m_pNavPanelCtl->CurrentBlendingFactor());
@@ -927,7 +927,7 @@ void CMainDlg::PaintToDC(CDC& dc) {
 				*GetImageProcessingParams(), 
 				CreateDefaultProcessingFlags());
 		if (pDIBData != NULL) {
-			BITMAPINFO bmInfo;
+			BITMAPINFO bmInfo{ 0 };
 			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, offsetsInWin);
 		}
 
@@ -1239,6 +1239,7 @@ LRESULT CMainDlg::OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 			}
 		}
 	}
+
 	// Do dragging or cropping when needed, else pass event to panel manager and zoom navigator
 	bool bMouseCursorSet = false;
 	if (m_bZoomMode) {
@@ -3036,8 +3037,7 @@ bool CMainDlg::SaveImageNoPrompt(LPCTSTR sFileName, bool bFullSize) {
 		return false;
 	}
 	if (CSaveImage::SaveImage(sFileName, m_pCurrentImage, *m_pImageProcParams, 
-		CreateDefaultProcessingFlags(), bFullSize, m_bUseLosslessWEBP))
-	{
+		CreateDefaultProcessingFlags(), bFullSize, m_bUseLosslessWEBP)) {
 		m_pFileList->Reload(); // maybe image is stored to current directory - needs reload
 		::SetCursor(hOldCursor);
 		Invalidate();
@@ -3543,13 +3543,25 @@ void CMainDlg::PerformZoom(double dValue, bool bExponent, bool bZoomToMouse, boo
 	double dZoomMin = max(0.0001, min(Helpers::ZoomMin, GetZoomFactorForFitToScreen(false, false) * 0.5));
 	m_dZoom = max(dZoomMin, min(Helpers::ZoomMax, m_dZoom));
 
+	// always try to snap to 100%... aka if within 1% of 100%, snap exactly to it
 	if (abs(m_dZoom - 1.0) < 0.01) {
 		m_dZoom = 1.0;
 	}
-	if ((dOldZoom - 1.0)*(m_dZoom - 1.0) <= 0 && m_bInZooming && !m_bZoomMode) {
-		// make a stop at 100 %
-		m_dZoom = 1.0;
-	} 
+
+	// only pause on some percent if enabled
+	double pauseAtZoom = CSettingsProvider::This().ZoomPauseFactor();
+	if (pauseAtZoom != 0) {
+		// snap to zoom factor... aka if within 1% of the set zoom factor, snap exactly to it
+		// skip it if the zoom factor is 100% since it's already checked above - save one expensive calculation of abs()
+		if (pauseAtZoom != 1 && abs(m_dZoom - pauseAtZoom) < 0.01) {
+			m_dZoom = pauseAtZoom;
+		}
+
+		if ((dOldZoom - pauseAtZoom) * (m_dZoom - pauseAtZoom) <= 0 && m_bInZooming && !m_bZoomMode) {
+			// make a stop at 100 % (or whatever % is configured)
+			m_dZoom = pauseAtZoom;
+		}
+	}
 
 	// Never create images more than 65535 pixels wide or high - the basic processing cannot handle it
 	int nOldXSize = (int)(m_pCurrentImage->OrigWidth() * dOldZoom + 0.5);

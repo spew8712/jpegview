@@ -219,6 +219,7 @@ CSettingsProvider::CSettingsProvider(void) {
 	m_bCreateParamDBEntryOnSave = GetBool(_T("CreateParamDBEntryOnSave"), true);
 	m_bWrapAroundFolder = GetBool(_T("WrapAroundFolder"), true);
 	m_bWindowAlwaysOnTopOnStartup = GetBool(_T("WindowAlwaysOnTopOnStartup"), false);
+	m_zoomPauseFactor = GetInt(_T("ZoomPausePercent"), 100, 0, 6553500) / 100.0;  // can't have a % larger than the MAX_IMAGE_DIMENSION %, and convert to a scale factor (double/double division) only once
 	m_bSaveWithoutPrompt = GetBool(_T("OverrideOriginalFileWithoutSaveDialog"), false);
 	m_bTrimWithoutPromptLosslessJPEG = GetBool(_T("TrimWithoutPromptLosslessJPEG"), false);
 	m_bAllowFileDeletion = GetBool(_T("AllowFileDeletion"), true);
@@ -755,6 +756,7 @@ void CSettingsProvider::ReadIniFile(LPCTSTR fileName, IniHashMap* keyMap, TCHAR*
 
 	int index = 0;
 	LPTSTR current = pBuffer;
+	// TODO not sure why the original author manually parses the file instead of using GetPrivateProfileString/Int APIs
 	while (*current != 0) {
 		while (*current != 0 && _istspace(*current)) current++;
 		LPCTSTR key = current;

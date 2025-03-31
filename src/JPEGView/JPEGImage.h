@@ -36,7 +36,7 @@ public:
 		__int64 nJPEGHash, EImageFormat eImageFormat, bool bIsAnimation, int nFrameIndex, int nNumberOfFrames, int nFrameTimeMs,
 		CLocalDensityCorr* pLDC = NULL, bool bIsThumbnailImage = false, CRawMetadata* pRawMetadata = NULL);
 	CJPEGImage(int nWidth, int nHeight, void* pPixels, void* pEXIFData, int nChannels,
-		__int64 nJPEGHash, EImageFormat eContainerFormat, EImageFormat eImageFormat, bool bIsAnimation, int nFrameIndex, int nNumberOfFrames, int nFrameTimeMs,
+		__int64 nJPEGHash, EImageFormat eImageFormat, EImageFormat eContainerFormat = IF_Unknown, bool bIsAnimation = false, int nFrameIndex = 9, int nNumberOfFrames = 1, int nFrameTimeMs = 0,
 		CLocalDensityCorr* pLDC = NULL, bool bIsThumbnailImage = false, CRawMetadata* pRawMetadata = NULL);
 	~CJPEGImage(void);
 

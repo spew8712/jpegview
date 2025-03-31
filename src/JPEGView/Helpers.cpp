@@ -728,7 +728,7 @@ LPCTSTR ConvertTransitionEffectToString(ETransitionEffect effect) {
 	}
 }
 
-static bool IsInFileEndingList(LPCTSTR sFileEndings, LPCTSTR sEnding) {
+static bool IsInFileEndingList(LPCTSTR sFileEndings, LPCTSTR sEnding, int nStartOffset = 1, int nEndingOffset = -1) {
 	const int BUFFER_SIZE = 256;
 	TCHAR buffer[BUFFER_SIZE];
 	_tcsncpy_s(buffer, BUFFER_SIZE, sFileEndings, _TRUNCATE);
@@ -741,7 +741,7 @@ static bool IsInFileEndingList(LPCTSTR sFileEndings, LPCTSTR sEnding) {
 			*sCurrent = 0;
 			sCurrent++;
 		}
-		if (_tcsicmp(sStart + 1, sEnding - 1) == 0) {
+		if (_tcsicmp(sStart + nStartOffset, sEnding + nEndingOffset) == 0) {
 			return true;
 		}
 		sStart = sCurrent;
@@ -785,6 +785,11 @@ EImageFormat GetImageFormat(LPCTSTR sFileName) {
 		}
 	}
 	return IF_Unknown;
+}
+
+bool IsRawImageFormat(LPCTSTR sExt)
+{
+	return IsInFileEndingList(CSettingsProvider::This().FileEndingsRAW(), sExt, 2, 0); //2: skip "*." in ref, 0: no '.' in given ext
 }
 
 // Returns the short form of the path (including the file name)
@@ -855,6 +860,12 @@ __int64 GetFileSize(LPCTSTR sPath) {
 	__int64 fileSize = 0;
 	::GetFileSizeEx(hFile, (PLARGE_INTEGER)&fileSize);
 	::CloseHandle(hFile);
+	return fileSize;
+}
+
+__int64 GetFileSize(HANDLE hFile) {
+	__int64 fileSize = 0;
+	::GetFileSizeEx(hFile, (PLARGE_INTEGER)&fileSize);
 	return fileSize;
 }
 
