@@ -66,7 +66,7 @@ CJPEGImage::CJPEGImage(int nWidth, int nHeight, void* pPixels, void* pEXIFData, 
 	EImageFormat eImageFormat, bool bIsAnimation, int nFrameIndex, int nNumberOfFrames, int nFrameTimeMs,
 	CLocalDensityCorr* pLDC, bool bIsThumbnailImage, CRawMetadata* pRawMetadata)
 	: CJPEGImage(nWidth, nHeight, pPixels, pEXIFData, nChannels, nJPEGHash,
-		IF_Unknown, eImageFormat, bIsAnimation, nFrameIndex, nNumberOfFrames, nFrameTimeMs,
+		eImageFormat, IF_Unknown, bIsAnimation, nFrameIndex, nNumberOfFrames, nFrameTimeMs,
 		pLDC, bIsThumbnailImage, pRawMetadata)
 {
 }
