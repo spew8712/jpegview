@@ -1,6 +1,6 @@
 # JPEGView - Image Viewer and Editor
 
-This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the _**slideshow aspect and ease of use**_ of the app. Panning is now enabled by default. [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support (include animated AVIF) has been added for viewing, and 'save as AVIF'.
+This is a mod of [sylikc's official re-release of JPEGView](https://github.com/sylikc/jpegview/) to focus on the _**slideshow aspect and ease of use**_ of the app. Panning is now enabled by default. [AVIF image format](https://avif.io/blog/articles/avif-faq/#%E2%8F%A9generalinformation) support (include animated AVIF) has been added for viewing, and 'save as AVIF'. Latest addition is viewing of manga/comics archives (CBZ/CB7).
 
 ## Description
 
@@ -19,6 +19,9 @@ JPEGView has built-in support the following formats:
   * Olympus (ORF), Panasonic (RW2), Fujifilm (RAF)
   * Sigma (X3F), Pentax (PEF), Minolta (MRW), Kodak (KDC, DCR)
   * A full list is available here: [LibRaw supported cameras](https://www.libraw.org/supported-cameras)
+* Manga/comics container format: CBZ/CB7.
+  * And probably anything 7zip can open.
+  * Valid within are a big subset of above image formats.
 
 Many additional formats are supported by Windows Imaging Component (WIC)
 
@@ -41,23 +44,23 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 * Movie/Slideshow mode - to play folder of JPEGs as movie
 
 **Mod features**
-* Slideshow stuff - see next section.
+* **Slideshow stuff** - see next section.
 * Image formats
   * Read/write **AVIF**, include animated. Dev notes below.
   * View _largest_ icon in **ICO**
-* [Experimental] Browse manga/comics.
+* [Experimental] **Browse manga/comics**
   * Container format: CBZ/CB7. Within can be JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, BMP or RAW images; animation ignored.
   * Navigation keys page through images in archive instead of advancing to next file. See 'Navigation' section below.
-* Default to panning mode. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
+* *Default to panning mode*. Dedicated 'Selection mode' can be toggled via remapped 'S' hotkey.
    * Quick zoom to selection mode via remapped hotkey 'Z'.
    * Option for selection box to match image aspect ratio.
-* Toggle 3 transparency modes: TransparencyColor (default), checkerboard pattern or inverse TransparencyColor, via hotkey: SHIFT+V.
+* **Toggle 3 transparency modes**: TransparencyColor (default), checkerboard pattern or inverse TransparencyColor, via hotkey: SHIFT+V.
 * Navigation
    * **ALT+<Left/Right arrow>**: Jump back/forward 100 images.
    * **CTRL+ALT+<Left/Right arrow>**: Jump to previous/next folder.
    * Wrap backwards. Allowed for `LoopSameFolderLevel` & `LoopSubFolders` too, not just`LoopFolder`.
    * **ALT+P**: Jump back to previous opened folder if any.
-   * In manga/CBZ mode:
+   * In manga mode:
      * **Left**/**Right**: previous/next image in archive. If already at 1st or last image of archive respectively, will exit archive to previous/next image.
      * **ALT+<Left/Right arrow>**: Jump back/forward 100 images in archive. If overshoot, stop at first/last image in archive.
      * **CTRL+<Left/Right arrow>**: Exit archive to previous/next image file.
@@ -335,6 +338,13 @@ Roughly follow the steps in [aom's guide](https://aomedia.googlesource.com/aom) 
         * Many project may fail to build (like owing to bad jpeg libs, etc), but they probably don't matter / aren't needed.
         * Desired output: `libavif_build/avif.lib` and `avif.dll`, which are needed by JPEGView =)
 
+### Building JPEGView
+The above `avif.lib` then goes into `src\JPEGView\libavif\lib64`.
+`avif.dll` goes to `src\JPEGView\bin\x64\Release` and/or Debug folder.
+These are added in `JPEGView.vcxproj`'s configuration.
+
+Simply build using the VS solution file.
+
 ## [Experimental WIP] Browse Manga/Comics
 Support viewing manga/comics in CBZ archives from v1.2.60.
 * Image formats: JXL, JPG, PNG, WEBP, AVIF/HEIF, QOI, BMP, RAW.
@@ -344,6 +354,7 @@ Support viewing manga/comics in CBZ archives from v1.2.60.
   * Some image loaders read from disk instead of memory, so are not easily portable/reusable to decode CBZ's image contents in memory. Hence, ignores all special handling, such as for animation and colour profiles.
      * Incompatible formats/loaders: GDI+ (GIF, BMP), WIC, PSD.
      * Reworked and added a ReaderBMP method to read from memory. It has another untidy bit: it creates the CJPEGImage instead of CImageLoadThread caller, as other loaders do.
+       * Same for RAW.
   * Not all combos are tested. Mainly tested: JXL in CBZ. Minimal test: Some RAW and AVIF in CB7, PNG & BMP in CBZ.
   * Known issues:
      * [Fixed in v1.2.61] miniz: unable to uncompress files beyond ~2MB, such as BMP images. Found a quick fix, but don't know why it is so.
@@ -354,13 +365,6 @@ Support viewing manga/comics in CBZ archives from v1.2.60.
   * Removed ZIP from file (extension) filter to avoid trying to read non-comics archives. Added CB7 to file filters.
   * Pre-built bit7z DLL is without auto format detection! Thus, needed to build our own copy with BIT7Z_AUTO_FORMAT option enabled.
     * Building bit7z is reasonably easy. Use CMake to configure it with BIT7Z_AUTO_FORMAT enabled, and various options as desired. Generate VS project files and build.
-
-### Building JPEGView
-The above `avif.lib` then goes into `src\JPEGView\libavif\lib64`.
-`avif.dll` goes to `src\JPEGView\bin\x64\Release` and/or Debug folder.
-These are added in `JPEGView.vcxproj`'s configuration.
-
-Simply build using the VS solution file.
 
 ## ICO Image Format
 ICO file can contain multiple icons of various sizes.
@@ -461,5 +465,6 @@ I'm hoping with this project, some devs might help me keep the project alive!  I
 ## Special Thanks
 
 Thanks to [sylikc](https://github.com/sylikc), [qbnu](https://github.com/qbnu) et al for maintaining JPEGView =D
-
 Thanks to Alliance for Open Media for [libavif](https://github.com/AOMediaCodec/libavif/) + [aom](https://aomedia.googlesource.com/aom) for AVIF image read/write.
+Thanks to [kuba zip](https://github.com/kuba--/zip) and [miniz](https://github.com/richgel999/miniz), the *single file* zip library!
+Thanks to [rikyoz's bit7z](https://github.com/rikyoz/bit7z) for very easy to use wrapper for 7zip.
