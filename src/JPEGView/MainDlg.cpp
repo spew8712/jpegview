@@ -3225,8 +3225,8 @@ void CMainDlg::GotoImage(EImagePosition ePos, int nFlags) {
 	m_pCropCtl->CancelCropping(); // cancel any running crop
 
 	if (m_pCurrentImage && m_pCurrentImage->ContainerHasMultipleImages()
-		&& ((ePos == POS_Next_Image) || (ePos == POS_Previous_Image))
-			|| (ePos == POS_Next_100) || (ePos == POS_Previous_100) || (ePos == POS_Goto_Image_Num))
+		&& ((ePos == POS_Next_Image) || (ePos == POS_Previous_Image)
+			|| (ePos == POS_Next_100) || (ePos == POS_Previous_100) || (ePos == POS_Goto_Image_Num)))
 	{
 		int numFrames = m_pCurrentImage->NumberOfFrames();
 		if (numFrames <= 1) return;
